@@ -253,8 +253,8 @@ export default function ProductsPage() {
           pointerEvents: "none",
         }} />
 
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "140px 60px 80px", width: "100%", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "60px", alignItems: "center" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "140px 60px 80px", width: "100%", position: "relative", zIndex: 2 }}>
+          <div className="products-hero-grid">
             <div>
               <span className="prod-hero-tag" style={{
                 display: "inline-block",
@@ -464,7 +464,7 @@ export default function ProductsPage() {
 
       {/* ─── PRODUCTS GRID / LIST ─── */}
       <section style={{ padding: "60px 0 120px", background: "var(--black)" }}>
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px" }}>
           <div
             ref={gridRef}
             style={
@@ -785,11 +785,8 @@ function ProductListCard({
   return (
     <Link
       href={`/product/${product.id}`}
-      className="prod-card"
+      className="prod-card prod-list-card"
       style={{
-        display: "grid",
-        gridTemplateColumns: "220px 1fr auto",
-        gap: "0",
         background: "rgba(10,15,36,0.6)",
         border: "1px solid rgba(220,202,187,0.1)",
         borderRadius: "16px",

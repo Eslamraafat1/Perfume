@@ -4,6 +4,7 @@ import "./globals.css";
 import { ProductProvider } from "./context/ProductContext";
 import { CartProvider } from "./context/CartContext";
 import { SiteContentProvider } from "./context/SiteContentContext";
+import { LanguageProvider } from "./context/LanguageContext";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -37,11 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body>
-        <CartProvider>
-          <SiteContentProvider>
-            <ProductProvider>{children}</ProductProvider>
-          </SiteContentProvider>
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <SiteContentProvider>
+              <ProductProvider>{children}</ProductProvider>
+            </SiteContentProvider>
+          </CartProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useProducts } from "./context/ProductContext";
 import { useCart } from "./context/CartContext";
 import { useSiteContent } from "./context/SiteContentContext";
+import { useLanguage } from "./context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -14,34 +15,33 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-/* ─── data ─── */
-const NOTES = [
-  { icon: "🪵", name: "Indian Oud", origin: "Assam, India", desc: "Derived from infected Aquilaria heartwood. Deep, resinous, smoky." },
-  { icon: "🌹", name: "Bulgarian Rose", origin: "Rose Valley, Bulgaria", desc: "Hand-picked at dawn. Rich, velvety, honeyed." },
-  { icon: "🍦", name: "Madagascar Vanilla", origin: "Toamasina, Madagascar", desc: "Sun-dried pods. Sweet, cozy, subtly smoky." },
-  { icon: "🍊", name: "Italian Bergamot", origin: "Calabria, Italy", desc: "Cold-pressed peel. Crisp, citrusy, uplifting." },
-  { icon: "🌿", name: "Haitian Vetiver", origin: "Haiti", desc: "Earthy roots. Woody, smoky, deeply grounding." },
-  { icon: "🌸", name: "Turkish Rose Absolute", origin: "Isparta, Turkey", desc: "Solvent-extracted. Intensely floral, warm, complex." },
+/* ─── static icon data (text comes from translations) ─── */
+const NOTE_KEYS = [
+  { icon: "🪵", nameKey: "note1_name", originKey: "note1_origin", descKey: "note1_desc" },
+  { icon: "🌹", nameKey: "note2_name", originKey: "note2_origin", descKey: "note2_desc" },
+  { icon: "🍦", nameKey: "note3_name", originKey: "note3_origin", descKey: "note3_desc" },
+  { icon: "🍊", nameKey: "note4_name", originKey: "note4_origin", descKey: "note4_desc" },
+  { icon: "🌿", nameKey: "note5_name", originKey: "note5_origin", descKey: "note5_desc" },
+  { icon: "🌸", nameKey: "note6_name", originKey: "note6_origin", descKey: "note6_desc" },
+];
+
+const PROCESS_STEP_ICONS = ["🌿", "⏳", "🔬", "✦"];
+const PROCESS_NUMS = ["01", "02", "03", "04"];
+const PROCESS_TITLE_KEYS = ["proc_step1_title", "proc_step2_title", "proc_step3_title", "proc_step4_title"];
+const PROCESS_DESC_KEYS = ["proc_step1_desc", "proc_step2_desc", "proc_step3_desc", "proc_step4_desc"];
+
+const TESTIMONIAL_KEYS = [
+  { stars: 5, textKey: "test1_text", nameKey: "test1_name", roleKey: "test_role", productKey: "test1_product" },
+  { stars: 5, textKey: "test2_text", nameKey: "test2_name", roleKey: "test_role", productKey: "test2_product" },
+  { stars: 5, textKey: "test3_text", nameKey: "test3_name", roleKey: "test_role", productKey: "test3_product" },
 ];
 
 // Categories are now dynamic — built inside the component from SiteContentContext
 
-const TESTIMONIALS = [
-  { stars: 5, text: "Noir Oud is my signature scent. The longevity is unreal — 10+ hours and still going strong. I get compliments at every meeting.", name: "Sherif M.", role: "Verified Buyer", product: "Noir Oud" },
-  { stars: 5, text: "Rose Musk is a masterpiece. Smells so fresh yet warm. The packaging is stunning — perfect for gifting. Already re-ordered!", name: "Mariam A.", role: "Verified Buyer", product: "Rose Musk" },
-  { stars: 5, text: "I was skeptical about local perfumery, but Maison Luxe completely blew me away. The sillage rivals high-end French houses.", name: "Tarek H.", role: "Verified Buyer", product: "Oriental Spice" },
-];
-
-const PROCESS_STEPS = [
-  { num: "01", title: "Ethical Sourcing", desc: "We travel the world to hand-select raw botanicals at their precise peak potency — roses before dawn, oud at dusk.", icon: "🌿" },
-  { num: "02", title: "90-Day Maceration", desc: "Every blend ages in climate-controlled dark vaults for 90 days, allowing the molecules to bond and create deep complexity.", icon: "⏳" },
-  { num: "03", title: "Molecular Tuning", desc: "Master perfumers analyze each batch via chromatography, fine-tuning the balance of top, heart and base notes.", icon: "🔬" },
-  { num: "04", title: "Artisan Bottling", desc: "Each bottle is hand-filled, hand-sealed with 24K gold foil, and nestled in our signature velvet gift box.", icon: "✦" },
-];
-
 export default function HomePage() {
   const { products, loading } = useProducts();
   const { get: sc } = useSiteContent();
+  const { t, isRTL } = useLanguage();
   const pageRef = useRef<HTMLDivElement>(null);
   const heroBottleRef = useRef<HTMLDivElement>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -135,8 +135,13 @@ export default function HomePage() {
     if (email) { setSubscribed(true); setEmail(""); }
   }
 
+  /* ── Build translated data arrays ── */
+  const NOTES = NOTE_KEYS.map((n) => ({ icon: n.icon, name: t(n.nameKey), origin: t(n.originKey), desc: t(n.descKey) }));
+  const PROCESS_STEPS = PROCESS_STEP_ICONS.map((icon, i) => ({ num: PROCESS_NUMS[i], title: t(PROCESS_TITLE_KEYS[i]), desc: t(PROCESS_DESC_KEYS[i]), icon }));
+  const TESTIMONIALS = TESTIMONIAL_KEYS.map((tk) => ({ stars: tk.stars, text: t(tk.textKey), name: t(tk.nameKey), role: t(tk.roleKey), product: t(tk.productKey) }));
+
   return (
-    <div ref={pageRef} style={{ background: "var(--black)", color: "var(--white)", overflowX: "hidden" }}>
+    <div ref={pageRef} style={{ background: "var(--black)", color: "var(--white)", overflowX: "hidden", direction: isRTL ? "rtl" : "ltr" }}>
       <Navbar />
 
       {/* ══════════════════════════════════════════════
@@ -161,8 +166,8 @@ export default function HomePage() {
         <div style={{ position: "absolute", top: "10%", left: "5%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(220,202,187,0.07) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "5%", right: "5%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(25,41,84,0.6) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
 
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "120px 60px 80px", width: "100%", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "120px 60px 80px", width: "100%", position: "relative", zIndex: 2 }}>
+          <div className="hero-grid">
 
             {/* Left */}
             <div>
@@ -173,7 +178,7 @@ export default function HomePage() {
                 borderRadius: "40px", padding: "8px 20px", marginBottom: "32px",
               }}>
                 <span style={{ width: "6px", height: "6px", background: "var(--gold)", borderRadius: "50%", animation: "pulse-dot 2s ease-in-out infinite" }} />
-                {sc("hero_eyebrow")}
+                {t("hero_eyebrow")}
               </span>
 
               <h1 className="h-title" style={{
@@ -185,11 +190,11 @@ export default function HomePage() {
                 textTransform: "uppercase",
                 letterSpacing: "-0.01em",
               }}>
-                <span style={{ display: "block" }}>{sc("hero_title_1")}</span>
+                <span style={{ display: "block" }}>{t("hero_title_1")}</span>
                 <span style={{ display: "block", background: "linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontStyle: "italic" }}>
-                  {sc("hero_title_2")}
+                  {t("hero_title_2")}
                 </span>
-                <span style={{ display: "block" }}>{sc("hero_title_3")}</span>
+                <span style={{ display: "block" }}>{t("hero_title_3")}</span>
               </h1>
 
               <p className="h-subtitle" style={{
@@ -201,7 +206,7 @@ export default function HomePage() {
                 borderLeft: "2px solid rgba(220,202,187,0.3)",
                 paddingLeft: "20px",
               }}>
-                {sc("hero_subtitle")}
+                {t("hero_subtitle")}
               </p>
 
               <div className="h-actions" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
@@ -218,7 +223,7 @@ export default function HomePage() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 50px rgba(220,202,187,0.45)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 30px rgba(220,202,187,0.3)"; }}
                 >
-                  Explore Collection ✦
+                  {t("hero_btn_primary")}
                 </Link>
                 <Link href="/about" style={{
                   display: "inline-flex", alignItems: "center", gap: "8px",
@@ -233,20 +238,20 @@ export default function HomePage() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)"; (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.06)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
                 >
-                  Our Story →
+                  {t("hero_btn_secondary")}
                 </Link>
               </div>
 
               {/* Stats */}
               <div style={{ display: "flex", gap: "40px", marginTop: "56px", paddingTop: "40px", borderTop: "1px solid rgba(220,202,187,0.1)" }}>
                 {[
-                  { val: <><span className="cnt-products">0</span>+</>, label: "Fragrances" },
-                  { val: <><span className="cnt-hours">0</span>hr</>, label: "Longevity" },
-                  { val: <><span className="cnt-years">0</span>+</>, label: "Years Crafting" },
+                  { val: <><span className="cnt-products">0</span>+</>, labelKey: "hero_stat_fragrances" },
+                  { val: <><span className="cnt-hours">0</span>hr</>, labelKey: "hero_stat_longevity" },
+                  { val: <><span className="cnt-years">0</span>+</>, labelKey: "hero_stat_years" },
                 ].map((s, i) => (
                   <div key={i} className="h-stat">
                     <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", color: "var(--gold)", fontWeight: 700, lineHeight: 1 }}>{s.val}</div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--white-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: "5px" }}>{s.label}</div>
+                    <div style={{ fontSize: "0.68rem", color: "var(--white-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: "5px" }}>{t(s.labelKey)}</div>
                   </div>
                 ))}
               </div>
@@ -314,8 +319,8 @@ export default function HomePage() {
                 padding: "14px 18px",
                 animation: "float-badge 4s ease-in-out infinite",
               }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>Longevity</div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>12hr+</div>
+                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>{t("hero_longevity_label")}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>{t("hero_longevity_val")}</div>
               </div>
 
               <div style={{
@@ -328,8 +333,8 @@ export default function HomePage() {
                 padding: "14px 18px",
                 animation: "float-badge 5s ease-in-out infinite reverse",
               }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>Collection</div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>Niche</div>
+                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>{t("hero_collection_label")}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>{t("hero_collection_val")}</div>
               </div>
             </div>
           </div>
@@ -338,27 +343,27 @@ export default function HomePage() {
         {/* Scroll indicator */}
         <div style={{ position: "absolute", bottom: "32px", left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--white-muted)", fontSize: "0.65rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
           <div style={{ width: "1px", height: "50px", background: "linear-gradient(to bottom, transparent, var(--gold))", animation: "scroll-line 2s ease-in-out infinite" }} />
-          Scroll
+          {t("hero_scroll")}
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════
           SECTION 2 — TRUST BAR
       ══════════════════════════════════════════════ */}
-      <section style={{ background: "rgba(220,202,187,0.04)", borderTop: "1px solid rgba(220,202,187,0.1)", borderBottom: "1px solid rgba(220,202,187,0.1)", padding: "30px 60px" }}>
+      <section className="responsive-pad" style={{ background: "rgba(220,202,187,0.04)", borderTop: "1px solid rgba(220,202,187,0.1)", borderBottom: "1px solid rgba(220,202,187,0.1)", padding: "30px 60px" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "24px" }}>
           {[
-            { icon: "👑", label: "Niche Concentration", sub: "Extrait de Parfum grade" },
-            { icon: "🕐", label: "12+ Hours Longevity", sub: "Guaranteed performance" },
-            { icon: "📦", label: "Velvet Gift Box", sub: "Luxury packaging included" },
-            { icon: "🚚", label: "Free Shipping", sub: "On orders above 1500 EGP" },
-            { icon: "↩️", label: "14-Day Returns", sub: "Hassle-free policy" },
+            { icon: "👑", labelKey: "trust_niche", subKey: "trust_niche_sub" },
+            { icon: "🕐", labelKey: "trust_longevity", subKey: "trust_longevity_sub" },
+            { icon: "📦", labelKey: "trust_box", subKey: "trust_box_sub" },
+            { icon: "🚚", labelKey: "trust_shipping", subKey: "trust_shipping_sub" },
+            { icon: "↩️", labelKey: "trust_returns", subKey: "trust_returns_sub" },
           ].map((b) => (
-            <div key={b.label} className="fade-up" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div key={b.labelKey} className="fade-up" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <span style={{ fontSize: "1.4rem" }}>{b.icon}</span>
               <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--white)", letterSpacing: "0.04em" }}>{b.label}</div>
-                <div style={{ fontSize: "0.7rem", color: "var(--white-muted)" }}>{b.sub}</div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--white)", letterSpacing: "0.04em" }}>{t(b.labelKey)}</div>
+                <div style={{ fontSize: "0.7rem", color: "var(--white-muted)" }}>{t(b.subKey)}</div>
               </div>
             </div>
           ))}
@@ -368,19 +373,19 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 3 — CATEGORIES
       ══════════════════════════════════════════════ */}
-      <section style={{ padding: "120px 60px", background: "var(--dark)" }}>
+      <section className="responsive-pad" style={{ padding: "120px 60px", background: "var(--dark)" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           <div className="fade-up" style={{ textAlign: "center", marginBottom: "60px" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Olfactory Families</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("cat_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3.2rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              Shop by Collection
+              {t("cat_title")}
             </h2>
             <p style={{ color: "var(--white-muted)", marginTop: "14px", fontSize: "0.95rem", maxWidth: "520px", margin: "14px auto 0", lineHeight: 1.8 }}>
-              From smoky Oud to luminous Citrus — four distinct olfactory worlds, each a masterpiece.
+              {t("cat_desc")}
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
+          <div className="categories-grid">
             {CATEGORIES_DATA.map((cat) => (
               <Link
                 key={cat.slug}
@@ -435,7 +440,7 @@ export default function HomePage() {
                     fontSize: "0.7rem", color: "var(--gold)", fontWeight: 600,
                     letterSpacing: "0.1em", textTransform: "uppercase",
                   }}>
-                    Explore → 
+                    {t("cat_explore")}
                   </div>
                 </div>
               </Link>
@@ -447,13 +452,13 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 4 — FEATURED PRODUCTS
       ══════════════════════════════════════════════ */}
-      <section style={{ padding: "0 60px 120px", background: "var(--dark)" }}>
+      <section className="responsive-pad" style={{ padding: "0 60px 120px", background: "var(--dark)" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           <div className="fade-up" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "50px" }}>
             <div>
-              <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Signature Creations</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("prod_eyebrow")}</span>
               <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "12px", textTransform: "uppercase", fontWeight: 700 }}>
-                Bestsellers
+                {t("prod_title")}
               </h2>
             </div>
             <Link href="/products" style={{
@@ -466,7 +471,7 @@ export default function HomePage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.08)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)"; }}
             >
-              View All Products →
+              {t("prod_view_all")}
             </Link>
           </div>
 
@@ -485,8 +490,8 @@ export default function HomePage() {
               ? (
                 <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "80px 20px" }}>
                   <div style={{ fontSize: "4rem", opacity: 0.3, marginBottom: "20px" }}>🌹</div>
-                  <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem", marginBottom: "12px" }}>No fragrances yet</h3>
-                  <p style={{ color: "var(--white-muted)", marginBottom: "28px" }}>Visit the Dashboard to add your first premium perfume.</p>
+                  <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem", marginBottom: "12px" }}>{t("prod_no_fragrances")}</h3>
+                  <p style={{ color: "var(--white-muted)", marginBottom: "28px" }}>{t("prod_no_fragrances_desc")}</p>
                   <Link href="/dashboard" style={{
                     display: "inline-flex", alignItems: "center", gap: "8px",
                     background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
@@ -495,7 +500,7 @@ export default function HomePage() {
                     textDecoration: "none", textTransform: "uppercase",
                     fontFamily: "var(--font-sans)",
                   }}>
-                    Go to Dashboard
+                    {t("prod_go_dashboard")}
                   </Link>
                 </div>
               )
@@ -509,15 +514,15 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 5 — THE FRAGRANCE PROCESS
       ══════════════════════════════════════════════ */}
-      <section className="process-section" style={{ padding: "130px 60px", background: "linear-gradient(135deg, var(--black) 0%, var(--dark-3) 100%)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
+      <section className="process-section responsive-pad" style={{ padding: "130px 60px", background: "linear-gradient(135deg, var(--black) 0%, var(--dark-3) 100%)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           <div className="fade-up" style={{ textAlign: "center", marginBottom: "80px" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Our Craft</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("proc_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3.2rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              From Seed to Bottle
+              {t("proc_title")}
             </h2>
             <p style={{ color: "var(--white-muted)", marginTop: "14px", fontSize: "0.95rem", maxWidth: "520px", margin: "14px auto 0", lineHeight: 1.8 }}>
-              Every Maison Luxe fragrance undergoes a meticulous four-stage creation ritual that spans months, not days.
+              {t("proc_desc")}
             </p>
           </div>
 
@@ -568,7 +573,7 @@ export default function HomePage() {
                     {i + 1}
                   </div>
                 </div>
-                <div style={{ fontSize: "0.62rem", color: "var(--gold)", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "10px" }}>STEP {step.num}</div>
+                <div style={{ fontSize: "0.62rem", color: "var(--gold)", letterSpacing: "0.25em", textTransform: "uppercase", marginBottom: "10px" }}>{t("proc_step")} {step.num}</div>
                 <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", marginBottom: "12px", color: "var(--white)" }}>{step.title}</h3>
                 <p style={{ color: "var(--white-muted)", fontSize: "0.85rem", lineHeight: 1.75 }}>{step.desc}</p>
               </div>
@@ -586,7 +591,7 @@ export default function HomePage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)"; }}
             >
-              Read Our Full Story →
+              {t("proc_read_story")}
             </Link>
           </div>
         </div>
@@ -595,19 +600,19 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 6 — RARE INGREDIENTS
       ══════════════════════════════════════════════ */}
-      <section className="notes-marquee-section" style={{ padding: "120px 60px", background: "var(--dark-2)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
+      <section className="notes-marquee-section responsive-pad" style={{ padding: "120px 60px", background: "var(--dark-2)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-          <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center", marginBottom: "80px" }}>
+          <div className="fade-up about-grid" style={{ marginBottom: "80px" }}>
             <div>
-              <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Rarest Ingredients</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("notes_eyebrow")}</span>
               <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1 }}>
-                The World&apos;s Finest<br />
+                {t("notes_title_1")}<br />
                 <span style={{ fontStyle: "italic", background: "linear-gradient(135deg, var(--gold-light), var(--gold))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                  Raw Materials
+                  {t("notes_title_2")}
                 </span>
               </h2>
               <p style={{ color: "var(--white-muted)", marginTop: "20px", fontSize: "0.95rem", lineHeight: 1.85 }}>
-                We traverse continents to source only the most exceptional botanical essences. No synthetic shortcuts — only nature&apos;s finest, highly concentrated extractions.
+                {t("notes_desc")}
               </p>
               <Link href="/blog" style={{
                 display: "inline-flex", alignItems: "center", gap: "8px", marginTop: "32px",
@@ -619,7 +624,7 @@ export default function HomePage() {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.06)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
-                Read About Ingredients →
+                {t("notes_read_btn")}
               </Link>
             </div>
             <div style={{
@@ -677,10 +682,10 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 7 — BRAND STORY SPLIT
       ══════════════════════════════════════════════ */}
-      <section style={{ padding: "130px 60px", background: "var(--black)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
-        <div style={{ maxWidth: "1300px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px", alignItems: "center" }}>
+      <section className="responsive-pad" style={{ padding: "130px 60px", background: "var(--black)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
+        <div className="about-grid" style={{ maxWidth: "1300px", margin: "0 auto" }}>
           {/* Image grid */}
-          <div className="fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", height: "520px" }}>
+          <div className="fade-up story-images-grid">
             <div style={{ position: "relative", borderRadius: "20px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.12)" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/perfume_3.png" alt="Oud perfume" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
@@ -708,18 +713,18 @@ export default function HomePage() {
 
           {/* Text */}
           <div className="fade-up">
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Our Heritage</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("story_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 3.5vw, 3rem)", marginTop: "16px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1, marginBottom: "24px" }}>
-              Crafted in Egypt,<br />
+              {t("story_title_1")}<br />
               <span style={{ fontStyle: "italic", background: "linear-gradient(135deg, var(--gold-light), var(--gold))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-                Inspired by the Stars
+                {t("story_title_2")}
               </span>
             </h2>
             <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.85, marginBottom: "20px" }}>
-              Established in Egypt, Maison Luxe was born from a desire to bridge royal Eastern heritage with modern French sophistication. A perfume is not simply a scent — it is an invisible statement of who you are.
+              {t("story_p1")}
             </p>
             <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.85, marginBottom: "36px" }}>
-              Every ingredient undergoes high-performance chromatography to guarantee exceptional purity, achieving the projection and sillage that commands presence in any room.
+              {t("story_p2")}
             </p>
             <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
               <Link href="/about" style={{
@@ -729,7 +734,7 @@ export default function HomePage() {
                 fontSize: "0.82rem", fontWeight: 700, letterSpacing: "0.1em",
                 textDecoration: "none", textTransform: "uppercase", fontFamily: "var(--font-sans)",
               }}>
-                Learn About Us
+                {t("story_btn_about")}
               </Link>
               <Link href="/blog" style={{
                 display: "inline-flex", alignItems: "center", gap: "8px",
@@ -741,7 +746,7 @@ export default function HomePage() {
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.06)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
-                Perfume Journal →
+                {t("story_btn_blog")}
               </Link>
             </div>
           </div>
@@ -751,12 +756,12 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 8 — TESTIMONIALS
       ══════════════════════════════════════════════ */}
-      <section style={{ padding: "120px 60px", background: "var(--dark-3)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
+      <section className="responsive-pad" style={{ padding: "120px 60px", background: "var(--dark-3)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           <div className="fade-up" style={{ textAlign: "center", marginBottom: "60px" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Olfactory Feedback</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("test_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              What Our Clients Say
+              {t("test_title")}
             </h2>
           </div>
 
@@ -820,7 +825,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 9 — VIP BANNER
       ══════════════════════════════════════════════ */}
-      <section style={{
+      <section className="responsive-pad" style={{
         padding: "100px 60px",
         background: "linear-gradient(135deg, rgba(10,15,36,0.98) 0%, rgba(25,41,84,0.95) 100%)",
         borderTop: "1px solid rgba(220,202,187,0.12)",
@@ -834,12 +839,12 @@ export default function HomePage() {
         }} />
         <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "40px", position: "relative", zIndex: 2 }}>
           <div className="fade-up" style={{ maxWidth: "560px" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ VIP Concierge</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("vip_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              Find Your Olfactory Identity
+              {t("vip_title")}
             </h2>
             <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginTop: "16px" }}>
-              Unsure which notes resonate with your chemistry? Book a private scent consultation with our master perfumers.
+              {t("vip_desc")}
             </p>
           </div>
           <div className="fade-up">
@@ -855,7 +860,7 @@ export default function HomePage() {
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 50px rgba(220,202,187,0.45)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 30px rgba(220,202,187,0.3)"; }}
             >
-              Book Private Session →
+              {t("vip_btn")}
             </Link>
           </div>
         </div>
@@ -864,15 +869,15 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════
           SECTION 10 — NEWSLETTER
       ══════════════════════════════════════════════ */}
-      <section style={{ padding: "100px 60px", background: "var(--dark)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
+      <section className="responsive-pad" style={{ padding: "100px 60px", background: "var(--dark)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
         <div style={{ maxWidth: "650px", margin: "0 auto", textAlign: "center" }}>
           <div className="fade-up">
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>✦ Join the Circle</span>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("news_eyebrow")}</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              Receive Olfactory Stories
+              {t("news_title")}
             </h2>
             <p style={{ color: "var(--white-muted)", marginTop: "16px", marginBottom: "40px", fontSize: "0.95rem", lineHeight: 1.8 }}>
-              Be the first to know about new collection releases, private sales, and master perfumer insights. No spam, ever.
+              {t("news_desc")}
             </p>
             {subscribed ? (
               <div style={{
@@ -880,7 +885,7 @@ export default function HomePage() {
                 borderRadius: "50px", padding: "18px 40px",
                 color: "#4caf50", fontSize: "0.9rem", letterSpacing: "0.05em",
               }}>
-                ✓ Welcome to the Maison Luxe Circle!
+                {t("news_success")}
               </div>
             ) : (
               <form onSubmit={handleSubscribe} style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -889,7 +894,7 @@ export default function HomePage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email address"
+                  placeholder={t("news_placeholder")}
                   required
                   style={{
                     flex: 1, minWidth: "260px", maxWidth: "340px",
@@ -916,7 +921,7 @@ export default function HomePage() {
                   onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 35px rgba(220,202,187,0.4)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(220,202,187,0.25)"; }}
                 >
-                  Subscribe
+                  {t("news_btn")}
                 </button>
               </form>
             )}
@@ -932,6 +937,7 @@ export default function HomePage() {
 /* ─── Home Product Card ─── */
 function HomeProductCard({ product, index }: { product: any; index: number }) {
   const { addToCart, isInCart } = useCart();
+  const { t } = useLanguage();
   const [hovered, setHovered] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -1003,7 +1009,7 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
               cursor: "pointer",
             }}
           >
-            {added ? "✓ Added!" : isInCart(product.id) ? "✓ In Cart" : "+ Cart"}
+            {added ? t("prod_added") : isInCart(product.id) ? t("prod_in_cart") : t("prod_add")}
           </button>
           <div style={{
             background: "rgba(10,15,36,0.85)", backdropFilter: "blur(8px)",
@@ -1012,7 +1018,7 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
             fontSize: "0.73rem", fontWeight: 600,
             letterSpacing: "0.07em", textTransform: "uppercase",
           }}>
-            Details →
+            {t("prod_details")}
           </div>
         </div>
       </div>
@@ -1021,7 +1027,7 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
       <div style={{ padding: "22px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
           <span style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            {product.category || "Luxury"}
+            {product.category || t("prod_luxury")}
           </span>
           <div style={{ color: "var(--gold)", fontSize: "0.65rem", letterSpacing: "1px" }}>★★★★★</div>
         </div>

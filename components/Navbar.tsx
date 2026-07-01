@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCart } from "@/app/context/CartContext";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const { totalItems } = useCart();
+  const { t, lang, isRTL, toggleLang } = useLanguage();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -21,12 +23,12 @@ export default function Navbar() {
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const links = [
-    { name: "Home", href: "/" },
-    { name: "Products", href: "/products" },
-    { name: "Collection", href: "/category" },
-    { name: "About Us", href: "/about" },
-    { name: "Blog", href: "/blog" },
-    { name: "Contact", href: "/contact" },
+    { name: t("nav_home"), href: "/" },
+    { name: t("nav_products"), href: "/products" },
+    { name: t("nav_collection"), href: "/category" },
+    { name: t("nav_about"), href: "/about" },
+    { name: t("nav_blog"), href: "/blog" },
+    { name: t("nav_contact"), href: "/contact" },
   ];
 
   return (
@@ -34,18 +36,18 @@ export default function Navbar() {
       <header className="header-container">
         {/* ─── ANNOUNCEMENT BAR ─── */}
         <div className="announcement-bar">
-          <div className="announcement-track">
-            <div className="announcement-item">✦ 10% OFF YOUR FIRST ORDER | USE CODE: LUXE10 ✦</div>
-            <div className="announcement-item">✦ FREE SHIPPING ON ALL EGYPTIAN ORDERS ABOVE 1500 EGP ✦</div>
-            <div className="announcement-item">✦ EXPERIENCE THE ART OF INVISIBLE BEAUTY ✦</div>
-            <div className="announcement-item">✦ 10% OFF YOUR FIRST ORDER | USE CODE: LUXE10 ✦</div>
-            <div className="announcement-item">✦ FREE SHIPPING ON ALL EGYPTIAN ORDERS ABOVE 1500 EGP ✦</div>
-            <div className="announcement-item">✦ EXPERIENCE THE ART OF INVISIBLE BEAUTY ✦</div>
+          <div className="announcement-track" style={{ direction: isRTL ? "rtl" : "ltr" }}>
+            <div className="announcement-item">{t("ann_1")}</div>
+            <div className="announcement-item">{t("ann_2")}</div>
+            <div className="announcement-item">{t("ann_3")}</div>
+            <div className="announcement-item">{t("ann_1")}</div>
+            <div className="announcement-item">{t("ann_2")}</div>
+            <div className="announcement-item">{t("ann_3")}</div>
           </div>
         </div>
 
         {/* ─── NAVBAR ─── */}
-        <nav className={`navbar${scrolled ? " navbar-scrolled" : ""}`}>
+        <nav className={`navbar${scrolled ? " navbar-scrolled" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
           <Link href="/" className="navbar-brand">
             Maison<span> Luxe</span>
           </Link>
@@ -63,12 +65,24 @@ export default function Navbar() {
               );
             })}
             <li>
-              <Link href="/dashboard" className="navbar-cta">Dashboard</Link>
+              <Link href="/dashboard" className="navbar-cta">{t("nav_dashboard")}</Link>
             </li>
           </ul>
 
-          {/* Right side: Cart + Hamburger */}
+          {/* Right side: Lang Toggle + Cart + Hamburger */}
           <div className="navbar-right">
+
+            {/* Language Toggle Button */}
+            <button
+              onClick={toggleLang}
+              className="lang-toggle-btn"
+              aria-label="Toggle language"
+              title={lang === "en" ? "Switch to Arabic" : "Switch to English"}
+            >
+              <span className="lang-toggle-icon">{lang === "en" ? "🌐" : "🌐"}</span>
+              <span className="lang-toggle-text">{t("lang_btn")}</span>
+            </button>
+
             <Link href="/cart" className="cart-icon-btn" aria-label="Cart">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -95,7 +109,7 @@ export default function Navbar() {
       </header>
 
       {/* ─── MOBILE DRAWER ─── */}
-      <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`}>
+      <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         <div className="mobile-drawer-inner">
           <div className="mobile-drawer-brand">Maison Luxe</div>
           <ul className="mobile-nav-links">
@@ -111,11 +125,19 @@ export default function Navbar() {
             ))}
           </ul>
           <div className="mobile-drawer-actions">
+            {/* Mobile Language Toggle */}
+            <button
+              onClick={() => { toggleLang(); setMobileOpen(false); }}
+              className="lang-toggle-btn-mobile"
+              aria-label="Toggle language"
+            >
+              🌐 {t("lang_btn")}
+            </button>
             <Link href="/cart" className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center" }}>
-              🛍 View Cart {totalItems > 0 && `(${totalItems})`}
+              🛍 {t("nav_cart")} {totalItems > 0 && `(${totalItems})`}
             </Link>
             <Link href="/dashboard" className="btn-gold-outline" style={{ textAlign: "center", marginTop: "12px" }}>
-              Dashboard
+              {t("nav_dashboard")}
             </Link>
           </div>
         </div>

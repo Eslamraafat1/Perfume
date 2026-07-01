@@ -56,7 +56,7 @@ export default function CartPage() {
         </div>
       </section>
 
-      <section style={{ padding: "60px 60px 120px", maxWidth: "1200px", margin: "0 auto" }}>
+      <section className="responsive-pad" style={{ padding: "60px 60px 120px", maxWidth: "1200px", margin: "0 auto" }}>
         {items.length === 0 ? (
           /* ─── EMPTY STATE ─── */
           <div style={{ textAlign: "center", padding: "100px 20px" }}>

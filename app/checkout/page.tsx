@@ -191,8 +191,8 @@ export default function CheckoutPage() {
         </div>
       </section>
 
-      <section style={{ padding: "60px 60px 120px", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "40px" }} className="checkout-grid">
+      <section className="responsive-pad" style={{ padding: "60px 60px 120px", maxWidth: "1200px", margin: "0 auto" }}>
+        <div className="checkout-grid">
           
           {/* Left Column: Shipping & Payment Details */}
           <div className="checkout-col-left">
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
                     />
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  <div className="checkout-form-row-2">
                     <div className="form-group">
                       <label className="form-label">Email Address *</label>
                       <input
@@ -241,7 +241,7 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "20px" }}>
+                  <div className="checkout-form-row-1-2">
                     <div className="form-group">
                       <label className="form-label">Governorate *</label>
                       <select

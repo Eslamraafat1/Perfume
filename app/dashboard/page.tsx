@@ -199,8 +199,35 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* ─── MAIN ─── */}
       <main className="dashboard-main">
+        {/* Mobile Navigation Tabs */}
+        <div className="dashboard-mobile-nav">
+          <button
+            className={`dashboard-mobile-nav-item ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </button>
+          <button
+            className={`dashboard-mobile-nav-item ${activeTab === "add" ? "active" : ""}`}
+            onClick={() => setActiveTab("add")}
+          >
+            Add Product
+          </button>
+          <button
+            className={`dashboard-mobile-nav-item ${activeTab === "products" ? "active" : ""}`}
+            onClick={() => setActiveTab("products")}
+          >
+            Products
+          </button>
+          <button
+            className={`dashboard-mobile-nav-item ${activeTab === "content" ? "active" : ""}`}
+            onClick={() => setActiveTab("content")}
+          >
+            Site Content
+          </button>
+        </div>
+
         {/* Topbar */}
         <div className="dashboard-topbar">
           <h1 className="topbar-title">
@@ -752,7 +779,7 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
               Category {n}
             </div>
             <ImageField label={`Category ${n} Image`} fieldKey={`cat${n}_image`} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <div className="checkout-form-row-2" style={{ gap: "0 24px" }}>
               <TextField label="Name (الاسم)" fieldKey={`cat${n}_name`} />
               <TextField label="Subtitle (الوصف الصغير)" fieldKey={`cat${n}_sub`} />
             </div>

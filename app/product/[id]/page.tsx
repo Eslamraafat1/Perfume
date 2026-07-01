@@ -334,13 +334,8 @@ export default function ProductDetailsPage() {
       </div>
 
       {/* ─── SECTION 1: HERO DETAIL ─── */}
-      <section style={{ padding: "40px 60px 80px", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "80px",
-          alignItems: "start",
-        }}>
+      <section className="responsive-pad" style={{ padding: "40px 60px 80px", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+        <div className="pd-grid">
           {/* ── LEFT: Image Column ── */}
           <div style={{ position: "sticky", top: "120px" }}>
             {/* Main image with 3D effect */}
@@ -732,7 +727,7 @@ export default function ProductDetailsPage() {
         zIndex: 2,
       }}>
         {/* Tab Nav */}
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", borderBottom: "1px solid rgba(220,202,187,0.08)" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", borderBottom: "1px solid rgba(220,202,187,0.08)" }}>
           <div style={{ display: "flex", gap: "0" }}>
             {(["notes", "ritual", "story"] as const).map((tab) => (
               <button
@@ -857,7 +852,7 @@ export default function ProductDetailsPage() {
 
           {/* STORY TAB */}
           {activeTab === "story" && (
-            <div className="reveal-el" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "70px", alignItems: "center" }}>
+            <div className="reveal-el about-grid" style={{ alignItems: "center" }}>
               <div>
                 <span className="section-tag" style={{ color: "var(--gold)" }}>✦ Our Heritage</span>
                 <h2 className="section-title" style={{ marginTop: "12px", fontSize: "2.4rem", marginBottom: "24px" }}>
@@ -888,7 +883,7 @@ export default function ProductDetailsPage() {
 
       {/* ─── SECTION 3: RELATED PRODUCTS ─── */}
       {relatedProducts.length > 0 && (
-        <section style={{ padding: "100px 60px 120px", background: "var(--dark-2)", position: "relative", zIndex: 2 }}>
+        <section className="responsive-pad" style={{ padding: "100px 60px 120px", background: "var(--dark-2)", position: "relative", zIndex: 2 }}>
           <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "50px", flexWrap: "wrap", gap: "20px" }}>
               <div>
