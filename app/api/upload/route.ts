@@ -14,15 +14,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.json(
-        { error: "Supabase credentials are not configured on the server." },
-        { status: 500 }
-      );
-    }
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey);

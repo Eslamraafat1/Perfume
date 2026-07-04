@@ -14,13 +14,12 @@ const isValidUrl = (url: string | undefined): boolean => {
   }
 };
 
-const supabaseUrl = isValidUrl(rawUrl) ? rawUrl! : "https://placeholder-url-please-set-in-env.supabase.co";
-const supabaseAnonKey = rawKey && rawKey !== "your-anon-key-here" ? rawKey : "placeholder-anon-key";
+const supabaseUrl = isValidUrl(rawUrl) ? rawUrl! : "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
+const supabaseAnonKey = rawKey && rawKey !== "your-anon-key-here" ? rawKey : "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
 
 if (!isValidUrl(rawUrl) || !rawKey || rawKey === "your-anon-key-here") {
-  console.warn(
-    "⚠️ WARNING: Supabase environment variables are missing or invalid.\n" +
-    "Please update NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env.local file."
+  console.log(
+    "ℹ️ INFO: Supabase environment variables are missing in process.env. Using fallback credentials."
   );
 }
 
