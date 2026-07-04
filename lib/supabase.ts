@@ -14,12 +14,27 @@ const isValidUrl = (url: string | undefined): boolean => {
   }
 };
 
-const supabaseUrl = isValidUrl(rawUrl) ? rawUrl! : "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
-const supabaseAnonKey = rawKey && rawKey !== "your-anon-key-here" ? rawKey : "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
+const isPlaceholderUrl = (url: string | undefined): boolean => {
+  if (!url) return true;
+  return url.includes("placeholder-url-please-set-in-env") || url.includes("your-supabase-url");
+};
 
-if (!isValidUrl(rawUrl) || !rawKey || rawKey === "your-anon-key-here") {
+const isPlaceholderKey = (key: string | undefined): boolean => {
+  if (!key) return true;
+  return key === "placeholder-anon-key" || key === "your-anon-key-here";
+};
+
+const supabaseUrl = isValidUrl(rawUrl) && !isPlaceholderUrl(rawUrl)
+  ? rawUrl!
+  : "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
+
+const supabaseAnonKey = rawKey && !isPlaceholderKey(rawKey)
+  ? rawKey
+  : "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
+
+if (!isValidUrl(rawUrl) || isPlaceholderUrl(rawUrl) || isPlaceholderKey(rawKey)) {
   console.log(
-    "ℹ️ INFO: Supabase environment variables are missing in process.env. Using fallback credentials."
+    "ℹ️ INFO: Supabase environment variables are missing or placeholders in process.env. Using fallback credentials."
   );
 }
 

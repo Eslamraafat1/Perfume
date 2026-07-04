@@ -14,8 +14,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
+    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || supabaseUrl.includes("placeholder-url-please-set-in-env") || supabaseUrl.includes("your-supabase-url")) {
+      supabaseUrl = "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
+    }
+
+    if (!supabaseAnonKey || supabaseAnonKey === "placeholder-anon-key" || supabaseAnonKey === "your-anon-key-here") {
+      supabaseAnonKey = "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
+    }
 
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
