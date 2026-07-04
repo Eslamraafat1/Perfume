@@ -109,21 +109,22 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
       // Always unique name — no need for upsert/UPDATE permission
       const fileName = `site/${key}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,          // always new file → only needs INSERT policy
-          contentType: file.type,
-        });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("fileName", fileName);
 
-      if (uploadError) {
-        console.error("[SiteContent] Storage upload error:", uploadError);
-        throw new Error(`Upload error: ${uploadError.message}`);
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json();
+        throw new Error(`Upload error: ${errData.error || uploadRes.statusText}`);
       }
 
-      const { data: urlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
-      await update(key, urlData.publicUrl);
+      const uploadData = await uploadRes.json();
+      await update(key, uploadData.imageUrl);
     },
     [update]
   );

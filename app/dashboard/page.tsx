@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useProducts } from "../context/ProductContext";
 import { useSiteContent } from "../context/SiteContentContext";
@@ -10,6 +10,33 @@ export default function DashboardPage() {
   const { products, loading, addProduct, deleteProduct } = useProducts();
   const { get: sc, update: scUpdate, uploadImageAndUpdate } = useSiteContent();
   const [activeTab, setActiveTab] = useState<"overview" | "add" | "products" | "content">("overview");
+
+  const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "missing_env" | "error">("checking");
+  const [dbErrorMessage, setDbErrorMessage] = useState("");
+
+  useEffect(() => {
+    async function checkConnection() {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      if (!url || !key || url.includes("placeholder-url-please-set-in-env") || key === "placeholder-anon-key") {
+        setDbStatus("missing_env");
+        return;
+      }
+      try {
+        const { error } = await supabase.from("products").select("id").limit(1);
+        if (error) {
+          setDbStatus("error");
+          setDbErrorMessage(error.message);
+        } else {
+          setDbStatus("connected");
+        }
+      } catch (err) {
+        setDbStatus("error");
+        setDbErrorMessage(err instanceof Error ? err.message : "Network error");
+      }
+    }
+    checkConnection();
+  }, []);
 
   // Form state
   const [name, setName] = useState("");
@@ -81,30 +108,30 @@ export default function DashboardPage() {
 
     setIsSubmitting(true);
     try {
-      // Step 1: Upload image to Supabase Storage
+      // Step 1: Upload image to Supabase Storage via Server API Route (bypasses browser CORS & adblockers)
       setUploadProgress("Uploading image to Supabase Storage...");
       const ext = imageFile.name.split(".").pop() ?? "jpg";
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .upload(fileName, imageFile, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: imageFile.type,
-        });
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      formData.append("fileName", fileName);
 
-      if (uploadError) {
-        throw new Error(`Image upload failed: ${uploadError.message}`);
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const errData = await uploadRes.json();
+        throw new Error(`Image upload failed: ${errData.error || uploadRes.statusText}`);
       }
 
-      // Step 2: Get public URL of uploaded image
-      setUploadProgress("Saving product to database...");
-      const { data: urlData } = supabase.storage
-        .from(STORAGE_BUCKET)
-        .getPublicUrl(fileName);
+      const uploadData = await uploadRes.json();
+      const image_url = uploadData.imageUrl;
 
-      const image_url = urlData.publicUrl;
+      // Step 2: Add product record to database
+      setUploadProgress("Saving product to database...");
 
       // Step 3: Add product record to database
       await addProduct({
@@ -193,8 +220,27 @@ export default function DashboardPage() {
         </nav>
 
         <div className="sidebar-footer">
-          <div style={{ fontSize: "0.75rem", color: "var(--white-muted)", letterSpacing: "0.05em" }}>
-            <span style={{ color: "#22c55e" }}>●</span>&nbsp; Supabase Connected
+          <div style={{ fontSize: "0.75rem", color: "var(--white-muted)", letterSpacing: "0.05em", display: "flex", flexDirection: "column", gap: "4px" }}>
+            {dbStatus === "checking" && (
+              <div>
+                <span style={{ color: "#eab308" }}>●</span>&nbsp; Checking Supabase...
+              </div>
+            )}
+            {dbStatus === "connected" && (
+              <div>
+                <span style={{ color: "#22c55e" }}>●</span>&nbsp; Supabase Connected
+              </div>
+            )}
+            {dbStatus === "missing_env" && (
+              <div style={{ color: "#ef4444" }}>
+                <span style={{ color: "#ef4444" }}>●</span>&nbsp; Config Missing (.env.local)
+              </div>
+            )}
+            {dbStatus === "error" && (
+              <div style={{ color: "#ef4444" }} title={dbErrorMessage}>
+                <span style={{ color: "#ef4444" }}>●</span>&nbsp; Connection Failed
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -326,6 +372,38 @@ export default function DashboardPage() {
               <p className="dashboard-card-subtitle">
                 Image uploads go to Supabase Storage. Product data saves to PostgreSQL.
               </p>
+
+              {dbStatus === "missing_env" && (
+                <div style={{
+                  padding: "12px 16px",
+                  borderRadius: "6px",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#f87171",
+                  fontSize: "0.85rem",
+                  marginBottom: "20px",
+                  lineHeight: "1.5"
+                }}>
+                  <strong>⚠️ Supabase Configuration Missing:</strong> Environment variables are not loaded by Next.js.
+                  Please update <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in your <code>.env.local</code> file,
+                  then stop your terminal (Ctrl+C) and run <code>npm run dev</code> again to apply the changes.
+                </div>
+              )}
+              {dbStatus === "error" && (
+                <div style={{
+                  padding: "12px 16px",
+                  borderRadius: "6px",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.3)",
+                  color: "#f87171",
+                  fontSize: "0.85rem",
+                  marginBottom: "20px",
+                  lineHeight: "1.5"
+                }}>
+                  <strong>⚠️ Supabase Connection Error:</strong> {dbErrorMessage || "Could not connect to the database."}
+                  Please check your internet connection or verify your Supabase API keys in <code>.env.local</code>.
+                </div>
+              )}
 
               <form id="add-product-form" onSubmit={handleSubmit}>
                 <div className="form-grid">
