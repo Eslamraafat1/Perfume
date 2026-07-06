@@ -111,7 +111,7 @@ export default function Navbar() {
       {/* ─── MOBILE DRAWER ─── */}
       <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         <div className="mobile-drawer-inner">
-          <div className="mobile-drawer-brand">Maison Luxe</div>
+          <div className="mobile-drawer-brand">Nubia</div>
           <ul className="mobile-nav-links">
             {links.map((link) => (
               <li key={link.href}>

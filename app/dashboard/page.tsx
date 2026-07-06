@@ -166,7 +166,7 @@ export default function DashboardPage() {
       <aside className="dashboard-sidebar">
         <div className="sidebar-logo">
           <Link href="/" style={{ textDecoration: "none" }}>
-            <span className="sidebar-logo-text">Maison Luxe</span>
+            <span className="sidebar-logo-text">Nubia</span>
             <span className="sidebar-logo-sub">Admin Dashboard</span>
           </Link>
         </div>
@@ -722,6 +722,7 @@ interface SCEditorProps {
 
 function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SCEditorProps) {
   const [saving, setSaving] = useState<string | null>(null);
+  const [editLang, setEditLang] = useState<"en" | "ar">("ar");
 
   async function saveText(key: string, value: string) {
     setSaving(key);
@@ -747,19 +748,25 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
     }
   }
 
-  function TextField({ label, fieldKey, multiline = false }: { label: string; fieldKey: string; multiline?: boolean }) {
-    const [val, setVal] = useState(sc(fieldKey));
-    const isSavingThis = saving === fieldKey;
+  function TextField({ label, fieldKey, multiline = false, languageSpecific = true }: { label: string; fieldKey: string; multiline?: boolean; languageSpecific?: boolean }) {
+    const actualKey = languageSpecific ? `${editLang}_${fieldKey}` : fieldKey;
+    const [val, setVal] = useState(sc(actualKey));
+    
+    useEffect(() => {
+      setVal(sc(actualKey));
+    }, [actualKey, sc]);
+
+    const isSavingThis = saving === actualKey;
     return (
       <div className="form-group" style={{ marginBottom: "16px" }}>
-        <label className="form-label">{label}</label>
+        <label className="form-label">{label} <span style={{opacity:0.4, fontSize:"0.7rem"}}>({actualKey})</span></label>
         {multiline ? (
           <textarea
             className="form-textarea"
             rows={3}
             value={val}
             onChange={(e) => setVal(e.target.value)}
-            style={{ fontSize: "0.88rem" }}
+            style={{ fontSize: "0.88rem", direction: editLang === "ar" && languageSpecific ? "rtl" : "ltr" }}
           />
         ) : (
           <input
@@ -767,14 +774,14 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
             type="text"
             value={val}
             onChange={(e) => setVal(e.target.value)}
-            style={{ fontSize: "0.88rem" }}
+            style={{ fontSize: "0.88rem", direction: editLang === "ar" && languageSpecific ? "rtl" : "ltr" }}
           />
         )}
         <button
           className="btn-submit"
           style={{ marginTop: "8px", padding: "8px 20px", fontSize: "0.78rem" }}
           disabled={isSavingThis}
-          onClick={() => saveText(fieldKey, val)}
+          onClick={() => saveText(actualKey, val)}
         >
           {isSavingThis ? "Saving…" : "Save"}
         </button>
@@ -787,7 +794,7 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
     const currentImg = sc(fieldKey);
     return (
       <div className="form-group" style={{ marginBottom: "20px" }}>
-        <label className="form-label">{label}</label>
+        <label className="form-label">{label} <span style={{opacity:0.4, fontSize:"0.7rem"}}>({fieldKey})</span></label>
         <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "8px", flexWrap: "wrap" }}>
           <div style={{ width: "100px", height: "100px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(201,169,110,0.2)", flexShrink: 0, background: "rgba(255,255,255,0.03)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -822,20 +829,45 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "100px" }}>
+
+      {/* LANGUAGE TOGGLE */}
+      <div style={{ position: "sticky", top: "70px", zIndex: 10, display: "flex", gap: "12px", background: "rgba(20,20,20,0.9)", backdropFilter: "blur(10px)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(201,169,110,0.4)", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+        <div style={{ marginRight: "auto", display: "flex", alignItems: "center", fontWeight: 600, color: "var(--gold)" }}>
+          🌐 Editing Language / لغة التعديل:
+        </div>
+        <button className={editLang === "ar" ? "btn-submit" : "btn-reset"} onClick={() => setEditLang("ar")}>عربي (Arabic)</button>
+        <button className={editLang === "en" ? "btn-submit" : "btn-reset"} onClick={() => setEditLang("en")}>English</button>
+      </div>
+
+      {/* ── GENERAL (Navbar & Announce) ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">🌐 General Settings</h2>
+        <div style={{ marginTop: "24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Announcement 1" fieldKey="ann_1" />
+          <TextField label="Announcement 2" fieldKey="ann_2" />
+          <TextField label="Nav: Home" fieldKey="nav_home" />
+          <TextField label="Nav: Products" fieldKey="nav_products" />
+          <TextField label="Nav: Collection" fieldKey="nav_collection" />
+          <TextField label="Nav: About Us" fieldKey="nav_about" />
+        </div>
+      </div>
 
       {/* ── HERO SECTION ── */}
       <div className="dashboard-card">
         <h2 className="dashboard-card-title">🏠 Hero Section</h2>
-        <p className="dashboard-card-subtitle">الصورة والنصوص اللي بتظهر في أول الصفحة الرئيسية</p>
         <div style={{ marginTop: "24px" }}>
-          <ImageField label="Hero Image (الصورة الرئيسية)" fieldKey="hero_image" />
+          <ImageField label="Hero Background Image" fieldKey="hero_image" />
           <div style={{ borderTop: "1px solid rgba(220,202,187,0.1)", paddingTop: "20px", marginTop: "8px" }}>
-            <TextField label="Eyebrow Text (النص فوق العنوان)" fieldKey="hero_eyebrow" />
-            <TextField label="Title Line 1 (السطر الأول)" fieldKey="hero_title_1" />
-            <TextField label="Title Line 2 — Gold Italic (السطر الذهبي المائل)" fieldKey="hero_title_2" />
-            <TextField label="Title Line 3 (السطر الثالث)" fieldKey="hero_title_3" />
-            <TextField label="Subtitle (الوصف تحت العنوان)" fieldKey="hero_subtitle" multiline />
+            <TextField label="Eyebrow Text" fieldKey="hero_eyebrow" />
+            <TextField label="Title Line 1" fieldKey="hero_title_1" />
+            <TextField label="Title Line 2 (Gold Italic)" fieldKey="hero_title_2" />
+            <TextField label="Title Line 3" fieldKey="hero_title_3" />
+            <TextField label="Subtitle" fieldKey="hero_subtitle" multiline />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+              <TextField label="Primary Button" fieldKey="hero_btn_primary" />
+              <TextField label="Secondary Button" fieldKey="hero_btn_secondary" />
+            </div>
           </div>
         </div>
       </div>
@@ -843,22 +875,159 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
       {/* ── CATEGORIES ── */}
       <div className="dashboard-card">
         <h2 className="dashboard-card-title">🗂️ Categories Section</h2>
-        <p className="dashboard-card-subtitle">الكاتيجوريز الأربعة اللي بتظهر في قسم &quot;Shop by Collection&quot;</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Section Eyebrow" fieldKey="cat_eyebrow" />
+          <TextField label="Section Title" fieldKey="cat_title" />
+        </div>
+        <TextField label="Section Description" fieldKey="cat_desc" multiline />
 
         {([1, 2, 3, 4] as const).map((n) => (
-          <div key={n} style={{ marginTop: "28px", paddingTop: "24px", borderTop: n > 1 ? "1px solid rgba(220,202,187,0.1)" : "none" }}>
+          <div key={n} style={{ marginTop: "28px", paddingTop: "24px", borderTop: "1px solid rgba(220,202,187,0.1)" }}>
             <div style={{ fontSize: "0.8rem", color: "var(--gold)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "16px" }}>
               Category {n}
             </div>
             <ImageField label={`Category ${n} Image`} fieldKey={`cat${n}_image`} />
             <div className="checkout-form-row-2" style={{ gap: "0 24px" }}>
-              <TextField label="Name (الاسم)" fieldKey={`cat${n}_name`} />
-              <TextField label="Subtitle (الوصف الصغير)" fieldKey={`cat${n}_sub`} />
+              <TextField label="Name" fieldKey={`cat${n}_name`} />
+              <TextField label="Subtitle" fieldKey={`cat${n}_sub`} />
             </div>
           </div>
         ))}
       </div>
 
+      {/* ── PROCESS SECTION ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">⏳ Process (From Seed to Bottle)</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Section Eyebrow" fieldKey="proc_eyebrow" />
+          <TextField label="Section Title" fieldKey="proc_title" />
+        </div>
+        <TextField label="Section Description" fieldKey="proc_desc" multiline />
+
+        {([1, 2, 3, 4] as const).map((n) => (
+          <div key={n} style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(220,202,187,0.1)" }}>
+            <div style={{ fontSize: "0.8rem", color: "var(--gold)", textTransform: "uppercase", marginBottom: "12px" }}>Step {n}</div>
+            <TextField label="Step Title" fieldKey={`proc_step${n}_title`} />
+            <TextField label="Step Description" fieldKey={`proc_step${n}_desc`} multiline />
+          </div>
+        ))}
+      </div>
+
+      {/* ── NOTES / INGREDIENTS ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">🌿 Rare Ingredients</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Section Eyebrow" fieldKey="notes_eyebrow" />
+          <TextField label="Title Line 1" fieldKey="notes_title_1" />
+          <TextField label="Title Line 2" fieldKey="notes_title_2" />
+        </div>
+        <TextField label="Section Description" fieldKey="notes_desc" multiline />
+
+        {([1, 2, 3, 4, 5, 6] as const).map((n) => (
+          <div key={n} style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px solid rgba(220,202,187,0.1)" }}>
+            <div style={{ fontSize: "0.8rem", color: "var(--gold)", textTransform: "uppercase", marginBottom: "12px" }}>Ingredient {n}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+              <TextField label="Name" fieldKey={`note${n}_name`} />
+              <TextField label="Origin" fieldKey={`note${n}_origin`} />
+            </div>
+            <TextField label="Description" fieldKey={`note${n}_desc`} multiline />
+          </div>
+        ))}
+      </div>
+
+      {/* ── STORY & TESTIMONIALS ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">📖 Brand Story & Testimonials</h2>
+        
+        <div style={{ fontSize: "0.8rem", color: "var(--gold)", textTransform: "uppercase", marginBottom: "12px" }}>Brand Story</div>
+        <TextField label="Story Eyebrow" fieldKey="story_eyebrow" />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Story Title 1" fieldKey="story_title_1" />
+          <TextField label="Story Title 2" fieldKey="story_title_2" />
+        </div>
+        <TextField label="Paragraph 1" fieldKey="story_p1" multiline />
+        <TextField label="Paragraph 2" fieldKey="story_p2" multiline />
+
+        <div style={{ fontSize: "0.8rem", color: "var(--gold)", textTransform: "uppercase", marginTop: "32px", marginBottom: "12px", borderTop: "1px solid rgba(220,202,187,0.1)", paddingTop: "20px" }}>Testimonials</div>
+        <TextField label="Testimonial Section Title" fieldKey="test_title" />
+        
+        {([1, 2, 3] as const).map((n) => (
+          <div key={n} style={{ marginTop: "20px", padding: "16px", background: "rgba(255,255,255,0.02)", borderRadius: "8px" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--white-muted)", marginBottom: "12px" }}>Review {n}</div>
+            <TextField label="Customer Name" fieldKey={`test${n}_name`} />
+            <TextField label="Product Reviewed" fieldKey={`test${n}_product`} />
+            <TextField label="Review Text" fieldKey={`test${n}_text`} multiline />
+          </div>
+        ))}
+      </div>
+
+      {/* ── NEW: THE ART OF GIFTING ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">🎁 The Art of Gifting</h2>
+        <div style={{ marginTop: "24px" }}>
+          <ImageField label="Gifting Background/Product Image" fieldKey="gift_image" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <TextField label="Eyebrow Text" fieldKey="gift_eyebrow" />
+            <TextField label="Title" fieldKey="gift_title" />
+          </div>
+          <TextField label="Description" fieldKey="gift_desc" multiline />
+          <TextField label="Button Text" fieldKey="gift_btn" />
+        </div>
+      </div>
+
+      {/* ── NEW: SIGNATURE DISCOVERY ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">🔍 Signature Discovery (CTA)</h2>
+        <div style={{ marginTop: "24px" }}>
+          <ImageField label="Discovery Background Image" fieldKey="sig_image" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <TextField label="Title Line 1" fieldKey="sig_title_1" />
+            <TextField label="Title Line 2" fieldKey="sig_title_2" />
+          </div>
+          <TextField label="Description" fieldKey="sig_desc" multiline />
+          <TextField label="Button Text" fieldKey="sig_btn" />
+        </div>
+      </div>
+
+      {/* ── NEW: EDITORIAL SPOTLIGHT ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">📖 Editorial Spotlight</h2>
+        <div style={{ marginTop: "24px" }}>
+          <ImageField label="Editorial Feature Image" fieldKey="edit_image" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <TextField label="Eyebrow Text" fieldKey="edit_eyebrow" />
+            <TextField label="Title" fieldKey="edit_title" />
+          </div>
+          <TextField label="Description" fieldKey="edit_desc" multiline />
+          <TextField label="Button Text" fieldKey="edit_btn" />
+        </div>
+      </div>
+
+      {/* ── NEW: CURATED LOOKBOOK ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">✨ Curated Lookbook / Spotlight</h2>
+        <div style={{ marginTop: "24px" }}>
+          <ImageField label="Lookbook Main Image" fieldKey="look_image" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+            <TextField label="Eyebrow Text" fieldKey="look_eyebrow" />
+            <TextField label="Title" fieldKey="look_title" />
+          </div>
+          <TextField label="Description" fieldKey="look_desc" multiline />
+          <TextField label="Button Text" fieldKey="look_btn" />
+        </div>
+      </div>
+
+      {/* ── FOOTER ── */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">⬇️ Footer</h2>
+        <TextField label="Footer Description" fieldKey="footer_desc" multiline />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
+          <TextField label="Copyright Text" fieldKey="footer_copyright" />
+          <TextField label="Made With Love Text" fieldKey="footer_made" />
+        </div>
+      </div>
+
     </div>
   );
 }
+

@@ -22,7 +22,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", fontWeight: 700, color: "var(--gold)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "16px" }}>
-              Maison Luxe
+              Nubia
             </div>
             <p style={{ color: "var(--white-muted)", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "28px", maxWidth: "280px" }}>
               {t("footer_desc")}
@@ -152,7 +152,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 0", flexWrap: "wrap", gap: "16px" }}>
           <span style={{ fontSize: "0.78rem", color: "rgba(220,202,187,0.4)" }}>
-            © {year} Maison Luxe. {t("footer_copyright")}
+            © {year} Nubia. {t("footer_copyright")}
           </span>
           <div style={{ display: "flex", gap: "24px" }}>
             {(["footer_privacy", "footer_terms", "footer_cookies"] as const).map((key) => (

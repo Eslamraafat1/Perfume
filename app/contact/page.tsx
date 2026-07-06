@@ -28,7 +28,7 @@ export default function ContactPage() {
 
   const faqs = [
     {
-      q: "How long do Maison Luxe perfumes last on skin?",
+      q: "How long do Nubia perfumes last on skin?",
       a: "Our fragrances are formulated at highly concentrated Extrait de Parfum levels. Thanks to our 90-day maturation vault process, woody and oud blends typically last 10–12 hours, while fresh citrus notes persist for 6–8 hours."
     },
     {

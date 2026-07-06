@@ -68,7 +68,7 @@ export default function AboutPage() {
             textTransform: "uppercase"
           }}>
             The Essence of <br />
-            <span className="gold-text">Maison Luxe</span>
+            <span className="gold-text">Nubia</span>
           </h1>
           <p style={{
             color: "var(--white-muted)",
@@ -77,7 +77,7 @@ export default function AboutPage() {
             maxWidth: "600px",
             margin: "0 auto"
           }}>
-            Established with a passion for olfactory excellence, Maison Luxe crafts premium niche fragrances that merge royal Eastern heritage with contemporary French sophistication.
+            Established with a passion for olfactory excellence, Nubia crafts premium niche fragrances that merge royal Eastern heritage with contemporary French sophistication.
           </p>
         </div>
       </section>
@@ -120,7 +120,7 @@ export default function AboutPage() {
                 Crafting Liquid Memories
               </h2>
               <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "20px" }}>
-                At Maison Luxe, we believe a fragrance is more than a scent—it is an invisible statement, a powerful form of self-expression that commands presence. 
+                At Nubia, we believe a fragrance is more than a scent—it is an invisible statement, a powerful form of self-expression that commands presence. 
               </p>
               <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "30px" }}>
                 Every bottle undergoes a rigorous 90-day maceration ritual in our climate-controlled dark vaults. This slow maturation allows the natural oils to bond, ensuring exceptional longevity, projection, and sillage.

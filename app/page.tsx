@@ -303,7 +303,7 @@ export default function HomePage() {
                   textAlign: "center",
                   whiteSpace: "nowrap",
                 }}>
-                  <div style={{ fontFamily: "var(--font-serif)", color: "var(--gold)", fontSize: "1.1rem", fontWeight: 700 }}>Maison Luxe</div>
+                  <div style={{ fontFamily: "var(--font-serif)", color: "var(--gold)", fontSize: "1.1rem", fontWeight: 700 }}>Nubia</div>
                   <div style={{ fontSize: "0.65rem", color: "rgba(220,202,187,0.6)", letterSpacing: "0.3em", textTransform: "uppercase", marginTop: "2px" }}>Extrait de Parfum</div>
                 </div>
               </div>
@@ -445,6 +445,35 @@ export default function HomePage() {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — CURATED LOOKBOOK
+      ══════════════════════════════════════════════ */}
+      <section className="lookbook-section responsive-pad" style={{ padding: "100px 60px", background: "var(--black)", position: "relative", overflow: "hidden" }}>
+        <div className="about-grid" style={{ maxWidth: "1300px", margin: "0 auto", alignItems: "center" }}>
+          <div className="fade-up" style={{ paddingRight: isRTL ? "0" : "40px", paddingLeft: isRTL ? "40px" : "0" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("look_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 4vw, 3.5rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1 }}>
+              {t("look_title")}
+            </h2>
+            <p style={{ color: "var(--white-muted)", marginTop: "24px", fontSize: "0.95rem", lineHeight: 1.8 }}>
+              {t("look_desc")}
+            </p>
+            <Link href="/products" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px", marginTop: "36px",
+              background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+              color: "var(--black)", padding: "16px 36px", borderRadius: "50px",
+              fontSize: "0.83rem", fontWeight: 700, letterSpacing: "0.12em",
+              textTransform: "uppercase", textDecoration: "none", fontFamily: "var(--font-sans)",
+            }}>{t("look_btn")}</Link>
+          </div>
+          <div className="fade-up" style={{ position: "relative", height: "600px", borderRadius: "24px", overflow: "hidden" }}>
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+             <img src={sc("look_image")} alt="Lookbook" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
           </div>
         </div>
       </section>
@@ -598,6 +627,35 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════
+          NEW SECTION — THE ART OF GIFTING
+      ══════════════════════════════════════════════ */}
+      <section className="gift-section responsive-pad" style={{ padding: "120px 60px", background: "var(--dark)", position: "relative" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", textAlign: "center" }}>
+          <div className="fade-up">
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("gift_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3.2rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
+              {t("gift_title")}
+            </h2>
+            <p style={{ color: "var(--white-muted)", marginTop: "16px", fontSize: "1rem", lineHeight: 1.8, maxWidth: "600px", margin: "16px auto 40px" }}>
+              {t("gift_desc")}
+            </p>
+          </div>
+          <div className="fade-up" style={{ position: "relative", height: "500px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.15)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={sc("gift_image")} alt="Art of Gifting" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
+              <Link href="/products" style={{
+                background: "rgba(10,15,36,0.8)", backdropFilter: "blur(10px)",
+                color: "var(--gold)", border: "1px solid rgba(220,202,187,0.4)",
+                padding: "16px 36px", borderRadius: "50px", fontSize: "0.85rem",
+                fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+              }}>{t("gift_btn")}</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
           SECTION 6 — RARE INGREDIENTS
       ══════════════════════════════════════════════ */}
       <section className="notes-marquee-section responsive-pad" style={{ padding: "120px 60px", background: "var(--dark-2)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
@@ -675,6 +733,33 @@ export default function HomePage() {
                 <p style={{ color: "var(--white-muted)", fontSize: "0.83rem", lineHeight: 1.7 }}>{note.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — EDITORIAL SPOTLIGHT
+      ══════════════════════════════════════════════ */}
+      <section className="editorial-section responsive-pad" style={{ background: "var(--black)", borderTop: "1px solid rgba(220,202,187,0.08)", padding: "100px 60px" }}>
+        <div className="about-grid" style={{ maxWidth: "1300px", margin: "0 auto", alignItems: "center" }}>
+          <div className="fade-up" style={{ position: "relative", height: "650px", borderRadius: "24px", overflow: "hidden" }}>
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+             <img src={sc("edit_image")} alt="Editorial" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div className="fade-up" style={{ paddingLeft: isRTL ? "0" : "40px", paddingRight: isRTL ? "40px" : "0" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("edit_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 4vw, 4rem)", marginTop: "16px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.05 }}>
+              {t("edit_title")}
+            </h2>
+            <p style={{ color: "var(--white-muted)", marginTop: "24px", fontSize: "1.05rem", lineHeight: 1.85, maxWidth: "480px" }}>
+              {t("edit_desc")}
+            </p>
+            <Link href="/blog" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px", marginTop: "40px",
+              borderBottom: "1px solid var(--gold)", color: "var(--gold)",
+              paddingBottom: "8px", fontSize: "0.83rem", fontWeight: 700,
+              letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+            }}>{t("edit_btn")}</Link>
           </div>
         </div>
       </section>
@@ -863,6 +948,31 @@ export default function HomePage() {
               {t("vip_btn")}
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — SIGNATURE DISCOVERY (CTA)
+      ══════════════════════════════════════════════ */}
+      <section className="discovery-section responsive-pad" style={{ padding: "120px 60px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={sc("sig_image")} alt="Background" style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.3) contrast(1.2)" }} />
+        </div>
+        <div className="fade-up" style={{ position: "relative", zIndex: 2, maxWidth: "800px", margin: "0 auto", textAlign: "center", background: "rgba(10,15,36,0.7)", backdropFilter: "blur(20px)", padding: "60px 40px", borderRadius: "24px", border: "1px solid rgba(220,202,187,0.2)", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 4vw, 3.5rem)", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1 }}>
+            {t("sig_title_1")}<br />
+            <span style={{ color: "var(--gold)", fontStyle: "italic" }}>{t("sig_title_2")}</span>
+          </h2>
+          <p style={{ color: "var(--white-muted)", marginTop: "20px", fontSize: "1rem", lineHeight: 1.8, marginBottom: "36px" }}>
+            {t("sig_desc")}
+          </p>
+          <Link href="/products" style={{
+            display: "inline-flex", alignItems: "center",
+            background: "var(--white)", color: "var(--black)",
+            padding: "18px 42px", borderRadius: "50px", fontSize: "0.85rem",
+            fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+          }}>{t("sig_btn")}</Link>
         </div>
       </section>
 

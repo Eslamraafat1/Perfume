@@ -19,12 +19,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Maison Luxe — Fine Fragrances",
+  title: "Nubia — Fine Fragrances",
   description:
     "Discover our exclusive collection of luxury perfumes. Each fragrance is a masterpiece crafted from the world's finest ingredients.",
   keywords: "luxury perfume, fine fragrance, oud, rose, niche perfume",
   openGraph: {
-    title: "Maison Luxe — Fine Fragrances",
+    title: "Nubia — Fine Fragrances",
     description: "Discover our exclusive collection of luxury perfumes.",
     type: "website",
   },
@@ -38,13 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body>
-        <LanguageProvider>
-          <CartProvider>
-            <SiteContentProvider>
+        <SiteContentProvider>
+          <LanguageProvider>
+            <CartProvider>
               <ProductProvider>{children}</ProductProvider>
-            </SiteContentProvider>
-          </CartProvider>
-        </LanguageProvider>
+            </CartProvider>
+          </LanguageProvider>
+        </SiteContentProvider>
       </body>
     </html>
   );

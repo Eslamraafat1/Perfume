@@ -95,7 +95,7 @@ export default function CheckoutPage() {
 
       // ── بناء رسالة الواتساب ──
       const msg = [
-        `🌹 *طلب جديد — Maison Luxe*`,
+        `🌹 *طلب جديد — Nubia*`,
         `━━━━━━━━━━━━━━━━━━`,
         `🔖 رقم الطلب: *${orderId}*`,
         ``,
@@ -118,7 +118,7 @@ export default function CheckoutPage() {
         ``,
         `💳 طريقة الدفع: ${paymentMethod === "cod" ? "الدفع عند الاستلام" : "بطاقة ائتمان"}`,
         `━━━━━━━━━━━━━━━━━━`,
-        `شكراً لاختيارك Maison Luxe ✦`,
+        `شكراً لاختيارك Nubia ✦`,
       ]
         .filter((line) => line !== null)
         .join("\n");
