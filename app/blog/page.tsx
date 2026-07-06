@@ -275,7 +275,7 @@ export default function BlogPage() {
           <div style={{ textAlign: "center", marginBottom: "60px" }}>
             <span className="section-tag" style={{ color: "var(--gold)" }}>✦ Community</span>
             <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "2.4rem", textTransform: "uppercase" }}>Scent Moments</h2>
-            <p style={{ color: "var(--white-muted)", fontSize: "0.92rem", marginTop: "10px" }}>Tag <strong style={{ color: "var(--gold)" }}>#MaisonLuxe</strong> on Instagram to be featured.</p>
+            <p style={{ color: "var(--white-muted)", fontSize: "0.92rem", marginTop: "10px" }}>Tag <strong style={{ color: "var(--gold)" }}>#Nubia</strong> on Instagram to be featured.</p>
           </div>
           <div className="about-grid">
             {INSTA_GALLERY.map((img, idx) => (

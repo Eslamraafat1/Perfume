@@ -161,8 +161,8 @@ export default function ContactPage() {
                 <div>
                   <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.2rem", color: "var(--white)", marginBottom: "8px" }}>Email</h3>
                   <p style={{ color: "var(--white-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-                    contact@maisonluxe.com<br/>
-                    concierge@maisonluxe.com
+                    contact@Nubia.com<br/>
+                    concierge@Nubia.com
                   </p>
                 </div>
               </div>
@@ -273,7 +273,7 @@ export default function ContactPage() {
               <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: "1.85", marginBottom: "32px" }}>
                 During a 45-minute session, we evaluate your scent family preferences, skin pH reaction, and personal aesthetic to curate a custom rotation of 3 signature fragrances that command presence.
               </p>
-              <a href="mailto:concierge@maisonluxe.com" className="btn-gold-outline" style={{ textDecoration: "none" }}>Email VIP Concierge</a>
+              <a href="mailto:concierge@Nubia.com" className="btn-gold-outline" style={{ textDecoration: "none" }}>Email VIP Concierge</a>
             </div>
             <div style={{ borderRadius: "20px", overflow: "hidden", border: "1px solid rgba(220, 202, 187, 0.15)" }} className="about-image">
               <img src="https://images.unsplash.com/photo-1547887537-6158d64c35b3?q=80&w=1000" alt="Boutique VIP Table" style={{ width: "100%", height: "100%", objectFit: "cover" }} />

@@ -49,7 +49,7 @@ export default function Navbar() {
         {/* ─── NAVBAR ─── */}
         <nav className={`navbar${scrolled ? " navbar-scrolled" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
           <Link href="/" className="navbar-brand">
-            Maison<span> Luxe</span>
+            Nubia
           </Link>
 
           {/* Desktop links */}
