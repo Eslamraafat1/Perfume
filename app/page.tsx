@@ -10,6 +10,7 @@ import { useSiteContent } from "./context/SiteContentContext";
 import { useLanguage } from "./context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import HeroCarousel from "@/components/HeroCarousel";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,7 +44,6 @@ export default function HomePage() {
   const { get: sc } = useSiteContent();
   const { t, isRTL } = useLanguage();
   const pageRef = useRef<HTMLDivElement>(null);
-  const heroBottleRef = useRef<HTMLDivElement>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -145,207 +145,9 @@ export default function HomePage() {
       <Navbar />
 
       {/* ══════════════════════════════════════════════
-          SECTION 1 — HERO
+          SECTION 1 — HERO CAROUSEL
       ══════════════════════════════════════════════ */}
-      <section style={{
-        minHeight: "100vh",
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        overflow: "hidden",
-        background: "linear-gradient(135deg, #06091a 0%, #0f1635 50%, #08122a 100%)",
-      }}>
-        {/* Grid bg */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "linear-gradient(rgba(220,202,187,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(220,202,187,0.035) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
-        }} />
-
-        {/* Ambient glows */}
-        <div style={{ position: "absolute", top: "10%", left: "5%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(220,202,187,0.07) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "5%", right: "5%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(25,41,84,0.6) 0%, transparent 70%)", borderRadius: "50%", pointerEvents: "none" }} />
-
-        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "120px 60px 80px", width: "100%", position: "relative", zIndex: 2 }}>
-          <div className="hero-grid">
-
-            {/* Left */}
-            <div>
-              <span className="h-eyebrow" style={{
-                display: "inline-flex", alignItems: "center", gap: "10px",
-                fontSize: "0.7rem", letterSpacing: "0.35em", textTransform: "uppercase",
-                color: "var(--gold)", border: "1px solid rgba(220,202,187,0.3)",
-                borderRadius: "40px", padding: "8px 20px", marginBottom: "32px",
-              }}>
-                <span style={{ width: "6px", height: "6px", background: "var(--gold)", borderRadius: "50%", animation: "pulse-dot 2s ease-in-out infinite" }} />
-                {t("hero_eyebrow")}
-              </span>
-
-              <h1 className="h-title" style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "clamp(3.2rem, 5.5vw, 5.5rem)",
-                fontWeight: 700,
-                lineHeight: 1.05,
-                marginBottom: "28px",
-                textTransform: "uppercase",
-                letterSpacing: "-0.01em",
-              }}>
-                <span style={{ display: "block" }}>{t("hero_title_1")}</span>
-                <span style={{ display: "block", background: "linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontStyle: "italic" }}>
-                  {t("hero_title_2")}
-                </span>
-                <span style={{ display: "block" }}>{t("hero_title_3")}</span>
-              </h1>
-
-              <p className="h-subtitle" style={{
-                color: "var(--white-muted)",
-                fontSize: "1rem",
-                lineHeight: 1.9,
-                maxWidth: "480px",
-                marginBottom: "44px",
-                borderLeft: "2px solid rgba(220,202,187,0.3)",
-                paddingLeft: "20px",
-              }}>
-                {t("hero_subtitle")}
-              </p>
-
-              <div className="h-actions" style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <Link href="/products" style={{
-                  display: "inline-flex", alignItems: "center", gap: "10px",
-                  background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-                  color: "var(--black)", padding: "17px 36px", borderRadius: "50px",
-                  fontSize: "0.83rem", fontWeight: 700, letterSpacing: "0.12em",
-                  textTransform: "uppercase", textDecoration: "none",
-                  boxShadow: "0 8px 30px rgba(220,202,187,0.3)",
-                  transition: "all 0.35s ease",
-                  fontFamily: "var(--font-sans)",
-                }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 50px rgba(220,202,187,0.45)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 30px rgba(220,202,187,0.3)"; }}
-                >
-                  {t("hero_btn_primary")}
-                </Link>
-                <Link href="/about" style={{
-                  display: "inline-flex", alignItems: "center", gap: "8px",
-                  background: "transparent", color: "var(--gold)",
-                  padding: "17px 32px", borderRadius: "50px",
-                  fontSize: "0.83rem", fontWeight: 500, letterSpacing: "0.1em",
-                  textTransform: "uppercase", textDecoration: "none",
-                  border: "1px solid rgba(220,202,187,0.3)",
-                  transition: "all 0.3s ease",
-                  fontFamily: "var(--font-sans)",
-                }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)"; (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.06)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
-                >
-                  {t("hero_btn_secondary")}
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div style={{ display: "flex", gap: "40px", marginTop: "56px", paddingTop: "40px", borderTop: "1px solid rgba(220,202,187,0.1)" }}>
-                {[
-                  { val: <><span className="cnt-products">0</span>+</>, labelKey: "hero_stat_fragrances" },
-                  { val: <><span className="cnt-hours">0</span>hr</>, labelKey: "hero_stat_longevity" },
-                  { val: <><span className="cnt-years">0</span>+</>, labelKey: "hero_stat_years" },
-                ].map((s, i) => (
-                  <div key={i} className="h-stat">
-                    <div style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", color: "var(--gold)", fontWeight: 700, lineHeight: 1 }}>{s.val}</div>
-                    <div style={{ fontSize: "0.68rem", color: "var(--white-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginTop: "5px" }}>{t(s.labelKey)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — Bottle */}
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
-              {/* Decorative rings */}
-              <div className="h-ring" style={{
-                position: "absolute",
-                width: "460px", height: "460px",
-                border: "1px dashed rgba(220,202,187,0.15)",
-                borderRadius: "50%",
-              }} />
-              <div className="h-ring-2" style={{
-                position: "absolute",
-                width: "320px", height: "320px",
-                border: "1px solid rgba(220,202,187,0.08)",
-                borderRadius: "50%",
-              }} />
-
-              {/* Glow */}
-              <div style={{
-                position: "absolute",
-                width: "280px", height: "280px",
-                background: "radial-gradient(circle, rgba(220,202,187,0.18) 0%, transparent 70%)",
-                borderRadius: "50%",
-                filter: "blur(40px)",
-              }} />
-
-              {/* Bottle image */}
-              <div className="h-bottle" style={{
-                width: "300px", height: "420px",
-                position: "relative",
-                borderRadius: "24px",
-                overflow: "hidden",
-                border: "1px solid rgba(220,202,187,0.2)",
-                boxShadow: "0 40px 100px rgba(0,0,0,0.7), 0 0 60px rgba(220,202,187,0.1)",
-              }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={sc("hero_image")} alt="Signature Perfume" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                <div style={{
-                  position: "absolute", inset: 0,
-                  background: "linear-gradient(to top, rgba(6,9,26,0.8) 0%, rgba(6,9,26,0.1) 50%, transparent 100%)",
-                }} />
-                <div style={{
-                  position: "absolute", bottom: "20px", left: "50%",
-                  transform: "translateX(-50%)",
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                }}>
-                  <div style={{ fontFamily: "var(--font-serif)", color: "var(--gold)", fontSize: "1.1rem", fontWeight: 700 }}>Maison Luxe</div>
-                  <div style={{ fontSize: "0.65rem", color: "rgba(220,202,187,0.6)", letterSpacing: "0.3em", textTransform: "uppercase", marginTop: "2px" }}>Extrait de Parfum</div>
-                </div>
-              </div>
-
-              {/* Floating badge */}
-              <div style={{
-                position: "absolute",
-                top: "10%", right: "-5%",
-                background: "rgba(10,15,36,0.95)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(220,202,187,0.2)",
-                borderRadius: "16px",
-                padding: "14px 18px",
-                animation: "float-badge 4s ease-in-out infinite",
-              }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>{t("hero_longevity_label")}</div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>{t("hero_longevity_val")}</div>
-              </div>
-
-              <div style={{
-                position: "absolute",
-                bottom: "15%", left: "-8%",
-                background: "rgba(10,15,36,0.95)",
-                backdropFilter: "blur(12px)",
-                border: "1px solid rgba(220,202,187,0.2)",
-                borderRadius: "16px",
-                padding: "14px 18px",
-                animation: "float-badge 5s ease-in-out infinite reverse",
-              }}>
-                <div style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "4px" }}>{t("hero_collection_label")}</div>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", color: "var(--white)", fontWeight: 700 }}>{t("hero_collection_val")}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div style={{ position: "absolute", bottom: "32px", left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", color: "var(--white-muted)", fontSize: "0.65rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-          <div style={{ width: "1px", height: "50px", background: "linear-gradient(to bottom, transparent, var(--gold))", animation: "scroll-line 2s ease-in-out infinite" }} />
-          {t("hero_scroll")}
-        </div>
-      </section>
+      <HeroCarousel />
 
       {/* ══════════════════════════════════════════════
           SECTION 2 — TRUST BAR
