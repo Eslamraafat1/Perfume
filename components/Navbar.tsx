@@ -26,6 +26,7 @@ export default function Navbar() {
     { name: t("nav_home"), href: "/" },
     { name: t("nav_products"), href: "/products" },
     { name: t("nav_collection"), href: "/category" },
+    { name: t("nav_finder"), href: "/fragrance-finder" },
     { name: t("nav_about"), href: "/about" },
     { name: t("nav_blog"), href: "/blog" },
     { name: t("nav_contact"), href: "/contact" },

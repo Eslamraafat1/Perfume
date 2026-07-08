@@ -8,6 +8,7 @@ export const defaultTranslations: Record<string, string> = {
   en_nav_contact: "Contact",
   en_nav_dashboard: "Dashboard",
   en_nav_cart: "View Cart",
+  en_nav_finder: "Find Scent",
 
   ar_nav_home: "الرئيسية",
   ar_nav_products: "المنتجات",
@@ -17,6 +18,7 @@ export const defaultTranslations: Record<string, string> = {
   ar_nav_contact: "تواصل",
   ar_nav_dashboard: "لوحة التحكم",
   ar_nav_cart: "عرض السلة",
+  ar_nav_finder: "اكتشف عطرك",
 
   /* ── Announcement bar ── */
   en_ann_1: "✦ 10% OFF YOUR FIRST ORDER | USE CODE: LUXE10 ✦",
@@ -456,6 +458,23 @@ export const defaultTranslations: Record<string, string> = {
   ar_look_title: "كولكشن منتصف الليل",
   ar_look_desc: "للحظات ما بعد الغروب. تشكيلة من أكثر عطورنا جاذبية وغموضاً، صُممت خصيصاً لترافقك في الليل.",
   ar_look_btn: "تسوق الكولكشن",
+
+  /* ── Fragrance Finder ── */
+  en_finder_eyebrow: "✦ Fragrance Matcher",
+  en_finder_title: "Find Your Perfect Scent",
+  en_finder_desc: "Type the notes you love — like Rose, Oud, or Vanilla — and let us reveal the masterpieces that match your essence.",
+  en_finder_placeholder: "e.g., Bergamot, Jasmine, Sandalwood...",
+  en_finder_empty: "No matching fragrances found. Try adjusting your ingredients.",
+  en_finder_results: "Matching Creations",
+  en_finder_match_label: "Match",
+
+  ar_finder_eyebrow: "✦ مطابقة العطور",
+  ar_finder_title: "اكتشف عطرك المثالي",
+  ar_finder_desc: "اكتب المكونات التي تفضلها — مثل الورد، العود، أو الفانيليا — وسنعرض لك الإبداعات التي تعكس شخصيتك.",
+  ar_finder_placeholder: "مثال: برغموت، ياسمين، خشب الصندل...",
+  ar_finder_empty: "لم نجد عطوراً مطابقة. جرب تغيير المكونات.",
+  ar_finder_results: "الإبداعات المتطابقة",
+  ar_finder_match_label: "تطابق",
 
   /* ── Lang toggle ── */
   en_lang_btn: "عربي",
