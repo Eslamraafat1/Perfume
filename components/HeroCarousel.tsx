@@ -275,7 +275,7 @@ export default function HeroCarousel() {
         }
         .hc-title .line1 {
           display: block;
-          font-size: clamp(3.2rem, 6vw, 7rem);
+          font-size: clamp(3.2rem, 4vw, 7rem);
           color: #fff;
         }
         .hc-title .line2 {

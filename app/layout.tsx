@@ -7,6 +7,7 @@ import { SiteContentProvider } from "./context/SiteContentContext";
 import { LanguageProvider } from "./context/LanguageContext";
 import { HeroSlidesProvider } from "./context/HeroSlidesContext";
 import FragranceFinderWidget from "@/components/FragranceFinderWidget";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -59,6 +60,7 @@ export default function RootLayout({
               <HeroSlidesProvider>
                 <ProductProvider>
                   {children}
+                  <ScrollToTop />
                   <FragranceFinderWidget />
                 </ProductProvider>
               </HeroSlidesProvider>

@@ -305,7 +305,7 @@ export default function ProductDetailsPage() {
       }} />
 
       {/* ─── BREADCRUMB ─── */}
-      <div style={{ padding: "110px 60px 0", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+      <div className="responsive-pad" style={{ padding: "110px 60px 0", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.78rem", color: "var(--white-muted)" }}>
           <Link href="/" style={{ color: "var(--white-muted)", textDecoration: "none", transition: "color 0.2s" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold)")}

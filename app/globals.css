@@ -2481,18 +2481,6 @@ body {
 }
 
 /* ─── Loading spinner ─── */
-.loading-spinner {
-  width: 52px;
-  height: 52px;
-  border: 3px solid rgba(220,202,187,0.2);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
 
 /* ===========================================================================
    CATEGORY PAGE UPGRADE
@@ -2933,18 +2921,46 @@ body {
   50% { opacity: 0.25; }
 }
 
-/* Loading spinner upgrade */
+/* Loading spinner upgrade — dual-ring prestige */
 .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 2px solid rgba(220,202,187,0.15);
-  border-top: 2px solid var(--gold);
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+  border: 2px solid rgba(220,202,187,0.08);
+  border-top-color: var(--gold);
+  border-bottom-color: var(--gold-light);
+  box-shadow: 0 0 24px rgba(220,202,187,0.06), inset 0 0 24px rgba(220,202,187,0.02);
+  animation: spin 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border-radius: 50%;
+  border: 2px solid rgba(220,202,187,0.05);
+  border-right-color: var(--gold);
+  border-left-color: var(--gold-dark);
+  box-shadow: 0 0 12px rgba(220,202,187,0.04);
+  animation: spin-reverse 0.7s cubic-bezier(0.6, 0, 0.4, 1) infinite;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes spin-reverse {
+  to { transform: rotate(-360deg); }
 }
 
 /* Gold text gradient */
