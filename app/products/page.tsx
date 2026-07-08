@@ -338,7 +338,7 @@ export default function ProductsPage() {
         zIndex: 50,
         backdropFilter: "blur(20px)",
       }}>
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", overflowX: "auto", padding: "16px 0", scrollbarWidth: "none" }}>
             {CATEGORIES.map((cat) => (
               <button
@@ -377,7 +377,7 @@ export default function ProductsPage() {
 
       {/* ─── FILTER BAR ─── */}
       <section style={{ padding: "28px 0", background: "var(--dark-3)" }}>
-        <div className="prod-filter-bar" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+        <div className="responsive-pad prod-filter-bar" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
           {/* Search */}
           <div style={{ position: "relative", flex: 1, minWidth: "240px" }}>
             <svg style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", opacity: 0.5 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

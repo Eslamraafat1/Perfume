@@ -172,7 +172,7 @@ function CategoryContent() {
       </section>
 
       {/* ─── CATEGORY PILLS ─── */}
-      <section style={{ padding: "50px 60px 0", maxWidth: "1300px", margin: "0 auto" }}>
+      <section className="responsive-pad" style={{ padding: "50px 60px 0", maxWidth: "1300px", margin: "0 auto" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
           {CATEGORIES.map((cat) => (
             <button
@@ -188,7 +188,7 @@ function CategoryContent() {
       </section>
 
       {/* ─── FILTER PANEL ─── */}
-      <section style={{ padding: "30px 60px 50px", maxWidth: "1300px", margin: "0 auto" }}>
+      <section className="responsive-pad" style={{ padding: "30px 60px 50px", maxWidth: "1300px", margin: "0 auto" }}>
         <div className="filter-panel glass-panel" style={{ padding: "20px 28px" }}>
           <div className="filter-panel-inner">
             {/* Search */}
@@ -241,7 +241,7 @@ function CategoryContent() {
       </section>
 
       {/* ─── PRODUCTS GRID ─── */}
-      <section style={{ padding: "0 60px 120px", maxWidth: "1300px", margin: "0 auto" }}>
+      <section className="responsive-pad" style={{ padding: "0 60px 120px", maxWidth: "1300px", margin: "0 auto" }}>
         <div className="products-grid" ref={gridRef}>
           {loading ? (
             Array.from({ length: 8 }).map((_, i) => (

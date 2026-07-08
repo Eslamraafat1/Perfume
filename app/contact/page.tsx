@@ -261,7 +261,7 @@ export default function ContactPage() {
       </div>
 
       {/* ─── SECTION 2: VIP BESPOKE CONSULTATION ─── */}
-      <section className="reveal-el" style={{ padding: "120px 60px", background: "var(--dark)", borderTop: "1px solid rgba(220,202,187,0.1)", borderBottom: "1px solid rgba(220,202,187,0.1)" }}>
+      <section className="reveal-el responsive-pad" style={{ padding: "120px 60px", background: "var(--dark)", borderTop: "1px solid rgba(220,202,187,0.1)", borderBottom: "1px solid rgba(220,202,187,0.1)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div className="about-grid">
             <div>
@@ -283,7 +283,7 @@ export default function ContactPage() {
       </section>
 
       {/* ─── SECTION 3: FAQ ACCORDIONS ─── */}
-      <section className="reveal-el" style={{ padding: "120px 60px", background: "var(--black)" }}>
+      <section className="reveal-el responsive-pad" style={{ padding: "120px 60px", background: "var(--black)" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "60px" }}>
             <span className="section-tag" style={{ color: "var(--gold)" }}>✦ Questions &amp; Answers</span>

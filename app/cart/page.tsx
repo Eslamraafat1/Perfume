@@ -34,7 +34,7 @@ export default function CartPage() {
       <Navbar />
 
       {/* Hero strip */}
-      <section style={{
+      <section className="responsive-pad" style={{
         background: "linear-gradient(135deg, var(--dark-3) 0%, var(--dark) 100%)",
         padding: "140px 60px 60px",
         borderBottom: "1px solid rgba(220,202,187,0.12)"

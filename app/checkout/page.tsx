@@ -172,7 +172,7 @@ export default function CheckoutPage() {
       <Navbar />
 
       {/* Hero Header */}
-      <section className="checkout-title-section" style={{
+      <section className="responsive-pad checkout-title-section" style={{
         background: "linear-gradient(135deg, var(--dark-3) 0%, var(--dark) 100%)",
         padding: "140px 60px 50px",
         borderBottom: "1px solid rgba(220,202,187,0.12)"

@@ -755,7 +755,7 @@ export default function ProductDetailsPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: "1300px", margin: "0 auto", padding: "70px 60px 90px" }}>
+        <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "70px 60px 90px" }}>
           {/* NOTES TAB */}
           {activeTab === "notes" && (
             <div>
