@@ -1,4 +1,4 @@
-# Maison Luxe — Luxury Perfume Store
+# Nubia — Luxury Perfume Store
 
 A high-end luxury perfume web application built with **Next.js 15 (App Router)** and **Supabase** (PostgreSQL database + Storage for images).
 

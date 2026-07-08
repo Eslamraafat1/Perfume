@@ -864,7 +864,7 @@ export default function ProductDetailsPage() {
                 <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.85, marginBottom: "32px" }}>
                   The inspiration for this fragrance comes from the ancient spice routes that once connected Egypt to the Orient — a journey of discovery, luxury, and timeless allure.
                 </p>
-                <Link href="/about" className="btn-gold-outline">Discover Our Maison →</Link>
+                <Link href="/about" className="btn-gold-outline">Discover Our Nubia →</Link>
               </div>
               <div style={{ height: "450px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.15)" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}

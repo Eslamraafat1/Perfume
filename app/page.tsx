@@ -67,24 +67,7 @@ export default function HomePage() {
   /* ── GSAP Master Timeline ── */
   useEffect(() => {
     const ctx = gsap.context(() => {
-      /* 1. Hero */
-      const heroTl = gsap.timeline({ delay: 0.2 });
-      heroTl
-        .fromTo(".h-eyebrow", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" })
-        .fromTo(".h-title span", { opacity: 0, y: 60, clipPath: "inset(100% 0 0 0)" }, { opacity: 1, y: 0, clipPath: "inset(0% 0 0 0)", duration: 1.1, ease: "expo.out", stagger: 0.12 }, "-=0.3")
-        .fromTo(".h-subtitle", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.9, ease: "power3.out" }, "-=0.6")
-        .fromTo(".h-actions a, .h-actions button", { opacity: 0, y: 20, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.6, ease: "back.out(1.4)" }, "-=0.5")
-        .fromTo(".h-bottle", { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 1.4, ease: "power3.out" }, "-=1.2")
-        .fromTo(".h-stat", { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.1, duration: 0.6, ease: "power2.out" }, "-=0.8");
-
-      /* Bottle floating */
-      gsap.to(".h-bottle", { y: -18, duration: 3.5, ease: "sine.inOut", repeat: -1, yoyo: true });
-
-      /* Orbiting ring */
-      gsap.to(".h-ring", { rotation: 360, duration: 18, ease: "none", repeat: -1, transformOrigin: "50% 50%" });
-      gsap.to(".h-ring-2", { rotation: -360, duration: 25, ease: "none", repeat: -1, transformOrigin: "50% 50%" });
-
-      /* 2. Scroll reveals for everything */
+      /* 1. Scroll reveals for everything */
       ScrollTrigger.batch(".fade-up", {
         onEnter: (els) => gsap.fromTo(els, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: "power3.out" }),
         start: "top 88%",
@@ -149,104 +132,32 @@ export default function HomePage() {
       ══════════════════════════════════════════════ */}
       <HeroCarousel />
 
-      {/* ══════════════════════════════════════════════
-          SECTION 2 — TRUST BAR
-      ══════════════════════════════════════════════ */}
-      <section className="responsive-pad" style={{ background: "rgba(220,202,187,0.04)", borderTop: "1px solid rgba(220,202,187,0.1)", borderBottom: "1px solid rgba(220,202,187,0.1)", padding: "30px 60px" }}>
-        <div style={{ maxWidth: "1300px", margin: "0 auto", display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: "24px" }}>
-          {[
-            { icon: "👑", labelKey: "trust_niche", subKey: "trust_niche_sub" },
-            { icon: "🕐", labelKey: "trust_longevity", subKey: "trust_longevity_sub" },
-            { icon: "📦", labelKey: "trust_box", subKey: "trust_box_sub" },
-            { icon: "🚚", labelKey: "trust_shipping", subKey: "trust_shipping_sub" },
-            { icon: "↩️", labelKey: "trust_returns", subKey: "trust_returns_sub" },
-          ].map((b) => (
-            <div key={b.labelKey} className="fade-up" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "1.4rem" }}>{b.icon}</span>
-              <div>
-                <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--white)", letterSpacing: "0.04em" }}>{t(b.labelKey)}</div>
-                <div style={{ fontSize: "0.7rem", color: "var(--white-muted)" }}>{t(b.subKey)}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════════
-          SECTION 3 — CATEGORIES
+          NEW SECTION — CURATED LOOKBOOK
       ══════════════════════════════════════════════ */}
-      <section className="responsive-pad" style={{ padding: "120px 60px", background: "var(--dark)" }}>
-        <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-          <div className="fade-up" style={{ textAlign: "center", marginBottom: "60px" }}>
-            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("cat_eyebrow")}</span>
-            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3.2rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
-              {t("cat_title")}
+      <section className="lookbook-section responsive-pad" style={{ padding: "100px 60px", background: "var(--black)", position: "relative", overflow: "hidden" }}>
+        <div className="about-grid" style={{ maxWidth: "1300px", margin: "0 auto", alignItems: "center" }}>
+          <div className="fade-up" style={{ paddingRight: isRTL ? "0" : "40px", paddingLeft: isRTL ? "40px" : "0" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("look_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 4vw, 3.5rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1 }}>
+              {t("look_title")}
             </h2>
-            <p style={{ color: "var(--white-muted)", marginTop: "14px", fontSize: "0.95rem", maxWidth: "520px", margin: "14px auto 0", lineHeight: 1.8 }}>
-              {t("cat_desc")}
+            <p style={{ color: "var(--white-muted)", marginTop: "24px", fontSize: "0.95rem", lineHeight: 1.8 }}>
+              {t("look_desc")}
             </p>
+            <Link href="/products" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px", marginTop: "36px",
+              background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+              color: "var(--black)", padding: "16px 36px", borderRadius: "50px",
+              fontSize: "0.83rem", fontWeight: 700, letterSpacing: "0.12em",
+              textTransform: "uppercase", textDecoration: "none", fontFamily: "var(--font-sans)",
+            }}>{t("look_btn")}</Link>
           </div>
-
-          <div className="categories-grid">
-            {CATEGORIES_DATA.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/category?cat=${encodeURIComponent(cat.slug)}`}
-                className="fade-up"
-                style={{
-                  display: "block",
-                  position: "relative",
-                  height: "480px",
-                  borderRadius: "20px",
-                  overflow: "hidden",
-                  textDecoration: "none",
-                  border: "1px solid rgba(220,202,187,0.1)",
-                  transition: "all 0.45s cubic-bezier(0.4,0,0.2,1)",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "translateY(-10px)";
-                  el.style.boxShadow = "0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(220,202,187,0.1)";
-                  el.style.borderColor = "rgba(220,202,187,0.35)";
-                  const bg = el.querySelector(".cat-card-bg") as HTMLElement;
-                  if (bg) bg.style.transform = "scale(1.08)";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLElement;
-                  el.style.transform = "translateY(0)";
-                  el.style.boxShadow = "none";
-                  el.style.borderColor = "rgba(220,202,187,0.1)";
-                  const bg = el.querySelector(".cat-card-bg") as HTMLElement;
-                  if (bg) bg.style.transform = "scale(1)";
-                }}
-              >
-                <div className="cat-card-bg" style={{
-                  position: "absolute", inset: 0,
-                  backgroundImage: `url(${cat.img})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
-                }} />
-                <div style={{
-                  position: "absolute", inset: 0,
-                  background: `linear-gradient(to top, rgba(6,9,26,0.95) 0%, rgba(6,9,26,0.4) 50%, transparent 100%)`,
-                }} />
-                <div style={{
-                  position: "absolute", bottom: "28px", left: "24px", right: "24px",
-                }}>
-                  <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", color: "var(--white)", marginBottom: "6px", fontWeight: 700 }}>{cat.label}</h3>
-                  <p style={{ fontSize: "0.72rem", color: "rgba(220,202,187,0.7)", letterSpacing: "0.1em" }}>{cat.sub}</p>
-                  <div style={{
-                    marginTop: "14px",
-                    display: "inline-flex", alignItems: "center", gap: "6px",
-                    fontSize: "0.7rem", color: "var(--gold)", fontWeight: 600,
-                    letterSpacing: "0.1em", textTransform: "uppercase",
-                  }}>
-                    {t("cat_explore")}
-                  </div>
-                </div>
-              </Link>
-            ))}
+          <div className="fade-up" style={{ position: "relative", height: "600px", borderRadius: "24px", overflow: "hidden" }}>
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+             <img src={sc("look_image")} alt="Lookbook" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
           </div>
         </div>
       </section>
@@ -400,6 +311,35 @@ export default function HomePage() {
       </section>
 
       {/* ══════════════════════════════════════════════
+          NEW SECTION — THE ART OF GIFTING
+      ══════════════════════════════════════════════ */}
+      <section className="gift-section responsive-pad" style={{ padding: "120px 60px", background: "var(--dark)", position: "relative" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", textAlign: "center" }}>
+          <div className="fade-up">
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("gift_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 4vw, 3.2rem)", marginTop: "14px", textTransform: "uppercase", fontWeight: 700 }}>
+              {t("gift_title")}
+            </h2>
+            <p style={{ color: "var(--white-muted)", marginTop: "16px", fontSize: "1rem", lineHeight: 1.8, maxWidth: "600px", margin: "16px auto 40px" }}>
+              {t("gift_desc")}
+            </p>
+          </div>
+          <div className="fade-up" style={{ position: "relative", height: "500px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.15)" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={sc("gift_image")} alt="Art of Gifting" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.3)" }}>
+              <Link href="/products" style={{
+                background: "rgba(10,15,36,0.8)", backdropFilter: "blur(10px)",
+                color: "var(--gold)", border: "1px solid rgba(220,202,187,0.4)",
+                padding: "16px 36px", borderRadius: "50px", fontSize: "0.85rem",
+                fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+              }}>{t("gift_btn")}</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
           SECTION 6 — RARE INGREDIENTS
       ══════════════════════════════════════════════ */}
       <section className="notes-marquee-section responsive-pad" style={{ padding: "120px 60px", background: "var(--dark-2)", borderTop: "1px solid rgba(220,202,187,0.08)" }}>
@@ -477,6 +417,33 @@ export default function HomePage() {
                 <p style={{ color: "var(--white-muted)", fontSize: "0.83rem", lineHeight: 1.7 }}>{note.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — EDITORIAL SPOTLIGHT
+      ══════════════════════════════════════════════ */}
+      <section className="editorial-section responsive-pad" style={{ background: "var(--black)", borderTop: "1px solid rgba(220,202,187,0.08)", padding: "100px 60px" }}>
+        <div className="about-grid" style={{ maxWidth: "1300px", margin: "0 auto", alignItems: "center" }}>
+          <div className="fade-up" style={{ position: "relative", height: "650px", borderRadius: "24px", overflow: "hidden" }}>
+             {/* eslint-disable-next-line @next/next/no-img-element */}
+             <img src={sc("edit_image")} alt="Editorial" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+          <div className="fade-up" style={{ paddingLeft: isRTL ? "0" : "40px", paddingRight: isRTL ? "40px" : "0" }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--gold)", letterSpacing: "0.35em", textTransform: "uppercase" }}>{t("edit_eyebrow")}</span>
+            <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.5rem, 4vw, 4rem)", marginTop: "16px", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.05 }}>
+              {t("edit_title")}
+            </h2>
+            <p style={{ color: "var(--white-muted)", marginTop: "24px", fontSize: "1.05rem", lineHeight: 1.85, maxWidth: "480px" }}>
+              {t("edit_desc")}
+            </p>
+            <Link href="/blog" style={{
+              display: "inline-flex", alignItems: "center", gap: "10px", marginTop: "40px",
+              borderBottom: "1px solid var(--gold)", color: "var(--gold)",
+              paddingBottom: "8px", fontSize: "0.83rem", fontWeight: 700,
+              letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+            }}>{t("edit_btn")}</Link>
           </div>
         </div>
       </section>
@@ -665,6 +632,31 @@ export default function HomePage() {
               {t("vip_btn")}
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — SIGNATURE DISCOVERY (CTA)
+      ══════════════════════════════════════════════ */}
+      <section className="discovery-section responsive-pad" style={{ padding: "120px 60px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={sc("sig_image")} alt="Background" style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.3) contrast(1.2)" }} />
+        </div>
+        <div className="fade-up" style={{ position: "relative", zIndex: 2, maxWidth: "800px", margin: "0 auto", textAlign: "center", background: "rgba(10,15,36,0.7)", backdropFilter: "blur(20px)", padding: "60px 40px", borderRadius: "24px", border: "1px solid rgba(220,202,187,0.2)", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2.2rem, 4vw, 3.5rem)", textTransform: "uppercase", fontWeight: 700, lineHeight: 1.1 }}>
+            {t("sig_title_1")}<br />
+            <span style={{ color: "var(--gold)", fontStyle: "italic" }}>{t("sig_title_2")}</span>
+          </h2>
+          <p style={{ color: "var(--white-muted)", marginTop: "20px", fontSize: "1rem", lineHeight: 1.8, marginBottom: "36px" }}>
+            {t("sig_desc")}
+          </p>
+          <Link href="/products" style={{
+            display: "inline-flex", alignItems: "center",
+            background: "var(--white)", color: "var(--black)",
+            padding: "18px 42px", borderRadius: "50px", fontSize: "0.85rem",
+            fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", textDecoration: "none"
+          }}>{t("sig_btn")}</Link>
         </div>
       </section>
 

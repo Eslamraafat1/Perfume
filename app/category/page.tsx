@@ -159,7 +159,7 @@ function CategoryContent() {
         <div className="cat-hero-bg" />
         <div className="cat-hero-overlay" />
         <div className="cat-hero-content">
-          <span className="section-tag" style={{ color: "var(--gold)", letterSpacing: "0.3em" }}>✦ Maison Luxe Collection</span>
+          <span className="section-tag" style={{ color: "var(--gold)", letterSpacing: "0.3em" }}>✦ Nubia Collection</span>
           <h1 className="cat-hero-title">
             Discover Our
             <br />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import gsap from "gsap";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 /* ──────────────────────────────────────────────
    SLIDE DATA
@@ -11,54 +12,34 @@ const SLIDES = [
   {
     id: 0,
     img: "/perfume_1.png",
-    eyebrow: "The Signature Collection",
-    title: ["Eternal", "Midnight", "Oud"],
-    subtitle: "A journey through ancient forests and midnight blooms — an oud so rich it lingers for days.",
-    tag: "BEST SELLER",
     accent: "rgba(165, 110, 60, 0.6)",
     gradient: "linear-gradient(135deg, #0a0519 0%, #1a0a2e 45%, #0f0820 100%)",
     glow: "rgba(200, 140, 80, 0.35)",
     href: "/products",
-    btnText: "Explore Collection",
   },
   {
     id: 1,
     img: "/perfume_2.png",
-    eyebrow: "Floral Elixir Series",
-    title: ["Rose", "Noir", "Absolut"],
-    subtitle: "Thousands of hand-picked roses distilled into a single devastating drop of pure luxury.",
-    tag: "NEW ARRIVAL",
     accent: "rgba(130, 30, 80, 0.6)",
     gradient: "linear-gradient(135deg, #190514 0%, #2a0a1e 45%, #100a15 100%)",
     glow: "rgba(200, 60, 120, 0.35)",
     href: "/products",
-    btnText: "Discover Now",
   },
   {
     id: 2,
     img: "/perfume_3.png",
-    eyebrow: "The Celestial Range",
-    title: ["White", "Amber", "Accord"],
-    subtitle: "Warm musks meet crystalline amber in a composition that wraps you in an aura of pure elegance.",
-    tag: "LIMITED EDITION",
     accent: "rgba(200, 180, 100, 0.5)",
     gradient: "linear-gradient(135deg, #0f0e08 0%, #1f1c0a 45%, #12100a 100%)",
     glow: "rgba(220, 190, 80, 0.35)",
     href: "/products",
-    btnText: "View Collection",
   },
   {
     id: 3,
     img: "/perfume_4.png",
-    eyebrow: "Aqua Lumineuse",
-    title: ["Blue", "Sapphire", "Marine"],
-    subtitle: "Crisp sea breeze, aquatic neroli, and warm sandalwood — freedom distilled into a bottle.",
-    tag: "EDITOR'S CHOICE",
     accent: "rgba(30, 90, 180, 0.5)",
     gradient: "linear-gradient(135deg, #050d1a 0%, #0a1830 45%, #060e1a 100%)",
     glow: "rgba(60, 130, 220, 0.35)",
     href: "/products",
-    btnText: "Shop Now",
   },
 ];
 
@@ -66,6 +47,7 @@ const SLIDES = [
    COMPONENT
 ────────────────────────────────────────────── */
 export default function HeroCarousel() {
+  const { t, isRTL } = useLanguage();
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -237,7 +219,7 @@ export default function HeroCarousel() {
           z-index: 10;
           display: flex;
           align-items: center;
-          padding: 100px 80px 80px;
+          padding: 180px 80px 80px;
           max-width: 1400px;
           width: 100%;
           margin: 0 auto;
@@ -319,8 +301,7 @@ export default function HeroCarousel() {
           max-width: 520px;
           margin-bottom: 44px;
           font-weight: 300;
-          border-left: 2px solid rgba(220,202,187,0.35);
-          padding-left: 20px;
+          ${isRTL ? "border-right: 2px solid rgba(220,202,187,0.35); padding-right: 20px;" : "border-left: 2px solid rgba(220,202,187,0.35); padding-left: 20px;"}
           font-family: var(--font-sans);
         }
 
@@ -382,10 +363,11 @@ export default function HeroCarousel() {
         .hc-arrows {
           position: absolute;
           bottom: 48px;
-          right: 80px;
+          ${isRTL ? "left: 80px;" : "right: 80px;"}
           z-index: 20;
           display: flex;
           gap: 12px;
+          flex-direction: ${isRTL ? "row-reverse" : "row"};
         }
 
         .hc-arrow {
@@ -415,12 +397,13 @@ export default function HeroCarousel() {
         .hc-counter {
           position: absolute;
           bottom: 60px;
-          left: 80px;
+          ${isRTL ? "right: 80px;" : "left: 80px;"}
           z-index: 20;
           display: flex;
           align-items: center;
           gap: 16px;
           font-family: var(--font-serif);
+          flex-direction: ${isRTL ? "row-reverse" : "row"};
         }
         .hc-counter-current {
           font-size: 2.2rem;
@@ -475,13 +458,13 @@ export default function HeroCarousel() {
           inset: 0;
           background: var(--gold);
           border-radius: 3px;
-          transform-origin: left;
+          transform-origin: ${isRTL ? "right" : "left"};
         }
 
         /* ── Decorative vertical line ── */
         .hc-vline {
           position: absolute;
-          right: 80px;
+          ${isRTL ? "left: 80px;" : "right: 80px;"}
           top: 50%;
           transform: translateY(-50%);
           z-index: 10;
@@ -571,15 +554,15 @@ export default function HeroCarousel() {
 
         /* ── RESPONSIVE ── */
         @media (max-width: 1100px) {
-          .hc-content { padding: 90px 48px 120px; }
+          .hc-content { padding: 160px 48px 120px; }
           .hc-vline { display: none; }
-          .hc-arrows { right: 48px; bottom: 40px; }
-          .hc-counter { left: 48px; }
+          .hc-arrows { ${isRTL ? "left: 48px;" : "right: 48px;"} bottom: 40px; }
+          .hc-counter { ${isRTL ? "right: 48px;" : "left: 48px;"} }
         }
         @media (max-width: 768px) {
           .hc-root { height: 100svh; min-height: 580px; }
           .hc-content {
-            padding: 80px 24px 140px;
+            padding: 140px 24px 140px;
             align-items: flex-end;
           }
           .hc-text-box { max-width: 100%; }
@@ -587,8 +570,8 @@ export default function HeroCarousel() {
           .hc-title .line2,
           .hc-title .line3 { font-size: clamp(2.4rem, 10vw, 4rem); }
           .hc-subtitle { font-size: 0.9rem; margin-bottom: 28px; }
-          .hc-arrows { right: 24px; bottom: 32px; }
-          .hc-counter { left: 24px; bottom: 50px; }
+          .hc-arrows { ${isRTL ? "left: 24px;" : "right: 24px;"} bottom: 32px; }
+          .hc-counter { ${isRTL ? "right: 24px;" : "left: 24px;"} bottom: 50px; }
           .hc-dots { bottom: 14px; }
           .hc-btn-primary, .hc-btn-secondary { padding: 14px 26px; font-size: 0.78rem; }
         }
@@ -597,6 +580,31 @@ export default function HeroCarousel() {
           .hc-btn-secondary { display: none; }
           .hc-arrows { gap: 8px; }
           .hc-arrow { width: 44px; height: 44px; }
+        }
+
+        /* ── RTL Adjustments ── */
+        [dir="rtl"] .hc-title {
+          line-height: 1.35;
+          letter-spacing: 0;
+        }
+        [dir="rtl"] .hc-tag,
+        [dir="rtl"] .hc-eyebrow,
+        [dir="rtl"] .hc-btn-primary,
+        [dir="rtl"] .hc-btn-secondary {
+          letter-spacing: 0;
+        }
+        [dir="rtl"] .hc-title .line1,
+        [dir="rtl"] .hc-title .line2,
+        [dir="rtl"] .hc-title .line3 {
+          padding-bottom: 0.15em;
+          font-size: clamp(2.8rem, 5vw, 5.5rem);
+        }
+        @media (max-width: 768px) {
+          [dir="rtl"] .hc-title .line1,
+          [dir="rtl"] .hc-title .line2,
+          [dir="rtl"] .hc-title .line3 {
+             font-size: clamp(2rem, 8vw, 3.2rem);
+          }
         }
       `}</style>
 
@@ -632,7 +640,7 @@ export default function HeroCarousel() {
               ref={(el) => { imgRefs.current[i] = el; }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.img} alt={slide.title.join(" ")} />
+              <img src={slide.img} alt={t(`hc_s${i+1}_title1`)} />
             </div>
 
             {/* Gradient overlay — dynamic per slide */}
@@ -681,32 +689,32 @@ export default function HeroCarousel() {
                   <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
                     <circle cx="3" cy="3" r="3" fill="#0a0f24" />
                   </svg>
-                  {slide.tag}
+                  {t(`hc_s${i+1}_tag`)}
                 </span>
 
                 {/* Eyebrow */}
-                <span className="hc-eyebrow">{slide.eyebrow}</span>
+                <span className="hc-eyebrow">{t(`hc_s${i+1}_eyebrow`)}</span>
 
                 {/* Title */}
                 <h1 className="hc-title">
-                  <span className="line1">{slide.title[0]}</span>
-                  <span className="line2">{slide.title[1]}</span>
-                  <span className="line3">{slide.title[2]}</span>
+                  <span className="line1">{t(`hc_s${i+1}_title1`)}</span>
+                  <span className="line2">{t(`hc_s${i+1}_title2`)}</span>
+                  <span className="line3">{t(`hc_s${i+1}_title3`)}</span>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="hc-subtitle">{slide.subtitle}</p>
+                <p className="hc-subtitle">{t(`hc_s${i+1}_subtitle`)}</p>
 
                 {/* CTAs */}
                 <div className="hc-actions">
                   <Link href={slide.href} className="hc-btn-primary">
-                    {slide.btnText}
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    {t(`hc_s${i+1}_btn`)}
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
                       <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </Link>
                   <Link href="/about" className="hc-btn-secondary">
-                    Our Story
+                    {t("hc_story")}
                   </Link>
                 </div>
               </div>
@@ -727,7 +735,7 @@ export default function HeroCarousel() {
               onKeyDown={(e) => { if (e.key === "Enter") goTo(i); }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.img} alt={slide.title.join(" ")} />
+              <img src={slide.img} alt={t(`hc_s${i+1}_title1`)} />
             </div>
           ))}
         </div>
@@ -775,7 +783,7 @@ export default function HeroCarousel() {
             onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
             aria-label="Previous slide"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
               <path d="M11 14L6 9l5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -784,7 +792,7 @@ export default function HeroCarousel() {
             onClick={() => goTo((current + 1) % SLIDES.length)}
             aria-label="Next slide"
           >
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
               <path d="M7 4l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>

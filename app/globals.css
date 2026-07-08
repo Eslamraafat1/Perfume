@@ -17,14 +17,26 @@
   --white: #ffffff;
   --white-muted: #d0cbd6;
   --accent: #dbcabb;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-serif: var(--font-playfair), 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-title: 'Bricolage Grotesque', var(--font-sans);
   --radius: 12px;
   --radius-lg: 20px;
   --shadow-gold: 0 0 40px rgba(220, 202, 187, 0.25);
   --shadow-card: 0 20px 60px rgba(0,0,0,0.65);
   --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[lang="ar"],
+[dir="rtl"] {
+  --font-serif: var(--font-amiri), var(--font-playfair), 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--font-cairo), var(--font-inter), 'Inter', system-ui, sans-serif;
+  --font-title: var(--font-cairo), 'Bricolage Grotesque', var(--font-sans);
+}
+
+html[lang="ar"] *,
+[dir="rtl"] * {
+  letter-spacing: normal !important;
 }
 
 html {

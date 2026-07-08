@@ -49,7 +49,7 @@ export default function Navbar() {
         {/* ─── NAVBAR ─── */}
         <nav className={`navbar${scrolled ? " navbar-scrolled" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
           <Link href="/" className="navbar-brand">
-            Maison<span> Luxe</span>
+            Nubia
           </Link>
 
           {/* Desktop links */}
@@ -111,7 +111,7 @@ export default function Navbar() {
       {/* ─── MOBILE DRAWER ─── */}
       <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         <div className="mobile-drawer-inner">
-          <div className="mobile-drawer-brand">Maison Luxe</div>
+          <div className="mobile-drawer-brand">Nubia</div>
           <ul className="mobile-nav-links">
             {links.map((link) => (
               <li key={link.href}>
