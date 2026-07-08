@@ -70,3 +70,58 @@ create policy "Allow public insert on site_content"
 create policy "Allow public update on site_content"
   on site_content for update
   using (true);
+
+-- =============================================
+-- 5. Create hero_slides table for Hero Carousel
+-- =============================================
+create table if not exists public.hero_slides (
+  id          uuid        default gen_random_uuid() primary key,
+  sort_order  integer     not null default 0,
+  img         text        not null,
+  accent      text        not null default 'rgba(165,110,60,0.6)',
+  gradient    text        not null default 'linear-gradient(135deg,#0a0519 0%,#1a0a2e 45%,#0f0820 100%)',
+  glow        text        not null default 'rgba(200,140,80,0.35)',
+  href        text        not null default '/products',
+  active      boolean     not null default true,
+  tag_en      text        not null default '',
+  tag_ar      text        not null default '',
+  eyebrow_en  text        not null default '',
+  eyebrow_ar  text        not null default '',
+  title1_en   text        not null default '',
+  title1_ar   text        not null default '',
+  title2_en   text        not null default '',
+  title2_ar   text        not null default '',
+  title3_en   text        not null default '',
+  title3_ar   text        not null default '',
+  subtitle_en text        not null default '',
+  subtitle_ar text        not null default '',
+  btn_text_en text        not null default 'Explore Collection',
+  btn_text_ar text        not null default 'استكشف الكولكشن',
+  created_at  timestamptz default now()
+);
+
+-- Enable RLS for hero_slides
+alter table public.hero_slides enable row level security;
+
+-- Allow public select/insert/update/delete (for admin/demo without auth)
+create policy "Allow public select on hero_slides"
+  on public.hero_slides for select
+  using (true);
+
+create policy "Allow public insert on hero_slides"
+  on public.hero_slides for insert
+  with check (true);
+
+create policy "Allow public update on hero_slides"
+  on public.hero_slides for update
+  using (true);
+
+create policy "Allow public delete on hero_slides"
+  on public.hero_slides for delete
+  using (true);
+
+-- 4. Grant table privileges to anon, authenticated, and service_role
+grant select, insert, update, delete on table public.hero_slides to anon, authenticated, service_role;
+
+
+

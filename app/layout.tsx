@@ -5,6 +5,8 @@ import { ProductProvider } from "./context/ProductContext";
 import { CartProvider } from "./context/CartContext";
 import { SiteContentProvider } from "./context/SiteContentContext";
 import { LanguageProvider } from "./context/LanguageContext";
+import { HeroSlidesProvider } from "./context/HeroSlidesContext";
+import FragranceFinderWidget from "@/components/FragranceFinderWidget";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -54,7 +56,12 @@ export default function RootLayout({
         <SiteContentProvider>
           <LanguageProvider>
             <CartProvider>
-              <ProductProvider>{children}</ProductProvider>
+              <HeroSlidesProvider>
+                <ProductProvider>
+                  {children}
+                  <FragranceFinderWidget />
+                </ProductProvider>
+              </HeroSlidesProvider>
             </CartProvider>
           </LanguageProvider>
         </SiteContentProvider>

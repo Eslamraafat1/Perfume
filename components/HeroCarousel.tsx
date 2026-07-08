@@ -4,62 +4,33 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { useLanguage } from "@/app/context/LanguageContext";
-
-/* ──────────────────────────────────────────────
-   SLIDE DATA
-────────────────────────────────────────────── */
-const SLIDES = [
-  {
-    id: 0,
-    img: "/perfume_1.png",
-    accent: "rgba(165, 110, 60, 0.6)",
-    gradient: "linear-gradient(135deg, #0a0519 0%, #1a0a2e 45%, #0f0820 100%)",
-    glow: "rgba(200, 140, 80, 0.35)",
-    href: "/products",
-  },
-  {
-    id: 1,
-    img: "/perfume_2.png",
-    accent: "rgba(130, 30, 80, 0.6)",
-    gradient: "linear-gradient(135deg, #190514 0%, #2a0a1e 45%, #100a15 100%)",
-    glow: "rgba(200, 60, 120, 0.35)",
-    href: "/products",
-  },
-  {
-    id: 2,
-    img: "/perfume_3.png",
-    accent: "rgba(200, 180, 100, 0.5)",
-    gradient: "linear-gradient(135deg, #0f0e08 0%, #1f1c0a 45%, #12100a 100%)",
-    glow: "rgba(220, 190, 80, 0.35)",
-    href: "/products",
-  },
-  {
-    id: 3,
-    img: "/perfume_4.png",
-    accent: "rgba(30, 90, 180, 0.5)",
-    gradient: "linear-gradient(135deg, #050d1a 0%, #0a1830 45%, #060e1a 100%)",
-    glow: "rgba(60, 130, 220, 0.35)",
-    href: "/products",
-  },
-];
+import { useHeroSlides } from "@/app/context/HeroSlidesContext";
 
 /* ──────────────────────────────────────────────
    COMPONENT
 ────────────────────────────────────────────── */
 export default function HeroCarousel() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, lang } = useLanguage();
+  const { slides } = useHeroSlides();
   const [current, setCurrent] = useState(0);
   const [prev, setPrev] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [progress, setProgress] = useState(0);
+  // dotKey changes each time we want to restart the CSS progress animation — no rAF needed
+  const [dotKey, setDotKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const imgRefs = useRef<(HTMLDivElement | null)[]>([]);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
-  const progressAnimRef = useRef<NodeJS.Timeout | null>(null);
   const DURATION = 6000;
+
+  // Guard: keep current in bounds when slides array changes length
+  useEffect(() => {
+    if (slides.length > 0 && current >= slides.length) {
+      setCurrent(0);
+    }
+  }, [slides.length, current]);
 
   /* ── animate slide transition ── */
   const goTo = useCallback(
@@ -68,7 +39,7 @@ export default function HeroCarousel() {
       setIsAnimating(true);
       setPrev(current);
       setCurrent(next);
-      setProgress(0);
+      setDotKey((k) => k + 1); // restart CSS dot animation
 
       const outSlide = slideRefs.current[current];
       const inSlide = slideRefs.current[next];
@@ -103,44 +74,63 @@ export default function HeroCarousel() {
     [current, isAnimating]
   );
 
-  /* ── auto-play progress ── */
+  /* ── auto-play (no rAF — dot progress is pure CSS) ── */
   useEffect(() => {
-    setProgress(0);
-    let start: number;
-    let rafId: number;
-    const animate = (ts: number) => {
-      if (!start) start = ts;
-      const elapsed = ts - start;
-      setProgress(Math.min((elapsed / DURATION) * 100, 100));
-      if (elapsed < DURATION) {
-        rafId = requestAnimationFrame(animate);
-      }
-    };
-    rafId = requestAnimationFrame(animate);
+    if (slides.length < 2) return;
     progressRef.current = setTimeout(() => {
-      goTo((current + 1) % SLIDES.length);
+      goTo((current + 1) % slides.length);
     }, DURATION);
     return () => {
-      cancelAnimationFrame(rafId);
       if (progressRef.current) clearTimeout(progressRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current]);
+  }, [current, slides.length]);
 
-  /* ── entrance animation ── */
+  /* ── entrance + re-init animation (runs whenever the slide set changes) ── */
+  const slideIds = slides.map((s) => s.id).join(",");
   useEffect(() => {
-    const slide = slideRefs.current[0];
-    const text = textRefs.current[0];
-    const img = imgRefs.current[0];
-    if (!slide || !text || !img) return;
+    if (slides.length === 0) return;
 
-    gsap.set(slide, { zIndex: 1, clipPath: "inset(0 0% 0 0)" });
-    gsap.set(img, { scale: 1.15 });
-    gsap.set(text, { opacity: 0, y: 80 });
+    // Reset state to slide 0 whenever the slide list changes (e.g. DB data loads)
+    setCurrent(0);
+    setPrev(null);
+    setIsAnimating(false);
 
-    gsap.to(img, { scale: 1, duration: 1.6, ease: "expo.out", delay: 0.2 });
-    gsap.to(text, { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.5 });
-  }, []);
+    // Use rAF so React has committed the new DOM nodes before we touch them
+    const raf = requestAnimationFrame(() => {
+      // Hide ALL background slides via clip-path; GSAP owns z-index entirely
+      slideRefs.current.forEach((slide, i) => {
+        if (!slide) return;
+        gsap.set(slide, {
+          zIndex: i === 0 ? 1 : 0,
+          clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
+        });
+      });
+
+      // Reset ALL images
+      imgRefs.current.forEach((img) => {
+        if (img) gsap.set(img, { scale: 1.15, x: 0, y: 0 });
+      });
+
+      // Hide ALL text boxes so GSAP is the sole authority on visibility
+      textRefs.current.forEach((text) => {
+        if (text) gsap.set(text, { opacity: 0, y: 0 });
+      });
+
+      // Entrance animation for the first slide
+      const slide0 = slideRefs.current[0];
+      const text0 = textRefs.current[0];
+      const img0 = imgRefs.current[0];
+      if (!slide0 || !text0 || !img0) return;
+
+      gsap.set(text0, { y: 80 });
+      gsap.to(img0, { scale: 1, duration: 1.6, ease: "expo.out", delay: 0.2 });
+      gsap.to(text0, { opacity: 1, y: 0, duration: 1, ease: "power3.out", delay: 0.5 });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slideIds]);
 
   /* ── Parallax mouse effect ── */
   useEffect(() => {
@@ -164,12 +154,21 @@ export default function HeroCarousel() {
   /* ── keyboard navigation ── */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") goTo((current - 1 + SLIDES.length) % SLIDES.length);
-      if (e.key === "ArrowRight") goTo((current + 1) % SLIDES.length);
+      if (e.key === "ArrowLeft") goTo((current - 1 + slides.length) % slides.length);
+      if (e.key === "ArrowRight") goTo((current + 1) % slides.length);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [current, goTo]);
+  }, [current, goTo, slides.length]);
+
+  /* ── Loading skeleton ── */
+  if (slides.length === 0) {
+    return (
+      <div style={{ width: "100%", height: "100vh", background: "#06091a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "rgba(219,202,187,0.3)", fontSize: "1rem", fontFamily: "var(--font-serif)", letterSpacing: "0.1em" }}>Loading…</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -190,7 +189,7 @@ export default function HeroCarousel() {
           z-index: 0;
           will-change: clip-path;
         }
-        .hc-slide:first-child { z-index: 1; }
+        /* z-index for .hc-slide is controlled exclusively by GSAP */
 
         .hc-img-wrap {
           position: absolute;
@@ -460,6 +459,14 @@ export default function HeroCarousel() {
           border-radius: 3px;
           transform-origin: ${isRTL ? "right" : "left"};
         }
+        @keyframes hc-dot-progress {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        .hc-dot-fill-anim {
+          animation: hc-dot-progress ${6000}ms linear forwards;
+          transform-origin: ${isRTL ? "right" : "left"};
+        }
 
         /* ── Decorative vertical line ── */
         .hc-vline {
@@ -627,117 +634,135 @@ export default function HeroCarousel() {
         </div>
 
         {/* ── Slides ── */}
-        {SLIDES.map((slide, i) => (
-          <div
-            key={slide.id}
-            className="hc-slide"
-            ref={(el) => { slideRefs.current[i] = el; }}
-            aria-hidden={i !== current}
-          >
-            {/* Background image with parallax wrapper */}
+        {slides.map((slide, i) => {
+          const slideTitle1 = lang === "ar" ? slide.title1_ar : slide.title1_en;
+          return (
             <div
-              className="hc-img-wrap"
-              ref={(el) => { imgRefs.current[i] = el; }}
+              key={slide.id}
+              className="hc-slide"
+              ref={(el) => { slideRefs.current[i] = el; }}
+              aria-hidden={i !== current}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.img} alt={t(`hc_s${i+1}_title1`)} />
+              {/* Background image with parallax wrapper */}
+              <div
+                className="hc-img-wrap"
+                ref={(el) => { imgRefs.current[i] = el; }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={slide.img} alt={slideTitle1} />
+              </div>
+
+              {/* Gradient overlay — dynamic per slide */}
+              <div
+                className="hc-overlay"
+                style={{
+                  background: `
+                    linear-gradient(to right, rgba(6,9,26,0.92) 0%, rgba(6,9,26,0.7) 50%, rgba(6,9,26,0.3) 100%),
+                    linear-gradient(to top, rgba(6,9,26,0.85) 0%, transparent 50%)
+                  `,
+                }}
+              />
+
+              {/* Accent glow */}
+              <div
+                className="hc-overlay"
+                style={{
+                  background: `radial-gradient(ellipse 70% 70% at 80% 50%, ${slide.glow} 0%, transparent 70%)`,
+                }}
+              />
             </div>
-
-            {/* Gradient overlay — dynamic per slide */}
-            <div
-              className="hc-overlay"
-              style={{
-                background: `
-                  linear-gradient(to right, rgba(6,9,26,0.92) 0%, rgba(6,9,26,0.7) 50%, rgba(6,9,26,0.3) 100%),
-                  linear-gradient(to top, rgba(6,9,26,0.85) 0%, transparent 50%)
-                `,
-              }}
-            />
-
-            {/* Accent glow */}
-            <div
-              className="hc-overlay"
-              style={{
-                background: `radial-gradient(ellipse 70% 70% at 80% 50%, ${slide.glow} 0%, transparent 70%)`,
-              }}
-            />
-          </div>
-        ))}
+          );
+        })}
 
         {/* ── Text content (per slide) ── */}
-        {SLIDES.map((slide, i) => (
-          <div
-            key={`text-${slide.id}`}
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: i === current ? 15 : (prev === i ? 12 : 5),
-              display: "flex",
-              alignItems: "center",
-              padding: "0",
-              pointerEvents: i === current ? "auto" : "none",
-            }}
-          >
-            <div className="hc-content">
-              <div
-                className="hc-text-box"
-                ref={(el) => { textRefs.current[i] = el; }}
-                style={{ opacity: i === 0 ? 1 : 0 }}
-              >
-                {/* Tag badge */}
-                <span className="hc-tag">
-                  <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
-                    <circle cx="3" cy="3" r="3" fill="#0a0f24" />
-                  </svg>
-                  {t(`hc_s${i+1}_tag`)}
-                </span>
+        {slides.map((slide, i) => {
+          const slideTag = lang === "ar" ? slide.tag_ar : slide.tag_en;
+          const slideEyebrow = lang === "ar" ? slide.eyebrow_ar : slide.eyebrow_en;
+          const slideTitle1 = lang === "ar" ? slide.title1_ar : slide.title1_en;
+          const slideTitle2 = lang === "ar" ? slide.title2_ar : slide.title2_en;
+          const slideTitle3 = lang === "ar" ? slide.title3_ar : slide.title3_en;
+          const slideSubtitle = lang === "ar" ? slide.subtitle_ar : slide.subtitle_en;
+          const slideBtn = lang === "ar" ? slide.btn_text_ar : slide.btn_text_en;
 
-                {/* Eyebrow */}
-                <span className="hc-eyebrow">{t(`hc_s${i+1}_eyebrow`)}</span>
+          return (
+            <div
+              key={`text-${slide.id}`}
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: i === current ? 15 : (prev === i ? 12 : 5),
+                display: "flex",
+                alignItems: "center",
+                padding: "0",
+                pointerEvents: i === current ? "auto" : "none",
+              }}
+            >
+              <div className="hc-content">
+                <div
+                  className="hc-text-box"
+                  ref={(el) => { textRefs.current[i] = el; }}
+                  style={{ opacity: 0 }}
+                >
+                  {/* Tag badge */}
+                  {slideTag && (
+                    <span className="hc-tag">
+                      <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
+                        <circle cx="3" cy="3" r="3" fill="#0a0f24" />
+                      </svg>
+                      {slideTag}
+                    </span>
+                  )}
 
-                {/* Title */}
-                <h1 className="hc-title">
-                  <span className="line1">{t(`hc_s${i+1}_title1`)}</span>
-                  <span className="line2">{t(`hc_s${i+1}_title2`)}</span>
-                  <span className="line3">{t(`hc_s${i+1}_title3`)}</span>
-                </h1>
+                  {/* Eyebrow */}
+                  {slideEyebrow && <span className="hc-eyebrow">{slideEyebrow}</span>}
 
-                {/* Subtitle */}
-                <p className="hc-subtitle">{t(`hc_s${i+1}_subtitle`)}</p>
+                  {/* Title */}
+                  <h1 className="hc-title">
+                    {slideTitle1 && <span className="line1">{slideTitle1}</span>}
+                    {slideTitle2 && <span className="line2">{slideTitle2}</span>}
+                    {slideTitle3 && <span className="line3">{slideTitle3}</span>}
+                  </h1>
 
-                {/* CTAs */}
-                <div className="hc-actions">
-                  <Link href={slide.href} className="hc-btn-primary">
-                    {t(`hc_s${i+1}_btn`)}
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
-                      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </Link>
-                  <Link href="/about" className="hc-btn-secondary">
-                    {t("hc_story")}
-                  </Link>
+                  {/* Subtitle */}
+                  {slideSubtitle && <p className="hc-subtitle">{slideSubtitle}</p>}
+
+                  {/* CTAs */}
+                  <div className="hc-actions">
+                    <Link href={slide.href} className="hc-btn-primary">
+                      {slideBtn}
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
+                        <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Link>
+                    <Link href="/about" className="hc-btn-secondary">
+                      {t("hc_story")}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* ── Thumbnail sidebar ── */}
         <div className="hc-vline">
-          {SLIDES.map((slide, i) => (
-            <div
-              key={`thumb-${i}`}
-              className={`hc-vline-thumb ${i === current ? "active" : ""}`}
-              onClick={() => goTo(i)}
-              role="button"
-              aria-label={`Go to slide ${i + 1}`}
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === "Enter") goTo(i); }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={slide.img} alt={t(`hc_s${i+1}_title1`)} />
-            </div>
-          ))}
+          {slides.map((slide, i) => {
+            const slideTitle1 = lang === "ar" ? slide.title1_ar : slide.title1_en;
+            return (
+              <div
+                key={`thumb-${slide.id}`}
+                className={`hc-vline-thumb ${i === current ? "active" : ""}`}
+                onClick={() => goTo(i)}
+                role="button"
+                aria-label={`Go to slide ${i + 1}`}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") goTo(i); }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={slide.img} alt={slideTitle1} />
+              </div>
+            );
+          })}
         </div>
 
         {/* ── Counter ── */}
@@ -747,13 +772,13 @@ export default function HeroCarousel() {
           </span>
           <div className="hc-counter-divider" />
           <span className="hc-counter-total">
-            {String(SLIDES.length).padStart(2, "0")}
+            {String(slides.length).padStart(2, "0")}
           </span>
         </div>
 
-        {/* ── Dots with progress bar ── */}
+        {/* ── Dots — pure CSS progress (no rAF lag) ── */}
         <div className="hc-dots" role="tablist" aria-label="Slide navigation">
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <div
               key={`dot-${i}`}
               className="hc-dot-wrap"
@@ -767,8 +792,8 @@ export default function HeroCarousel() {
               <div className={`hc-dot ${i === current ? "active" : ""}`}>
                 {i === current && (
                   <div
-                    className="hc-dot-fill"
-                    style={{ transform: `scaleX(${progress / 100})` }}
+                    key={dotKey}
+                    className="hc-dot-fill hc-dot-fill-anim"
                   />
                 )}
               </div>
@@ -780,7 +805,7 @@ export default function HeroCarousel() {
         <div className="hc-arrows">
           <button
             className="hc-arrow"
-            onClick={() => goTo((current - 1 + SLIDES.length) % SLIDES.length)}
+            onClick={() => goTo((current - 1 + slides.length) % slides.length)}
             aria-label="Previous slide"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
@@ -789,7 +814,7 @@ export default function HeroCarousel() {
           </button>
           <button
             className="hc-arrow"
-            onClick={() => goTo((current + 1) % SLIDES.length)}
+            onClick={() => goTo((current + 1) % slides.length)}
             aria-label="Next slide"
           >
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
@@ -797,6 +822,7 @@ export default function HeroCarousel() {
             </svg>
           </button>
         </div>
+
       </div>
     </>
   );

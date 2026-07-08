@@ -4,12 +4,14 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useProducts } from "../context/ProductContext";
 import { useSiteContent } from "../context/SiteContentContext";
+import { useHeroSlides, DEFAULT_SLIDES, HeroSlide } from "../context/HeroSlidesContext";
 import { supabase, STORAGE_BUCKET } from "@/lib/supabase";
 
 export default function DashboardPage() {
   const { products, loading, addProduct, deleteProduct } = useProducts();
   const { get: sc, update: scUpdate, uploadImageAndUpdate } = useSiteContent();
-  const [activeTab, setActiveTab] = useState<"overview" | "add" | "products" | "content">("overview");
+  const { slides: heroSlides, allSlides: heroAllSlides, addSlide: addHeroSlide, updateSlide: updateHeroSlide, deleteSlide: deleteHeroSlide, reorderSlide: reorderHeroSlide, refetch: refetchHero } = useHeroSlides();
+  const [activeTab, setActiveTab] = useState<"overview" | "add" | "products" | "content" | "carousel">("overview");
 
   const [dbStatus, setDbStatus] = useState<"checking" | "connected" | "missing_env" | "error">("checking");
   const [dbErrorMessage, setDbErrorMessage] = useState("");
@@ -206,6 +208,14 @@ export default function DashboardPage() {
             <span className="nav-icon">🖼</span> Site Content
           </button>
 
+          <button
+            id="nav-carousel"
+            className={`sidebar-nav-item ${activeTab === "carousel" ? "active" : ""}`}
+            onClick={() => setActiveTab("carousel")}
+          >
+            <span className="nav-icon">🎞</span> Hero Carousel
+          </button>
+
           <span className="sidebar-section-label">Navigation</span>
 
           <Link href="/" className="sidebar-nav-item">
@@ -266,6 +276,12 @@ export default function DashboardPage() {
           >
             Site Content
           </button>
+          <button
+            className={`dashboard-mobile-nav-item ${activeTab === "carousel" ? "active" : ""}`}
+            onClick={() => setActiveTab("carousel")}
+          >
+            Carousel
+          </button>
         </div>
 
         {/* Topbar */}
@@ -275,6 +291,7 @@ export default function DashboardPage() {
             {activeTab === "add" && "Add New Fragrance"}
             {activeTab === "products" && "All Products"}
             {activeTab === "content" && "Site Content Editor"}
+            {activeTab === "carousel" && "Hero Carousel Manager"}
           </h1>
           <div className="topbar-right">
             <span className="topbar-badge">
@@ -687,6 +704,18 @@ export default function DashboardPage() {
           {activeTab === "content" && (
             <SiteContentEditor sc={sc} scUpdate={scUpdate} uploadImageAndUpdate={uploadImageAndUpdate} showToast={showToast} />
           )}
+          {/* ── HERO CAROUSEL TAB ── */}
+          {activeTab === "carousel" && (
+            <HeroCarouselEditor
+              slides={heroAllSlides}
+              onAdd={addHeroSlide}
+              onUpdate={updateHeroSlide}
+              onDelete={deleteHeroSlide}
+              onReorder={reorderHeroSlide}
+              onRefetch={refetchHero}
+              showToast={showToast}
+            />
+          )}
         </div>
       </main>
 
@@ -1024,6 +1053,511 @@ function SiteContentEditor({ sc, scUpdate, uploadImageAndUpdate, showToast }: SC
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
           <TextField label="Copyright Text" fieldKey="footer_copyright" />
           <TextField label="Made With Love Text" fieldKey="footer_made" />
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO CAROUSEL EDITOR COMPONENT
+═══════════════════════════════════════════════════ */
+interface HeroCarouselEditorProps {
+  slides: HeroSlide[];
+  onAdd: (slide: Omit<HeroSlide, "id" | "created_at">) => Promise<void>;
+  onUpdate: (id: string, updates: Partial<Omit<HeroSlide, "id" | "created_at">>) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+  onReorder: (id: string, direction: "up" | "down") => Promise<void>;
+  onRefetch: () => Promise<void>;
+  showToast: (msg: string, type?: "success" | "error") => void;
+}
+
+function HeroCarouselEditor({
+  slides,
+  onAdd,
+  onUpdate,
+  onDelete,
+  onReorder,
+  onRefetch,
+  showToast,
+}: HeroCarouselEditorProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [editLang, setEditLang] = useState<"en" | "ar">("ar");
+
+  // Form State
+  const [imgFile, setImgFile] = useState<File | null>(null);
+  const [imgPreview, setImgPreview] = useState<string>("");
+  const [accent, setAccent] = useState("rgba(165,110,60,0.6)");
+  const [gradient, setGradient] = useState("linear-gradient(135deg,#0a0519 0%,#1a0a2e 45%,#0f0820 100%)");
+  const [glow, setGlow] = useState("rgba(200,140,80,0.35)");
+  const [href, setHref] = useState("/products");
+  const [active, setActive] = useState(true);
+
+  const [tagEn, setTagEn] = useState("");
+  const [tagAr, setTagAr] = useState("");
+  const [eyebrowEn, setEyebrowEn] = useState("");
+  const [eyebrowAr, setEyebrowAr] = useState("");
+  const [title1En, setTitle1En] = useState("");
+  const [title1Ar, setTitle1Ar] = useState("");
+  const [title2En, setTitle2En] = useState("");
+  const [title2Ar, setTitle2Ar] = useState("");
+  const [title3En, setTitle3En] = useState("");
+  const [title3Ar, setTitle3Ar] = useState("");
+  const [subtitleEn, setSubtitleEn] = useState("");
+  const [subtitleAr, setSubtitleAr] = useState("");
+  const [btnTextEn, setBtnTextEn] = useState("Explore Collection");
+  const [btnTextAr, setBtnTextAr] = useState("استكشف الكولكشن");
+
+  const resetForm = () => {
+    setEditingId(null);
+    setImgFile(null);
+    setImgPreview("");
+    setAccent("rgba(165,110,60,0.6)");
+    setGradient("linear-gradient(135deg,#0a0519 0%,#1a0a2e 45%,#0f0820 100%)");
+    setGlow("rgba(200,140,80,0.35)");
+    setHref("/products");
+    setActive(true);
+    setTagEn("");
+    setTagAr("");
+    setEyebrowEn("");
+    setEyebrowAr("");
+    setTitle1En("");
+    setTitle1Ar("");
+    setTitle2En("");
+    setTitle2Ar("");
+    setTitle3En("");
+    setTitle3Ar("");
+    setSubtitleEn("");
+    setSubtitleAr("");
+    setBtnTextEn("Explore Collection");
+    setBtnTextAr("استكشف الكولكشن");
+  };
+
+  const handleEditInit = (slide: HeroSlide) => {
+    setEditingId(slide.id);
+    setImgPreview(slide.img);
+    setAccent(slide.accent);
+    setGradient(slide.gradient);
+    setGlow(slide.glow);
+    setHref(slide.href);
+    setActive(slide.active);
+    setTagEn(slide.tag_en || "");
+    setTagAr(slide.tag_ar || "");
+    setEyebrowEn(slide.eyebrow_en || "");
+    setEyebrowAr(slide.eyebrow_ar || "");
+    setTitle1En(slide.title1_en || "");
+    setTitle1Ar(slide.title1_ar || "");
+    setTitle2En(slide.title2_en || "");
+    setTitle2Ar(slide.title2_ar || "");
+    setTitle3En(slide.title3_en || "");
+    setTitle3Ar(slide.title3_ar || "");
+    setSubtitleEn(slide.subtitle_en || "");
+    setSubtitleAr(slide.subtitle_ar || "");
+    setBtnTextEn(slide.btn_text_en || "Explore Collection");
+    setBtnTextAr(slide.btn_text_ar || "استكشف الكولكشن");
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImgFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setImgPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUpload = async (file: File): Promise<string> => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const fileName = `carousel/slide-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("fileName", fileName);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || res.statusText);
+    }
+
+    const data = await res.json();
+    return data.imageUrl;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingId && !imgFile) {
+      showToast("Please upload an image for the slide.", "error");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let finalImgUrl = imgPreview;
+      if (imgFile) {
+        finalImgUrl = await handleUpload(imgFile);
+      }
+
+      const slideData = {
+        sort_order: editingId ? (slides.find(s => s.id === editingId)?.sort_order ?? slides.length) : slides.length,
+        img: finalImgUrl,
+        accent,
+        gradient,
+        glow,
+        href,
+        active,
+        tag_en: tagEn,
+        tag_ar: tagAr,
+        eyebrow_en: eyebrowEn,
+        eyebrow_ar: eyebrowAr,
+        title1_en: title1En,
+        title1_ar: title1Ar,
+        title2_en: title2En,
+        title2_ar: title2Ar,
+        title3_en: title3En,
+        title3_ar: title3Ar,
+        subtitle_en: subtitleEn,
+        subtitle_ar: subtitleAr,
+        btn_text_en: btnTextEn,
+        btn_text_ar: btnTextAr,
+      };
+
+      if (editingId) {
+        if (editingId.startsWith("default-")) {
+          await onAdd({ ...slideData, sort_order: slides.length });
+          showToast("✦ Saved default slide as a custom database slide!");
+        } else {
+          await onUpdate(editingId, slideData);
+          showToast("✦ Slide updated successfully!");
+        }
+      } else {
+        await onAdd(slideData);
+        showToast("✦ Slide added successfully!");
+      }
+      resetForm();
+      onRefetch();
+    } catch (err: any) {
+      showToast(err.message || "Failed to save slide.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (id.startsWith("default-")) {
+      showToast("Cannot delete system default slides. You can deactivate them instead.", "error");
+      return;
+    }
+    if (!confirm("Are you sure you want to delete this slide?")) return;
+    try {
+      await onDelete(id);
+      showToast("Slide deleted successfully.");
+      onRefetch();
+    } catch (err: any) {
+      showToast(err.message || "Failed to delete slide.", "error");
+    }
+  };
+
+  const handleToggleActive = async (slide: HeroSlide) => {
+    if (slide.id.startsWith("default-")) {
+      showToast("Cannot edit status of system default slides directly. Import them first.", "error");
+      return;
+    }
+    try {
+      await onUpdate(slide.id, { active: !slide.active });
+      showToast(`Slide ${!slide.active ? "activated" : "deactivated"} successfully.`);
+      onRefetch();
+    } catch (err: any) {
+      showToast(err.message || "Failed to update slide.", "error");
+    }
+  };
+
+  const handleMove = async (id: string, direction: "up" | "down") => {
+    if (id.startsWith("default-")) {
+      showToast("Import slides to database to enable reordering.", "error");
+      return;
+    }
+    try {
+      await onReorder(id, direction);
+      showToast("Reordered successfully.");
+      onRefetch();
+    } catch (err: any) {
+      showToast(err.message || "Failed to reorder.", "error");
+    }
+  };
+
+  const handleImportDefaults = async () => {
+    const hasRealSlides = slides.some(s => !s.id.startsWith("default-"));
+    if (hasRealSlides) {
+      if (!confirm("You already have custom slides in the database. Importing defaults might duplicate them or overwrite your order. Proceed?")) return;
+    } else {
+      if (!confirm("This will import the 4 default slides into your database so you can fully edit or delete them. Proceed?")) return;
+    }
+
+    setSubmitting(true);
+    try {
+      for (const slide of DEFAULT_SLIDES) {
+        const { id, ...slideData } = slide;
+        await onAdd(slideData);
+      }
+      showToast("✦ Successfully imported all default slides!");
+      onRefetch();
+    } catch (err: any) {
+      showToast(err.message || "Failed to import defaults.", "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const hasDefaults = slides.some(s => s.id.startsWith("default-"));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "100px" }}>
+      
+      {/* LANGUAGE SELECTOR */}
+      <div style={{ position: "sticky", top: "70px", zIndex: 10, display: "flex", gap: "12px", background: "rgba(20,20,20,0.9)", backdropFilter: "blur(10px)", padding: "16px", borderRadius: "12px", border: "1px solid rgba(201,169,110,0.4)", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+        <div style={{ marginRight: "auto", display: "flex", alignItems: "center", fontWeight: 600, color: "var(--gold)" }}>
+          🌐 Edit Language / لغة التعديل:
+        </div>
+        <button type="button" className={editLang === "ar" ? "btn-submit" : "btn-reset"} onClick={() => setEditLang("ar")}>عربي (Arabic)</button>
+        <button type="button" className={editLang === "en" ? "btn-submit" : "btn-reset"} onClick={() => setEditLang("en")}>English</button>
+      </div>
+
+      {hasDefaults && (
+        <div className="dashboard-card" style={{ border: "1px solid rgba(234,179,8,0.3)", background: "rgba(234,179,8,0.02)" }}>
+          <h3 style={{ color: "#eab308", display: "flex", alignItems: "center", gap: "8px", margin: 0, fontSize: "1.05rem" }}>
+            ⚠️ System Default Slides Active
+          </h3>
+          <p style={{ fontSize: "0.82rem", color: "var(--white-muted)", margin: "8px 0 16px", lineHeight: 1.5 }}>
+            The carousel is currently showing default static slides because your database table `hero_slides` is empty.
+            To edit, delete, or reorder these slides, import them to your database first.
+          </p>
+          <button type="button" className="btn-submit" onClick={handleImportDefaults} disabled={submitting}>
+            {submitting ? "Importing..." : "📥 Import Default Slides to Database"}
+          </button>
+        </div>
+      )}
+
+      {/* ADD / EDIT SLIDE FORM */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">
+          {editingId ? `📝 Edit Slide (${editingId.startsWith("default-") ? "Template" : "DB ID: " + editingId.slice(0,8)})` : "➕ Add New Carousel Slide"}
+        </h2>
+        
+        <form onSubmit={handleSubmit} style={{ marginTop: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          {/* Image Upload */}
+          <div className="form-group">
+            <label className="form-label">Slide Image 🖼️</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", marginTop: "8px", flexWrap: "wrap" }}>
+              {imgPreview && (
+                <div style={{ width: "160px", height: "90px", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(201,169,110,0.2)", background: "rgba(0,0,0,0.4)" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imgPreview} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+              )}
+              <div>
+                <input
+                  id="slide-image-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                />
+                <label htmlFor="slide-image-file" className="btn-submit" style={{ cursor: "pointer", display: "inline-block", padding: "10px 20px" }}>
+                  {imgFile ? "Change Selected Image" : "Upload Slide Image"}
+                </label>
+                <p style={{ fontSize: "0.72rem", color: "var(--white-muted)", marginTop: "6px" }}>
+                  Upload high-quality landscape image (16:9 recommended)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            {/* Tag Badge */}
+            <div className="form-group">
+              <label className="form-label">Tag Badge (e.g. BEST SELLER) - {editLang === "ar" ? "عربي" : "English"}</label>
+              {editLang === "ar" ? (
+                <input className="form-input" style={{ direction: "rtl" }} type="text" placeholder="مثال: الأكثر مبيعاً" value={tagAr} onChange={e => setTagAr(e.target.value)} />
+              ) : (
+                <input className="form-input" type="text" placeholder="e.g. BEST SELLER" value={tagEn} onChange={e => setTagEn(e.target.value)} />
+              )}
+            </div>
+
+            {/* Eyebrow */}
+            <div className="form-group">
+              <label className="form-label">Eyebrow Text - {editLang === "ar" ? "عربي" : "English"}</label>
+              {editLang === "ar" ? (
+                <input className="form-input" style={{ direction: "rtl" }} type="text" placeholder="مثال: تشكيلة التوقيع الخاصة" value={eyebrowAr} onChange={e => setEyebrowAr(e.target.value)} />
+              ) : (
+                <input className="form-input" type="text" placeholder="e.g. The Signature Collection" value={eyebrowEn} onChange={e => setEyebrowEn(e.target.value)} />
+              )}
+            </div>
+          </div>
+
+          {/* Title Lines */}
+          <div className="form-group">
+            <label className="form-label">Title (3 lines of text for staggered animation) - {editLang === "ar" ? "عربي" : "English"}</label>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginTop: "6px" }}>
+              {editLang === "ar" ? (
+                <>
+                  <input className="form-input" style={{ direction: "rtl" }} type="text" placeholder="السطر 1" value={title1Ar} onChange={e => setTitle1Ar(e.target.value)} />
+                  <input className="form-input" style={{ direction: "rtl" }} type="text" placeholder="السطر 2" value={title2Ar} onChange={e => setTitle2Ar(e.target.value)} />
+                  <input className="form-input" style={{ direction: "rtl" }} type="text" placeholder="السطر 3" value={title3Ar} onChange={e => setTitle3Ar(e.target.value)} />
+                </>
+              ) : (
+                <>
+                  <input className="form-input" type="text" placeholder="Line 1" value={title1En} onChange={e => setTitle1En(e.target.value)} />
+                  <input className="form-input" type="text" placeholder="Line 2" value={title2En} onChange={e => setTitle2En(e.target.value)} />
+                  <input className="form-input" type="text" placeholder="Line 3" value={title3En} onChange={e => setTitle3En(e.target.value)} />
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Subtitle */}
+          <div className="form-group">
+            <label className="form-label">Subtitle Description - {editLang === "ar" ? "عربي" : "English"}</label>
+            {editLang === "ar" ? (
+              <textarea className="form-textarea" style={{ direction: "rtl" }} rows={2} placeholder="وصف تفصيلي قصير..." value={subtitleAr} onChange={e => setSubtitleAr(e.target.value)} />
+            ) : (
+              <textarea className="form-textarea" rows={2} placeholder="Short description description..." value={subtitleEn} onChange={e => setSubtitleEn(e.target.value)} />
+            )}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            {/* Button Text */}
+            <div className="form-group">
+              <label className="form-label">Button Text - {editLang === "ar" ? "عربي" : "English"}</label>
+              {editLang === "ar" ? (
+                <input className="form-input" style={{ direction: "rtl" }} type="text" value={btnTextAr} onChange={e => setBtnTextAr(e.target.value)} />
+              ) : (
+                <input className="form-input" type="text" value={btnTextEn} onChange={e => setBtnTextEn(e.target.value)} />
+              )}
+            </div>
+
+            {/* Target Href Link */}
+            <div className="form-group">
+              <label className="form-label">Target Link (href)</label>
+              <input className="form-input" type="text" placeholder="e.g. /products or /category?cat=Oud" value={href} onChange={e => setHref(e.target.value)} />
+            </div>
+          </div>
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "18px", marginTop: "10px" }}>
+            <h4 style={{ margin: "0 0 16px", color: "var(--gold)", fontSize: "0.88rem", letterSpacing: "0.05em" }}>🎨 Advanced Slide Styling & Colors (Glow & Ambient Accent)</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontSize: "0.75rem" }}>Accent Glow (rgba)</label>
+                <input className="form-input" style={{ fontSize: "0.8rem" }} type="text" value={glow} onChange={e => setGlow(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label" style={{ fontSize: "0.75rem" }}>Edge Accent (rgba)</label>
+                <input className="form-input" style={{ fontSize: "0.8rem" }} type="text" value={accent} onChange={e => setAccent(e.target.value)} />
+              </div>
+              <div className="form-group">
+                <label className="form-label" style={{ fontSize: "0.75rem" }}>Background Gradient CSS</label>
+                <input className="form-input" style={{ fontSize: "0.8rem" }} type="text" value={gradient} onChange={e => setGradient(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "12px", marginTop: "10px" }}>
+            <button className="btn-submit" type="submit" disabled={submitting}>
+              {submitting ? "Saving Slide..." : editingId ? "Save Changes" : "Create Slide"}
+            </button>
+            {editingId && (
+              <button className="btn-reset" type="button" onClick={resetForm}>
+                Cancel Edit
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* ALL CAROUSEL SLIDES LIST */}
+      <div className="dashboard-card">
+        <h2 className="dashboard-card-title">🎞️ Current Carousel Slides</h2>
+        <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          {slides.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "var(--white-muted)", fontSize: "0.9rem" }}>
+              No slides configured. Add one above!
+            </div>
+          ) : (
+            slides.map((slide, index) => {
+              const slideTitle1 = editLang === "ar" ? slide.title1_ar : slide.title1_en;
+              const slideTitle2 = editLang === "ar" ? slide.title2_ar : slide.title2_en;
+              const slideTitle3 = editLang === "ar" ? slide.title3_ar : slide.title3_en;
+              const slideSubtitle = editLang === "ar" ? slide.subtitle_ar : slide.subtitle_en;
+              const slideTag = editLang === "ar" ? slide.tag_ar : slide.tag_en;
+
+              const isDefault = slide.id.startsWith("default-");
+
+              return (
+                <div key={slide.id} style={{ display: "flex", gap: "20px", padding: "20px", borderRadius: "12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,169,110,0.1)", flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ width: "120px", height: "72px", borderRadius: "8px", overflow: "hidden", flexShrink: 0, border: "1px solid rgba(255,255,255,0.05)" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={slide.img} alt="Slide Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+
+                  <div style={{ flex: 1, minWidth: "220px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--gold)" }}>
+                        {slideTitle1} {slideTitle2} {slideTitle3}
+                      </span>
+                      {slideTag && (
+                        <span style={{ background: "rgba(201,169,110,0.15)", color: "var(--gold-light)", padding: "2px 8px", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 700 }}>
+                          {slideTag}
+                        </span>
+                      )}
+                      {isDefault && (
+                        <span style={{ background: "rgba(234,179,8,0.15)", color: "#facc15", padding: "2px 8px", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 700 }}>
+                          SYSTEM DEFAULT
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: "var(--white-muted)", lineHeight: 1.4 }}>
+                      {slideSubtitle}
+                    </p>
+                    <div style={{ marginTop: "8px", fontSize: "0.7rem", color: "rgba(255,255,255,0.25)" }}>
+                      Link: {slide.href} | Order: {slide.sort_order}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {!isDefault && (
+                      <>
+                        <button type="button" className="btn-reset" style={{ padding: "6px 10px", fontSize: "0.75rem" }} onClick={() => handleMove(slide.id, "up")} disabled={index === 0}>
+                          ▲
+                        </button>
+                        <button type="button" className="btn-reset" style={{ padding: "6px 10px", fontSize: "0.75rem" }} onClick={() => handleMove(slide.id, "down")} disabled={index === slides.length - 1}>
+                          ▼
+                        </button>
+                      </>
+                    )}
+
+                    <button type="button" className="btn-submit" style={{ padding: "8px 16px", fontSize: "0.75rem" }} onClick={() => handleEditInit(slide)}>
+                      Edit
+                    </button>
+
+                    {!isDefault && (
+                      <button type="button" className="btn-reset" style={{ padding: "8px 16px", fontSize: "0.75rem", borderColor: "rgba(239,68,68,0.3)", color: "#ef4444" }} onClick={() => handleDelete(slide.id)}>
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
