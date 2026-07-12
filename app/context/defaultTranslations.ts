@@ -22,11 +22,11 @@ export const defaultTranslations: Record<string, string> = {
 
   /* ── Announcement bar ── */
   en_ann_1: "✦ 10% OFF YOUR FIRST ORDER | USE CODE: LUXE10 ✦",
-  en_ann_2: "✦ FREE SHIPPING ON ALL EGYPTIAN ORDERS ABOVE 1500 EGP ✦",
+  en_ann_2: "✦ FREE SHIPPING ON ALL EGYPTIAN ORDERS ABOVE 3000 EGP ✦",
   en_ann_3: "✦ EXPERIENCE THE ART OF INVISIBLE BEAUTY ✦",
 
   ar_ann_1: "✦ خصم ١٠٪ على أول طلب | استخدم كود: LUXE10 ✦",
-  ar_ann_2: "✦ شحن مجاني لجميع الطلبات فوق ١٥٠٠ جنيه داخل مصر ✦",
+  ar_ann_2: "✦ شحن مجاني لجميع الطلبات فوق  30٠٠ جنيه داخل مصر ✦",
   ar_ann_3: "✦ اختبر فن الجمال الخفي ✦",
 
   /* ── Hero ── */

@@ -52,8 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} ${amiri.variable} ${cairo.variable}`}>
-      <body>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${amiri.variable} ${cairo.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <SiteContentProvider>
           <LanguageProvider>
             <CartProvider>

@@ -4,9 +4,16 @@ import React, { useRef, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import gsap from 'gsap';
+import { useLanguage } from '@/app/context/LanguageContext';
 
 export default function AboutPage() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { lang, isRTL } = useLanguage();
+
+  const brandStatement = {
+    en: "We are an emerging brand rooted in the grandeur of history and the rich fragrance of Nubian civilization — a culture steeped in distinctive Eastern aromas. Nubia is a brand that aspires to create high-quality perfumes crafted exclusively to mirror the ancient Egyptian-Nubian heritage.",
+    ar: "نحن براند ناشئ من عراقة التاريخ وعبق الحضارة النوبية المليئة بالروائح الشرقية المتميزة، براند يتطلع إلى إنشاء عطور بجودة عالية صُممت خصيصاً لتحاكي إرث النوبة المصرية العتيقة.",
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -122,8 +129,24 @@ export default function AboutPage() {
               <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "20px" }}>
                 At Nubia, we believe a fragrance is more than a scent—it is an invisible statement, a powerful form of self-expression that commands presence. 
               </p>
-              <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "30px" }}>
+              <p style={{ color: "var(--white-muted)", fontSize: "0.95rem", lineHeight: 1.8, marginBottom: "20px" }}>
                 Every bottle undergoes a rigorous 90-day maceration ritual in our climate-controlled dark vaults. This slow maturation allows the natural oils to bond, ensuring exceptional longevity, projection, and sillage.
+              </p>
+
+              {/* Brand Statement — bilingual */}
+              <p style={{
+                color: "var(--white)",
+                fontSize: "0.97rem",
+                lineHeight: 1.9,
+                marginBottom: "30px",
+                paddingLeft: isRTL ? 0 : "18px",
+                paddingRight: isRTL ? "18px" : 0,
+                borderLeft: isRTL ? "none" : "3px solid var(--gold)",
+                borderRight: isRTL ? "3px solid var(--gold)" : "none",
+                direction: isRTL ? "rtl" : "ltr",
+                fontStyle: "italic",
+              }}>
+                {brandStatement[lang]}
               </p>
               
               <div style={{ display: "flex", gap: "40px", paddingTop: "24px", borderTop: "1px solid rgba(220, 202, 187, 0.12)" }}>

@@ -6,9 +6,10 @@ import { useProducts } from "../context/ProductContext";
 import { useSiteContent } from "../context/SiteContentContext";
 import { useHeroSlides, DEFAULT_SLIDES, HeroSlide } from "../context/HeroSlidesContext";
 import { supabase, STORAGE_BUCKET } from "@/lib/supabase";
+import { Product } from "../context/ProductContext";
 
 export default function DashboardPage() {
-  const { products, loading, addProduct, deleteProduct } = useProducts();
+  const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const { get: sc, update: scUpdate, uploadImageAndUpdate } = useSiteContent();
   const { slides: heroSlides, allSlides: heroAllSlides, addSlide: addHeroSlide, updateSlide: updateHeroSlide, deleteSlide: deleteHeroSlide, reorderSlide: reorderHeroSlide, refetch: refetchHero } = useHeroSlides();
   const [activeTab, setActiveTab] = useState<"overview" | "add" | "products" | "content" | "carousel">("overview");
@@ -47,6 +48,21 @@ export default function DashboardPage() {
   const [longevity, setLongevity] = useState("");
   const [sillage, setSillage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  
+  // New State for Variants and Media
+  const [sizes, setSizes] = useState<{size: string, price: number}[]>([
+    { size: "10ml", price: 50 },
+    { size: "30ml", price: 120 },
+    { size: "50ml", price: 195 },
+    { size: "100ml", price: 320 },
+  ]);
+  // Existing gallery images (URLs already in DB)
+  const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
+  // New gallery images (Files selected by user)
+  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>("");
@@ -88,49 +104,95 @@ export default function DashboardPage() {
     setBadge("");
     setImageFile(null);
     setImagePreview(null);
-    setUploadProgress("");
     setCategory("");
     setTopNotes("");
     setHeartNotes("");
     setBaseNotes("");
     setLongevity("");
     setSillage("");
+    setSizes([
+      { size: "10ml", price: 50 },
+      { size: "30ml", price: 120 },
+      { size: "50ml", price: 195 },
+      { size: "100ml", price: 320 },
+    ]);
+    setExistingGalleryImages([]);
+    setAdditionalImages([]);
+    setAdditionalImagePreviews([]);
+    setVideoUrl("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+    setEditingProduct(null);
+  };
+
+  const handleEditProduct = (p: any) => {
+    setEditingProduct(p);
+    setName(p.name);
+    setDescription(p.description);
+    setPrice(p.price.toString());
+    setBadge(p.badge || "");
+    setImageFile(null);
+    setImagePreview(p.image_url);
+    setCategory(p.category || "");
+    setTopNotes(p.top_notes || "");
+    setHeartNotes(p.heart_notes || "");
+    setBaseNotes(p.base_notes || "");
+    setLongevity(p.longevity || "");
+    setSillage(p.sillage || "");
+    setSizes(p.sizes || []);
+    setAdditionalImages([]);
+    setAdditionalImagePreviews([]);
+    setExistingGalleryImages(p.images || []);
+    setVideoUrl(p.video_url || "");
+    setActiveTab("add");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !description || !price || !imageFile) return;
+    if (!name || !description || !price || (!imageFile && !editingProduct)) return;
 
     setIsSubmitting(true);
     try {
       // Step 1: Upload image to Supabase Storage via Server API Route (bypasses browser CORS & adblockers)
-      setUploadProgress("Uploading image to Supabase Storage...");
-      const ext = imageFile.name.split(".").pop() ?? "jpg";
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      let image_url = editingProduct ? editingProduct.image_url : "";
+      if (imageFile) {
+        setUploadProgress("Uploading main image...");
+        const ext = imageFile.name.split(".").pop() ?? "jpg";
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        formData.append("fileName", fileName);
 
-      const formData = new FormData();
-      formData.append("file", imageFile);
-      formData.append("fileName", fileName);
+        const upRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (!upRes.ok) throw new Error("Failed to upload main image");
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        const errData = await uploadRes.json();
-        throw new Error(`Image upload failed: ${errData.error || uploadRes.statusText}`);
+        const data = await upRes.json();
+        image_url = data.imageUrl;
       }
 
-      const uploadData = await uploadRes.json();
-      const image_url = uploadData.imageUrl;
+      // Step 2: Upload additional images (if any)
+      let uploadedAdditionalImages: string[] = editingProduct ? (existingGalleryImages) : [];
+      if (additionalImages.length > 0) {
+        setUploadProgress("Uploading additional images...");
+        // If editing, we append. The user can just upload more images and they get appended.
+        // Or if they want to replace, they would need a delete feature, but append is safer.
+        for (const file of additionalImages) {
+          const ext = file.name.split(".").pop() ?? "jpg";
+          const fileName = `gallery-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("fileName", fileName);
 
-      // Step 2: Add product record to database
+          const upRes = await fetch("/api/upload", { method: "POST", body: formData });
+          if (upRes.ok) {
+            const data = await upRes.json();
+            uploadedAdditionalImages.push(data.imageUrl);
+          }
+        }
+      }
+
       setUploadProgress("Saving product to database...");
 
-      // Step 3: Add product record to database
-      await addProduct({
+      const productData = {
         name,
         description,
         price: parseFloat(price),
@@ -142,11 +204,21 @@ export default function DashboardPage() {
         base_notes: baseNotes.trim() || undefined,
         longevity: longevity.trim() || undefined,
         sillage: sillage.trim() || undefined,
-      });
+        sizes,
+        images: uploadedAdditionalImages.length > 0 ? uploadedAdditionalImages : undefined,
+        video_url: videoUrl.trim() || undefined,
+      };
 
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+        showToast("✦ Fragrance updated successfully!");
+      } else {
+        await addProduct(productData);
+        showToast("✦ Fragrance added to collection!");
+      }
+      
       handleReset();
       setActiveTab("products");
-      showToast("✦ Fragrance added to collection!");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred";
       showToast(message, "error");
@@ -187,9 +259,9 @@ export default function DashboardPage() {
           <button
             id="nav-add"
             className={`sidebar-nav-item ${activeTab === "add" ? "active" : ""}`}
-            onClick={() => setActiveTab("add")}
+            onClick={() => { setActiveTab("add"); handleReset(); }}
           >
-            <span className="nav-icon">✦</span> Add Product
+            <span className="nav-icon">✦</span> {editingProduct ? "Edit Product" : "Add Product"}
           </button>
 
           <button
@@ -575,6 +647,181 @@ export default function DashboardPage() {
                     />
                   </div>
 
+                  {/* ── NEW: Dynamic Sizes ── */}
+                  <div className="form-group full-width">
+                    <label className="form-label">Variants & Sizes</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
+                      {sizes.map((s, idx) => (
+                        <div key={idx} style={{
+                          background: "rgba(255,255,255,0.03)", border: "1px solid rgba(220,202,187,0.15)",
+                          padding: "12px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "8px"
+                        }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--gold)" }}>
+                            <span>Size</span>
+                            <input
+                              type="text"
+                              value={s.size}
+                              onChange={(e) => {
+                                const newSizes = [...sizes];
+                                newSizes[idx].size = e.target.value;
+                                setSizes(newSizes);
+                              }}
+                              style={{ width: "60px", background: "transparent", border: "none", color: "var(--white)", borderBottom: "1px solid rgba(220,202,187,0.3)", outline: "none", textAlign: "right" }}
+                            />
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--white-muted)" }}>
+                            <span>Price (EGP)</span>
+                            <input
+                              type="number"
+                              value={s.price}
+                              onChange={(e) => {
+                                const newSizes = [...sizes];
+                                newSizes[idx].price = Number(e.target.value);
+                                setSizes(newSizes);
+                              }}
+                              style={{ width: "60px", background: "transparent", border: "none", color: "var(--white)", borderBottom: "1px solid rgba(220,202,187,0.3)", outline: "none", textAlign: "right" }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* ── NEW: Gallery Images ── */}
+                  <div className="form-group full-width">
+                    <label className="form-label">Additional Gallery Images</label>
+
+                    {/* Existing images (from DB) */}
+                    {existingGalleryImages.length > 0 && (
+                      <div style={{ marginBottom: "14px" }}>
+                        <p style={{ fontSize: "0.74rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px" }}>
+                          Saved Images ({existingGalleryImages.length}) — click × to remove
+                        </p>
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                          {existingGalleryImages.map((src, i) => (
+                            <div key={i} style={{ position: "relative", width: "80px", height: "80px" }}>
+                              <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", border: "2px solid rgba(220,202,187,0.4)" }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={src} alt="gallery" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setExistingGalleryImages(existingGalleryImages.filter((_, idx) => idx !== i))}
+                                style={{
+                                  position: "absolute", top: "-8px", right: "-8px",
+                                  width: "22px", height: "22px",
+                                  background: "#ef4444", color: "#fff",
+                                  border: "none", borderRadius: "50%",
+                                  fontSize: "0.75rem", cursor: "pointer",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  lineHeight: 1, fontWeight: 700,
+                                  boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                                }}
+                                title="Remove image"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* New images to upload */}
+                    <label
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 20px",
+                        background: "rgba(220,202,187,0.07)",
+                        border: "1px dashed rgba(220,202,187,0.35)",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        color: "var(--gold)",
+                        fontSize: "0.82rem",
+                        letterSpacing: "0.08em",
+                        marginBottom: "10px",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(220,202,187,0.13)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(220,202,187,0.07)")}
+                    >
+                      + Add Images
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/png,image/jpeg,image/webp,image/jpg"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const newFiles = Array.from(e.target.files || []);
+                          if (!newFiles.length) return;
+                          // Accumulate — don't replace existing selections
+                          setAdditionalImages(prev => [...prev, ...newFiles]);
+                          const newPreviews = newFiles.map(f => URL.createObjectURL(f));
+                          setAdditionalImagePreviews(prev => [...prev, ...newPreviews]);
+                          // Reset input so same file can be re-added if needed
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {additionalImagePreviews.length > 0 && (
+                      <div>
+                        <p style={{ fontSize: "0.74rem", color: "var(--white-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "10px" }}>
+                          New images to upload ({additionalImagePreviews.length})
+                        </p>
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                          {additionalImagePreviews.map((src, i) => (
+                            <div key={i} style={{ position: "relative", width: "80px", height: "80px" }}>
+                              <div style={{ width: "80px", height: "80px", borderRadius: "8px", overflow: "hidden", border: "2px solid rgba(76,175,80,0.5)" }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={src} alt="new preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newFiles = additionalImages.filter((_, idx) => idx !== i);
+                                  const newPreviews = additionalImagePreviews.filter((_, idx) => idx !== i);
+                                  setAdditionalImages(newFiles);
+                                  setAdditionalImagePreviews(newPreviews);
+                                }}
+                                style={{
+                                  position: "absolute", top: "-8px", right: "-8px",
+                                  width: "22px", height: "22px",
+                                  background: "#ef4444", color: "#fff",
+                                  border: "none", borderRadius: "50%",
+                                  fontSize: "0.75rem", cursor: "pointer",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  lineHeight: 1, fontWeight: 700,
+                                  boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+                                }}
+                                title="Remove"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── NEW: Video URL ── */}
+                  <div className="form-group full-width">
+                    <label className="form-label" htmlFor="product-video-url">Video Embed URL (YouTube / Vimeo)</label>
+                    <input
+                      id="product-video-url"
+                      className="form-input"
+                      type="url"
+                      placeholder="e.g. https://www.youtube.com/embed/..."
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                    />
+                    <p style={{ fontSize: "0.75rem", color: "var(--white-muted)", marginTop: "6px" }}>
+                      Please provide the direct embed URL to ensure it plays inside the page beautifully.
+                    </p>
+                  </div>
+
                   {/* Upload Progress */}
                   {uploadProgress && (
                     <div
@@ -599,15 +846,15 @@ export default function DashboardPage() {
                   {/* Actions */}
                   <div className="form-actions">
                     <button type="button" className="btn-reset" onClick={handleReset} disabled={isSubmitting}>
-                      Clear
+                      {editingProduct ? "Cancel Edit" : "Clear"}
                     </button>
                     <button
                       id="submit-product-btn"
                       type="submit"
                       className="btn-submit"
-                      disabled={isSubmitting || !name || !description || !price || !imageFile}
+                      disabled={isSubmitting || !name || !description || !price || (!imageFile && !editingProduct)}
                     >
-                      {isSubmitting ? "Uploading..." : "✦ Add to Collection"}
+                      {isSubmitting ? "Saving..." : (editingProduct ? "✦ Update Collection" : "✦ Add to Collection")}
                     </button>
                   </div>
                 </div>
@@ -676,6 +923,14 @@ export default function DashboardPage() {
                           </td>
                           <td>
                             <div className="table-actions">
+                              <button
+                                id={`edit-product-${product.id}`}
+                                className="btn-secondary"
+                                style={{ padding: "8px 14px", fontSize: "0.8rem", borderRadius: "8px", minWidth: "60px", background: "transparent", border: "1px solid rgba(220,202,187,0.2)" }}
+                                onClick={() => handleEditProduct(product)}
+                              >
+                                Edit
+                              </button>
                               <button
                                 id={`delete-product-${product.id}`}
                                 className="btn-table-delete"

@@ -33,7 +33,7 @@ export default function ContactPage() {
     },
     {
       q: "What is your shipping policy within Egypt?",
-      a: "We offer next-day delivery within Cairo and Giza, and 2-3 business days for other governorates. Shipping is completely free for all orders above 1500 EGP."
+      a: "We offer next-day delivery within Cairo and Giza, and 2-3 business days for other governorates. Shipping is completely free for all orders above 3000 EGP."
     },
     {
       q: "Can I customize a fragrance bottle for a gift?",

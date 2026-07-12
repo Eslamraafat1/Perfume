@@ -16,15 +16,6 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger, TextPlugin);
 }
 
-const SIZES = ["30ml", "50ml", "100ml", "150ml"];
-
-const SIZE_PRICES: Record<string, number> = {
-  "30ml": 0.6,
-  "50ml": 1,
-  "100ml": 1.7,
-  "150ml": 2.2,
-};
-
 export default function ProductDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -33,12 +24,13 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSize, setSelectedSize] = useState("50ml");
+  const [selectedSize, setSelectedSize] = useState("");
   const [qty, setQty] = useState(1);
   const [addedToast, setAddedToast] = useState(false);
   const [activeTab, setActiveTab] = useState<"notes" | "ritual" | "story">("notes");
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeScentBar, setActiveScentBar] = useState<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -62,6 +54,10 @@ export default function ProductDetailsPage() {
         setLoading(false);
       } else {
         setProduct(data);
+        if (data.sizes && data.sizes.length > 0) {
+          setSelectedSize(data.sizes[0].size);
+        }
+        setSelectedImage(data.image_url);
         if (data.category) {
           const { data: relatedData } = await supabase
             .from("products")
@@ -212,7 +208,11 @@ export default function ProductDetailsPage() {
 
   function getAdjustedPrice() {
     if (!product) return 0;
-    return Math.round(product.price * (SIZE_PRICES[selectedSize] || 1));
+    if (product.sizes && product.sizes.length > 0) {
+      const sizeObj = product.sizes.find(s => s.size === selectedSize);
+      if (sizeObj) return sizeObj.price;
+    }
+    return product.price;
   }
 
   function handleAddToCart() {
@@ -374,7 +374,7 @@ export default function ProductDetailsPage() {
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={product.image_url}
+                src={selectedImage || product.image_url}
                 alt={product.name}
                 onLoad={() => setImageLoaded(true)}
                 style={{
@@ -404,6 +404,44 @@ export default function ProductDetailsPage() {
                 }} />
               ))}
             </div>
+
+            {/* ── Creative Image Gallery ── */}
+            {((product.images && product.images.length > 0) || true) && (
+              <div style={{
+                marginTop: "16px",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(65px, 1fr))",
+                gap: "10px",
+              }}>
+                {[product.image_url, ...(product.images || [])].map((imgSrc, i) => (
+                  <button
+                    key={i}
+                    onClick={() => { setImageLoaded(false); setTimeout(() => setSelectedImage(imgSrc), 50); }}
+                    style={{
+                      background: "var(--dark-2)",
+                      border: selectedImage === imgSrc ? "1px solid var(--gold)" : "1px solid rgba(220,202,187,0.15)",
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      aspectRatio: "1/1",
+                      cursor: "pointer",
+                      padding: 0,
+                      position: "relative",
+                      transition: "all 0.3s ease",
+                      opacity: selectedImage === imgSrc ? 1 : 0.6,
+                      transform: selectedImage === imgSrc ? "scale(1.05)" : "scale(1)",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                    onMouseLeave={(e) => { if(selectedImage !== imgSrc) (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    {selectedImage === imgSrc && (
+                      <div style={{ position: "absolute", inset: 0, border: "2px solid var(--gold)", borderRadius: "12px" }} />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Scent Profile */}
             <div style={{
@@ -534,30 +572,30 @@ export default function ProductDetailsPage() {
                 Select Size
               </p>
               <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                {SIZES.map((s) => (
+                {(product.sizes || []).map((s) => (
                   <button
-                    key={s}
-                    onClick={() => setSelectedSize(s)}
+                    key={s.size}
+                    onClick={() => setSelectedSize(s.size)}
                     className="size-btn"
                     style={{
                       padding: "12px 22px",
                       borderRadius: "12px",
-                      border: selectedSize === s
+                      border: selectedSize === s.size
                         ? "1px solid var(--gold)"
                         : "1px solid rgba(220,202,187,0.15)",
-                      background: selectedSize === s
+                      background: selectedSize === s.size
                         ? "linear-gradient(135deg, var(--gold), var(--gold-dark))"
                         : "rgba(255,255,255,0.03)",
-                      color: selectedSize === s ? "var(--black)" : "var(--white-muted)",
+                      color: selectedSize === s.size ? "var(--black)" : "var(--white-muted)",
                       fontSize: "0.8rem",
-                      fontWeight: selectedSize === s ? 700 : 400,
+                      fontWeight: selectedSize === s.size ? 700 : 400,
                       cursor: "pointer",
                       transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
                       fontFamily: "var(--font-sans)",
                       letterSpacing: "0.05em",
                     }}
                   >
-                    {s}
+                    {s.size}
                     <span style={{
                       display: "block",
                       fontSize: "0.65rem",
@@ -565,7 +603,7 @@ export default function ProductDetailsPage() {
                       marginTop: "2px",
                       fontWeight: 400,
                     }}>
-                      {Math.round(product.price * SIZE_PRICES[s]).toLocaleString()} EGP
+                      {s.price.toLocaleString()} EGP
                     </span>
                   </button>
                 ))}
@@ -693,6 +731,43 @@ export default function ProductDetailsPage() {
               </Link>
             </div>
 
+            {/* ── NEW: Cinematic Video Embed ── */}
+            {product.video_url && (
+              <div className="pd-stagger" style={{
+                marginBottom: "36px",
+                borderRadius: "16px",
+                overflow: "hidden",
+                border: "1px solid rgba(220,202,187,0.15)",
+                background: "var(--dark-2)",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+              }}>
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(220,202,187,0.1)", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ color: "var(--gold)" }}>▶</span>
+                  <span style={{ fontSize: "0.8rem", color: "var(--white)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Campaign Film</span>
+                </div>
+                <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+                  <iframe
+                    src={(() => {
+                      const url = product.video_url;
+                      if (!url) return "";
+                      let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+                      if (match && match[1]) return `https://www.youtube.com/embed/${match[1]}`;
+                      let vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                      if (vimeoMatch && vimeoMatch[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                      let tiktokMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+                      if (tiktokMatch && tiktokMatch[1]) return `https://www.tiktok.com/embed/v2/${tiktokMatch[1]}`;
+                      return url;
+                    })()}
+                    title={`${product.name} Video`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Trust Meta */}
             <div className="pd-stagger" style={{
               display: "grid",
@@ -718,6 +793,20 @@ export default function ProductDetailsPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── NEW SECTION: EDITORIAL GALLERY ─── */}
+      {product.images && product.images.length > 0 && (
+        <section style={{ padding: "0 60px 80px", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {product.images.map((img, idx) => (
+              <div key={idx} className="reveal-el" style={{ width: "100%", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.1)", background: "var(--dark-2)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt={`${product.name} gallery ${idx + 1}`} style={{ width: "100%", height: "auto", display: "block", objectFit: "cover", maxHeight: "800px" }} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ─── SECTION 2: TABS ─── */}
       <section style={{

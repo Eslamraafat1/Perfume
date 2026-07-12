@@ -11,6 +11,7 @@ import { useLanguage } from "./context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroCarousel from "@/components/HeroCarousel";
+import CategorySection from "@/components/CategorySection";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -131,6 +132,11 @@ export default function HomePage() {
           SECTION 1 — HERO CAROUSEL
       ══════════════════════════════════════════════ */}
       <HeroCarousel />
+
+      {/* ══════════════════════════════════════════════
+          NEW SECTION — CATEGORY SECTION
+      ══════════════════════════════════════════════ */}
+      <CategorySection />
 
 
       {/* ══════════════════════════════════════════════

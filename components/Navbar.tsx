@@ -50,7 +50,11 @@ export default function Navbar() {
         {/* ─── NAVBAR ─── */}
         <nav className={`navbar${scrolled ? " navbar-scrolled" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
           <Link href="/" className="navbar-brand">
-            Nubia
+            <span className="navbar-brand-icon" aria-hidden="true">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/camel-icon.png" alt="" className="camel-icon" />
+            </span>
+            <span className="navbar-brand-text">Nubia</span>
           </Link>
 
           {/* Desktop links */}
@@ -112,7 +116,11 @@ export default function Navbar() {
       {/* ─── MOBILE DRAWER ─── */}
       <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         <div className="mobile-drawer-inner">
-          <div className="mobile-drawer-brand">Nubia</div>
+          <div className="mobile-drawer-brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/camel-icon.png" alt="" className="camel-icon-mobile" />
+            Nubia
+          </div>
           <ul className="mobile-nav-links">
             {links.map((link) => (
               <li key={link.href}>

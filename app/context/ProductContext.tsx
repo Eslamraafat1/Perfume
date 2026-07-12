@@ -22,6 +22,9 @@ export interface Product {
   base_notes?: string;
   longevity?: string;
   sillage?: string;
+  sizes?: { size: string; price: number }[];
+  images?: string[];
+  video_url?: string;
   created_at?: string;
 }
 
@@ -29,6 +32,7 @@ interface ProductContextType {
   products: Product[];
   loading: boolean;
   addProduct: (product: Omit<Product, "id" | "created_at">) => Promise<void>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -80,6 +84,12 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     await fetchProducts();
   };
 
+  const updateProduct = async (id: string, product: Partial<Product>) => {
+    const { error } = await supabase.from("products").update(product).eq("id", id);
+    if (error) throw new Error(error.message);
+    await fetchProducts();
+  };
+
   const deleteProduct = async (id: string) => {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) throw new Error(error.message);
@@ -88,7 +98,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProductContext.Provider
-      value={{ products, loading, addProduct, deleteProduct, refetch: fetchProducts }}
+      value={{ products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts }}
     >
       {children}
     </ProductContext.Provider>
