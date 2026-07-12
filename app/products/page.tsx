@@ -21,6 +21,13 @@ const CATEGORIES = [
   { id: "Oriental Spice", label: "Oriental Spice", icon: "🌶" },
 ];
 
+const GENDER_FILTERS = [
+  { id: "all",    label: "All",    labelAr: "الكل",    icon: "✦" },
+  { id: "men",    label: "Men",    labelAr: "رجالي",   icon: "♂" },
+  { id: "women",  label: "Women",  labelAr: "نسائي",   icon: "♀" },
+  { id: "unisex", label: "Unisex", labelAr: "مشترك",  icon: "⚧" },
+];
+
 const SORT_OPTIONS = [
   { id: "default", label: "Featured" },
   { id: "price-low", label: "Price: Low → High" },
@@ -35,6 +42,7 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("default");
+  const [genderFilter, setGenderFilter] = useState("all");
   const [view, setView] = useState<"grid" | "list">("grid");
   const [toast, setToast] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -138,6 +146,9 @@ export default function ProductsPage() {
         (p) => p.category?.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
+    if (genderFilter !== "all") {
+      result = result.filter((p) => (p.gender || "unisex") === genderFilter);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -156,7 +167,7 @@ export default function ProductsPage() {
       );
     }
     return result;
-  }, [products, selectedCategory, searchQuery, sortBy]);
+  }, [products, selectedCategory, searchQuery, sortBy, genderFilter]);
 
   function handleQuickAdd(e: React.MouseEvent, product: Product) {
     e.preventDefault();
@@ -371,6 +382,35 @@ export default function ProductsPage() {
                 {cat.label}
               </button>
             ))}
+          </div>
+
+          {/* Gender filter row */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "14px" }}>
+            <span style={{ fontSize: "0.68rem", color: "var(--white-muted)", textTransform: "uppercase", letterSpacing: "0.15em", whiteSpace: "nowrap", marginRight: "4px" }}>For:</span>
+            {GENDER_FILTERS.map((g) => {
+              const colorMap: Record<string, string> = { men: "#6ab0f5", women: "#f5a0c8", unisex: "var(--gold)", all: "var(--gold)" };
+              const active = genderFilter === g.id;
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setGenderFilter(g.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "6px",
+                    padding: "7px 18px", borderRadius: "40px",
+                    border: active ? `1px solid ${colorMap[g.id]}` : "1px solid rgba(220,202,187,0.12)",
+                    background: active ? `${colorMap[g.id]}18` : "transparent",
+                    color: active ? colorMap[g.id] : "var(--white-muted)",
+                    fontSize: "0.78rem", fontWeight: active ? 700 : 400,
+                    cursor: "pointer", whiteSpace: "nowrap",
+                    fontFamily: "var(--font-sans)",
+                    transition: "all 0.25s ease",
+                  }}
+                >
+                  <span>{g.icon}</span>
+                  {g.label} <span style={{ opacity: 0.6, fontSize: "0.7rem" }}>· {g.labelAr}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -687,6 +727,18 @@ function ProductGridCard({
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
           <div style={{ color: "var(--gold)", fontSize: "0.72rem", letterSpacing: "1px" }}>★★★★★</div>
           <span style={{ fontSize: "0.68rem", color: "var(--white-muted)" }}>4.9</span>
+          {product.gender && (
+            <span style={{
+              marginLeft: "auto",
+              fontSize: "0.62rem", fontWeight: 600,
+              padding: "2px 9px", borderRadius: "20px",
+              background: product.gender === "men" ? "rgba(106,176,245,0.12)" : product.gender === "women" ? "rgba(245,160,200,0.12)" : "rgba(220,202,187,0.08)",
+              color: product.gender === "men" ? "#6ab0f5" : product.gender === "women" ? "#f5a0c8" : "var(--gold)",
+              border: `1px solid ${product.gender === "men" ? "rgba(106,176,245,0.3)" : product.gender === "women" ? "rgba(245,160,200,0.3)" : "rgba(220,202,187,0.2)"}`,
+            }}>
+              {product.gender === "men" ? "♂ رجالي" : product.gender === "women" ? "♀ نسائي" : "⚧ مشترك"}
+            </span>
+          )}
         </div>
         <h3 style={{
           fontFamily: "var(--font-title)",

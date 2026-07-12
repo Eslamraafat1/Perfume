@@ -9,6 +9,8 @@ import React, {
 } from "react";
 import { supabase } from "@/lib/supabase";
 
+export type ProductGender = "men" | "women" | "unisex";
+
 export interface Product {
   id: string;
   name: string;
@@ -17,6 +19,7 @@ export interface Product {
   image_url: string;
   badge?: string | null;
   category?: string;
+  gender?: ProductGender;
   top_notes?: string;
   heart_notes?: string;
   base_notes?: string;

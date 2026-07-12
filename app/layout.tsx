@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Amiri, Cairo } from "next/font/google";
+import { Playfair_Display, Inter, Amiri, Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { ProductProvider } from "./context/ProductContext";
 import { CartProvider } from "./context/CartContext";
@@ -34,6 +34,13 @@ const cairo = Cairo({
   display: "swap",
 });
 
+const tajawal = Tajawal({
+  weight: ["200", "300", "400", "500", "700", "800", "900"],
+  subsets: ["arabic"],
+  variable: "--font-tajawal",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Nubia — Fine Fragrances",
   description:
@@ -52,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} ${amiri.variable} ${cairo.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${playfair.variable} ${inter.variable} ${amiri.variable} ${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <SiteContentProvider>
           <LanguageProvider>

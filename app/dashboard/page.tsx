@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [badge, setBadge] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [category, setCategory] = useState("");
+  const [gender, setGender] = useState<"men" | "women" | "unisex">("unisex");
   const [topNotes, setTopNotes] = useState("");
   const [heartNotes, setHeartNotes] = useState("");
   const [baseNotes, setBaseNotes] = useState("");
@@ -105,6 +106,7 @@ export default function DashboardPage() {
     setImageFile(null);
     setImagePreview(null);
     setCategory("");
+    setGender("unisex");
     setTopNotes("");
     setHeartNotes("");
     setBaseNotes("");
@@ -133,6 +135,7 @@ export default function DashboardPage() {
     setImageFile(null);
     setImagePreview(p.image_url);
     setCategory(p.category || "");
+    setGender(p.gender || "unisex");
     setTopNotes(p.top_notes || "");
     setHeartNotes(p.heart_notes || "");
     setBaseNotes(p.base_notes || "");
@@ -199,6 +202,7 @@ export default function DashboardPage() {
         image_url,
         badge: badge.trim() || null,
         category: category.trim() || undefined,
+        gender,
         top_notes: topNotes.trim() || undefined,
         heart_notes: heartNotes.trim() || undefined,
         base_notes: baseNotes.trim() || undefined,
@@ -572,6 +576,49 @@ export default function DashboardPage() {
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
                     />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="form-group">
+                    <label className="form-label">Gender</label>
+                    <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                      {(["men", "women", "unisex"] as const).map((g) => {
+                        const meta = {
+                          men:    { label: "رجالي", icon: "♂", color: "#6ab0f5" },
+                          women:  { label: "نسائي",  icon: "♀", color: "#f5a0c8" },
+                          unisex: { label: "مشترك", icon: "⚧", color: "var(--gold)" },
+                        }[g];
+                        const active = gender === g;
+                        return (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => setGender(g)}
+                            style={{
+                              flex: 1,
+                              padding: "14px 10px",
+                              borderRadius: "12px",
+                              border: active ? `1.5px solid ${meta.color}` : "1px solid rgba(220,202,187,0.15)",
+                              background: active ? `rgba(${g === "men" ? "106,176,245" : g === "women" ? "245,160,200" : "220,202,187"},0.1)` : "rgba(255,255,255,0.03)",
+                              color: active ? meta.color : "var(--white-muted)",
+                              cursor: "pointer",
+                              fontFamily: "var(--font-sans)",
+                              fontSize: "0.82rem",
+                              fontWeight: active ? 700 : 400,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              gap: "6px",
+                              transition: "all 0.25s ease",
+                              boxShadow: active ? `0 4px 20px rgba(${g === "men" ? "106,176,245" : g === "women" ? "245,160,200" : "220,202,187"},0.2)` : "none",
+                            }}
+                          >
+                            <span style={{ fontSize: "1.4rem" }}>{meta.icon}</span>
+                            <span>{meta.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   
                   {/* Notes */}

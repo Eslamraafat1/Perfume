@@ -514,6 +514,32 @@ export default function ProductDetailsPage() {
               </p>
             )}
 
+            {/* Gender Badge */}
+            {product.gender && (
+              <div className="pd-stagger" style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
+                {(() => {
+                  const gMap = {
+                    men:    { label: "رجالي",   labelEn: "Men",    icon: "♂", bg: "rgba(106,176,245,0.12)", border: "rgba(106,176,245,0.35)", color: "#6ab0f5" },
+                    women:  { label: "نسائي",   labelEn: "Women",  icon: "♀", bg: "rgba(245,160,200,0.12)", border: "rgba(245,160,200,0.35)", color: "#f5a0c8" },
+                    unisex: { label: "مشترك",   labelEn: "Unisex", icon: "⚧", bg: "rgba(220,202,187,0.10)", border: "rgba(220,202,187,0.35)", color: "var(--gold)" },
+                  };
+                  const g = gMap[product.gender];
+                  return (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                      background: g.bg, border: `1px solid ${g.border}`,
+                      color: g.color, borderRadius: "50px",
+                      padding: "5px 14px", fontSize: "0.72rem",
+                      fontWeight: 600, letterSpacing: "0.08em",
+                    }}>
+                      <span style={{ fontSize: "0.9rem" }}>{g.icon}</span>
+                      {g.labelEn} · {g.label}
+                    </span>
+                  );
+                })()}
+              </div>
+            )}
+
             <h1 className="pd-stagger" style={{
               fontFamily: "var(--font-serif)",
               fontSize: "clamp(2.5rem, 4vw, 3.8rem)",

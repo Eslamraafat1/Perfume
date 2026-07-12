@@ -30,6 +30,13 @@ const PRICE_RANGES = [
   { id: "2000+", label: "Above 2,000 EGP" },
 ];
 
+const GENDER_FILTERS = [
+  { id: "all",    label: "All",    labelAr: "الكل",   icon: "✦" },
+  { id: "men",    label: "Men",    labelAr: "رجالي",  icon: "♂" },
+  { id: "women",  label: "Women",  labelAr: "نسائي",  icon: "♀" },
+  { id: "unisex", label: "Unisex", labelAr: "مشترك", icon: "⚧" },
+];
+
 function CategoryContent() {
   const { products, loading } = useProducts();
   const { addToCart, isInCart } = useCart();

@@ -116,11 +116,26 @@ export default function Navbar() {
       {/* ─── MOBILE DRAWER ─── */}
       <div className={`mobile-drawer${mobileOpen ? " mobile-drawer-open" : ""}`} style={{ direction: isRTL ? "rtl" : "ltr" }}>
         <div className="mobile-drawer-inner">
-          <div className="mobile-drawer-brand">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/camel-icon.png" alt="" className="camel-icon-mobile" />
-            Nubia
+
+          {/* Header row: brand + close button */}
+          <div className="mobile-drawer-header">
+            <div className="mobile-drawer-brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/camel-icon.png" alt="" className="camel-icon-mobile" />
+              Nubia
+            </div>
+            <button
+              className="mobile-drawer-close"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
           </div>
+
+          {/* Nav links */}
           <ul className="mobile-nav-links">
             {links.map((link) => (
               <li key={link.href}>
@@ -133,8 +148,9 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
+
+          {/* Actions */}
           <div className="mobile-drawer-actions">
-            {/* Mobile Language Toggle */}
             <button
               onClick={() => { toggleLang(); setMobileOpen(false); }}
               className="lang-toggle-btn-mobile"
@@ -142,13 +158,16 @@ export default function Navbar() {
             >
               🌐 {t("lang_btn")}
             </button>
-            <Link href="/cart" className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center" }}>
+            <Link href="/cart" className="btn-primary" style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "center" }}
+              onClick={() => setMobileOpen(false)}>
               🛍 {t("nav_cart")} {totalItems > 0 && `(${totalItems})`}
             </Link>
-            <Link href="/dashboard" className="btn-gold-outline" style={{ textAlign: "center", marginTop: "12px" }}>
+            <Link href="/dashboard" className="btn-gold-outline" style={{ textAlign: "center" }}
+              onClick={() => setMobileOpen(false)}>
               {t("nav_dashboard")}
             </Link>
           </div>
+
         </div>
       </div>
       {/* Overlay */}
