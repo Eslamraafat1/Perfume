@@ -45,6 +45,15 @@ alter table public.products add column if not exists heart_notes text default 'L
 alter table public.products add column if not exists base_notes text default 'Oud, Amber, Patchouli';
 alter table public.products add column if not exists longevity text default 'Very Long Lasting (8h-12h)';
 alter table public.products add column if not exists sillage text default 'Strong';
+alter table public.products add column if not exists sizes jsonb;
+alter table public.products add column if not exists images text[];
+alter table public.products add column if not exists video_url text;
+alter table public.products add column if not exists badge text;
+-- =============================================
+-- Gender column (men / women / unisex)
+-- =============================================
+alter table public.products add column if not exists gender text default 'unisex'
+  check (gender in ('men', 'women', 'unisex'));
 
 -- =============================================
 -- 4. Create site_content table for dynamic text/images
