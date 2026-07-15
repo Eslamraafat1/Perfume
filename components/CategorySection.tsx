@@ -3,13 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { useSiteContent } from "@/app/context/SiteContentContext";
 
-const CATEGORIES = [
+const CATEGORIES_STATIC = [
   { 
     id: "for-him", 
     title: "For Him", 
     titleAr: "للرجال", 
-    img: "/perfume_1.png", 
+    defaultImg: "/perfume_1.png",
+    contentKey: "cat1_image",
     bg: "linear-gradient(135deg, #0f172a, #1e293b)", 
     desc: "Bold, masculine, and unforgettable.", 
     descAr: "عطور ذات طابع ذكوري جريء وحضور قوي لا يُنسى." 
@@ -18,7 +20,8 @@ const CATEGORIES = [
     id: "for-her", 
     title: "For Her", 
     titleAr: "للنساء", 
-    img: "/perfume_2.png", 
+    defaultImg: "/perfume_2.png",
+    contentKey: "cat2_image",
     bg: "linear-gradient(135deg, #2a0a18, #4c1130)", 
     desc: "Elegant, floral, and completely captivating.", 
     descAr: "مزيج أنيق من الزهور يمنحكِ جاذبية ساحرة طوال اليوم." 
@@ -27,7 +30,8 @@ const CATEGORIES = [
     id: "unisex", 
     title: "Unisex", 
     titleAr: "للجنسين", 
-    img: "/perfume_3.png", 
+    defaultImg: "/perfume_3.png",
+    contentKey: "cat3_image",
     bg: "linear-gradient(135deg, #18181b, #27272a)", 
     desc: "Balanced and harmonious for anyone to wear.", 
     descAr: "توازن مثالي وتركيبة متناغمة تناسب الجميع بامتياز." 
@@ -36,7 +40,8 @@ const CATEGORIES = [
     id: "oriental", 
     title: "Oriental", 
     titleAr: "شرقي", 
-    img: "/perfume_4.png", 
+    defaultImg: "/perfume_4.png",
+    contentKey: "cat4_image",
     bg: "linear-gradient(135deg, #291a0c, #4a2c11)", 
     desc: "Rich oud, amber, and spices from the East.", 
     descAr: "أصالة الشرق في مزيج غني من العود والعنبر والتوابل." 
@@ -45,7 +50,14 @@ const CATEGORIES = [
 
 export default function CategorySection() {
   const { isRTL } = useLanguage();
+  const { get: sc } = useSiteContent();
   const [hoveredIndex, setHoveredIndex] = useState<number>(0);
+
+  // Build categories with dynamic images from Supabase (via SiteContentContext)
+  const CATEGORIES = CATEGORIES_STATIC.map((cat) => ({
+    ...cat,
+    img: sc(cat.contentKey) || cat.defaultImg,
+  }));
 
   return (
     <section className="cat-section">

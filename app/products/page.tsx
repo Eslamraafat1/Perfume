@@ -282,9 +282,9 @@ export default function ProductsPage() {
               </span>
               <h1 className="prod-hero-title" style={{
                 fontFamily: "var(--font-serif)",
-                fontSize: "clamp(3rem, 6vw, 5.5rem)",
+                fontSize: "clamp(2rem, 4vw, 4rem)",
                 fontWeight: 700,
-                lineHeight: 1.05,
+                lineHeight: 1.15,
                 marginBottom: "20px",
                 textTransform: "uppercase",
               }}>

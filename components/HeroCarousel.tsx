@@ -5,143 +5,210 @@ import gsap from "gsap";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useHeroSlides } from "@/app/context/HeroSlidesContext";
 
+const LETTERS = ["N", "U", "B", "I", "A"];
+const DURATION = 6000;
+
 export default function HeroCarousel() {
   const { isRTL } = useLanguage();
   const { slides } = useHeroSlides();
   const [current, setCurrent] = useState(0);
-  const [prev, setPrev] = useState<number | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [dotKey, setDotKey] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const nubiaRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const imgRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const nubiaWrapRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // letterRefs[slideIndex][letterIndex]
+  const letterRefs = useRef<(HTMLSpanElement | null)[][]>([]);
   const progressRef = useRef<NodeJS.Timeout | null>(null);
-  const DURATION = 6000;
 
+  /* ─── Init letter ref arrays when slides load ─── */
   useEffect(() => {
-    if (slides.length > 0 && current >= slides.length) {
-      setCurrent(0);
-    }
+    letterRefs.current = slides.map((_, si) =>
+      letterRefs.current[si] ?? Array(LETTERS.length).fill(null)
+    );
+  }, [slides.length]); // eslint-disable-line
+
+  /* ─── Bound guard ─── */
+  useEffect(() => {
+    if (slides.length > 0 && current >= slides.length) setCurrent(0);
   }, [slides.length, current]);
 
+  /* ─── Letters IN: staggered fall-down with blur ─── */
+  const animIn = useCallback((si: number, delay = 0) => {
+    const els = letterRefs.current[si]?.filter(Boolean) as HTMLSpanElement[];
+    if (!els || els.length === 0) return;
+
+    gsap.killTweensOf(els);
+    gsap.set(els, { y: 100, opacity: 0, rotateX: -80, scale: 0.6, filter: "blur(18px)", transformOrigin: "50% 100%" });
+    gsap.to(els, {
+      y: 0,
+      opacity: 1,
+      rotateX: 0,
+      scale: 1,
+      filter: "blur(0px)",
+      duration: 1.1,
+      ease: "expo.out",
+      stagger: { each: 0.09, from: "start" },
+      delay,
+    });
+
+    // Shimmer after enter
+    const wrap = nubiaWrapRefs.current[si];
+    if (wrap) {
+      setTimeout(() => {
+        wrap.classList.add("hc-shimmer-active");
+        setTimeout(() => wrap.classList.remove("hc-shimmer-active"), 1800);
+      }, (delay + 0.55) * 1000);
+    }
+  }, []);
+
+  /* ─── Letters OUT: scatter / glitch ─── */
+  const animOut = useCallback((si: number) => {
+    const els = letterRefs.current[si]?.filter(Boolean) as HTMLSpanElement[];
+    if (!els || els.length === 0) return;
+
+    gsap.killTweensOf(els);
+    const yVals   = [-90, 70, -60, 80, -100];
+    const rxVals  = [50, -40, 35, -50, 60];
+    const scVals  = [0.4, 0.5, 0.45, 0.4, 0.35];
+
+    els.forEach((el, li) => {
+      gsap.to(el, {
+        y: yVals[li] ?? -70,
+        opacity: 0,
+        rotateX: rxVals[li] ?? 45,
+        scale: scVals[li] ?? 0.4,
+        filter: "blur(14px)",
+        duration: 0.6,
+        ease: "power3.in",
+        delay: li * 0.05,
+      });
+    });
+  }, []);
+
+  /* ─── Go-to slide ─── */
   const goTo = useCallback(
     (next: number) => {
       if (isAnimating || next === current) return;
       setIsAnimating(true);
-      setPrev(current);
-      setCurrent(next);
       setDotKey((k) => k + 1);
 
       const outSlide = slideRefs.current[current];
-      const inSlide = slideRefs.current[next];
-      const outNubia = nubiaRefs.current[current];
-      const inNubia = nubiaRefs.current[next];
-      const inImg = imgRefs.current[next];
-      const outImg = imgRefs.current[current];
-
+      const inSlide  = slideRefs.current[next];
       if (!outSlide || !inSlide) { setIsAnimating(false); return; }
 
-      gsap.set(inSlide, { zIndex: 2, clipPath: "inset(0 100% 0 0)" });
-      gsap.set(inImg, { scale: 1.15, x: 60, opacity: 0 });
-      gsap.set(inNubia, { scale: 0.8, opacity: 0 });
+      animOut(current);
 
-      const tl = gsap.timeline({
+      gsap.set(inSlide, { zIndex: 2, clipPath: "inset(0 100% 0 0)" });
+
+      gsap.timeline({
         onComplete: () => {
           gsap.set(outSlide, { zIndex: 0, clipPath: "inset(0 0% 0 0)" });
-          setPrev(null);
+          setCurrent(next);
           setIsAnimating(false);
         },
-      });
-
-      tl.to(outNubia, { scale: 1.1, opacity: 0, duration: 0.8, ease: "power2.in" }, 0)
-        .to(outImg, { scale: 1.05, x: -40, opacity: 0, duration: 0.9, ease: "power2.in" }, 0)
-        .to(inSlide, { clipPath: "inset(0 0% 0 0)", duration: 0.9, ease: "expo.inOut" }, 0.1)
-        .to(inNubia, { scale: 1, opacity: 1, duration: 1.4, ease: "expo.out" }, 0.4)
-        .to(inImg, { scale: 1, x: 0, opacity: 1, duration: 1.2, ease: "expo.out" }, 0.3);
+      })
+        .to(outSlide, { clipPath: "inset(0 100% 0 0)", duration: 0, ease: "none" }, 0.65) // hide after letters gone
+        .to(inSlide, { clipPath: "inset(0 0% 0 0)", duration: 0.85, ease: "expo.inOut" }, 0.55)
+        .call(() => animIn(next, 0.05), [], 0.6);
     },
-    [current, isAnimating]
+    [current, isAnimating, animIn, animOut]
   );
 
+  /* ─── Auto-advance ─── */
   useEffect(() => {
     if (slides.length < 2) return;
     progressRef.current = setTimeout(() => {
       goTo((current + 1) % slides.length);
     }, DURATION);
-    return () => {
-      if (progressRef.current) clearTimeout(progressRef.current);
-    };
+    return () => { if (progressRef.current) clearTimeout(progressRef.current); };
   }, [current, slides.length, goTo]);
 
+  /* ─── Initial mount ─── */
   const slideIds = slides.map((s) => s.id).join(",");
   useEffect(() => {
     if (slides.length === 0) return;
-
     setCurrent(0);
-    setPrev(null);
     setIsAnimating(false);
 
     const raf = requestAnimationFrame(() => {
-      slideRefs.current.forEach((slide, i) => {
-        if (!slide) return;
-        gsap.set(slide, {
-          zIndex: i === 0 ? 1 : 0,
-          clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-        });
+      slideRefs.current.forEach((sl, i) => {
+        if (!sl) return;
+        gsap.set(sl, { zIndex: i === 0 ? 1 : 0, clipPath: i === 0 ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" });
       });
-
-      imgRefs.current.forEach((img, i) => {
-        if (img) gsap.set(img, { scale: i === 0 ? 1 : 1.15, x: 0, y: 0, opacity: i === 0 ? 1 : 0 });
-      });
-
-      nubiaRefs.current.forEach((nubia, i) => {
-        if (nubia) gsap.set(nubia, { scale: i === 0 ? 1 : 0.8, opacity: i === 0 ? 1 : 0 });
-      });
-
-      const img0 = imgRefs.current[0];
-      const nubia0 = nubiaRefs.current[0];
-      if (!img0 || !nubia0) return;
-
-      gsap.fromTo(nubia0, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.6, ease: "expo.out", delay: 0.2 });
-      gsap.fromTo(img0, { scale: 1.15, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.6, ease: "expo.out", delay: 0.4 });
+      animIn(0, 0.35);
     });
-
     return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slideIds]);
 
+  /* ─── 3D per-letter parallax on mouse ─── */
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
     const onMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
       const { width, height } = container.getBoundingClientRect();
-      const xPct = (clientX / width - 0.5) * 2;
-      const yPct = (clientY / height - 0.5) * 2;
-      imgRefs.current.forEach((img, i) => {
-        if (i === current && img) {
-          gsap.to(img, { x: xPct * 15, y: yPct * 10, duration: 1.2, ease: "power2.out", overwrite: "auto" });
-        }
-      });
-      nubiaRefs.current.forEach((nubia, i) => {
-        if (i === current && nubia) {
-          gsap.to(nubia, { x: xPct * -10, y: yPct * -5, duration: 1.5, ease: "power2.out", overwrite: "auto" });
-        }
+      const xP = (e.clientX / width  - 0.5) * 2;
+      const yP = (e.clientY / height - 0.5) * 2;
+
+      const els = letterRefs.current[current]?.filter(Boolean) as HTMLSpanElement[];
+      if (!els) return;
+      els.forEach((el, li) => {
+        const sign  = li % 2 === 0 ? 1 : -1;
+        const depth = sign * (li * 0.4 + 0.8);
+        gsap.to(el, {
+          x: xP * -14 * depth * 0.25,
+          y: yP * -8  * depth * 0.25,
+          rotateY: xP * 5,
+          rotateX: yP * -3,
+          duration: 1.8,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
       });
     };
+
     container.addEventListener("mousemove", onMove);
     return () => container.removeEventListener("mousemove", onMove);
   }, [current]);
 
+  /* ─── Keyboard nav ─── */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") goTo((current - 1 + slides.length) % slides.length);
+      if (e.key === "ArrowLeft")  goTo((current - 1 + slides.length) % slides.length);
       if (e.key === "ArrowRight") goTo((current + 1) % slides.length);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [current, goTo, slides.length]);
 
+  /* ─── Touch / Click ripple on letters ─── */
+  const spawnRipple = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const x = "touches" in e
+      ? e.touches[0]?.clientX ?? 0
+      : (e as React.MouseEvent).clientX;
+    const y = "touches" in e
+      ? e.touches[0]?.clientY ?? 0
+      : (e as React.MouseEvent).clientY;
+
+    const ripple = document.createElement("div");
+    ripple.className = "hc-letter-ripple";
+    ripple.style.left = `${x}px`;
+    ripple.style.top  = `${y}px`;
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 750);
+
+    // Letter bounce via GSAP
+    const target = e.currentTarget as HTMLElement;
+    gsap.killTweensOf(target);
+    gsap.timeline()
+      .to(target, { y: -14, scale: 1.15, duration: 0.22, ease: "power3.out" })
+      .to(target, { y: 0,   scale: 1.0,  duration: 0.55, ease: "elastic.out(1, 0.4)" });
+  }, []);
+
+  /* ─── Loading state ─── */
   if (slides.length === 0) {
     return (
       <div style={{ width: "100%", height: "100vh", background: "#06091a", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -153,6 +220,9 @@ export default function HeroCarousel() {
   return (
     <>
       <style>{`
+        /* ══════════════════════════════════════
+           ROOT
+        ══════════════════════════════════════ */
         .hc-root {
           position: relative;
           width: 100%;
@@ -162,12 +232,14 @@ export default function HeroCarousel() {
           background: #06091a;
         }
 
+        /* ══════════════════════════════════════
+           GLOBAL BG
+        ══════════════════════════════════════ */
         .hc-global-bg {
           position: absolute;
           inset: 0;
           z-index: 0;
         }
-        
         .hc-global-bg-img {
           width: 100%;
           height: 100%;
@@ -176,18 +248,24 @@ export default function HeroCarousel() {
           display: block;
           animation: bg-pan 30s infinite alternate ease-in-out;
         }
-
         @keyframes bg-pan {
-          0% { transform: scale(1.05) translate(0, 0); }
-          100% { transform: scale(1.1) translate(-2%, 1%); }
+          0%   { transform: scale(1.05) translate(0,    0); }
+          100% { transform: scale(1.1)  translate(-2%, 1%); }
         }
-
         .hc-global-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(6,9,26,0.9) 0%, rgba(6,9,26,0.4) 50%, rgba(6,9,26,0.7) 100%);
+          background: linear-gradient(
+            to top,
+            rgba(6,9,26,0.92) 0%,
+            rgba(6,9,26,0.38) 50%,
+            rgba(6,9,26,0.68) 100%
+          );
         }
 
+        /* ══════════════════════════════════════
+           SLIDES
+        ══════════════════════════════════════ */
         .hc-slide {
           position: absolute;
           inset: 0;
@@ -198,121 +276,226 @@ export default function HeroCarousel() {
           justify-content: center;
         }
 
-        .hc-nubia-text {
-          position: absolute;
-          z-index: 1;
-          font-family: var(--font-serif);
-          font-size: clamp(3rem, 12vw, 10rem);
-          font-weight: 800;
-          text-transform: uppercase;
-          color: rgba(220, 202, 187, 0.15);
-          letter-spacing: 0.05em;
-          white-space: nowrap;
-          pointer-events: none;
+        /* ══════════════════════════════════════
+           NUBIA WRAP (holds all letters)
+        ══════════════════════════════════════ */
+        .hc-nubia-wrap {
+          position: relative;
+          z-index: 5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: clamp(2px, 0.6vw, 10px);
           user-select: none;
-          background: linear-gradient(180deg, rgba(220, 202, 187, 0.25) 0%, rgba(220, 202, 187, 0.04) 100%);
+          perspective: 900px;
+          transform-style: preserve-3d;
+        }
+
+        /* ══════════════════════════════════════
+           INDIVIDUAL LETTER
+        ══════════════════════════════════════ */
+        .hc-letter {
+          display: inline-block;
+          position: relative;
+          font-family: var(--font-serif);
+          font-size: clamp(4.5rem, 14vw, 13rem);
+          font-weight: 900;
+          text-transform: uppercase;
+          line-height: 0.95;
+          letter-spacing: -0.01em;
+          transform-style: preserve-3d;
+          will-change: transform, opacity, filter;
+          cursor: pointer;
+          -webkit-tap-highlight-color: transparent;
+          transition: filter 0.25s ease;
+
+          /* ── Strong visible gold ── */
+          background: linear-gradient(
+            165deg,
+            #fff5cc  0%,
+            #e8ca80 30%,
+            #c9a96e 60%,
+            #8c6237 100%
+          );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0px 10px 30px rgba(0,0,0,0.5));
-          will-change: transform, opacity;
-          /* Prevent bleed outside carousel bounds */
-          max-width: 100%;
-          overflow: hidden;
+          background-clip: text;
+
+          /* Strong glow */
+          filter:
+            drop-shadow(0 0   50px rgba(220,185,100, 0.55))
+            drop-shadow(0 0   20px rgba(201,169,110, 0.45))
+            drop-shadow(0 8px 22px rgba(0,0,0, 0.75));
         }
 
-        .hc-img-wrap {
-          position: relative;
-          z-index: 2;
-          width: auto;
-          height: 80vh;
-          max-height: 800px;
-          will-change: transform, opacity;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          
-        }
-
-        .hc-img-wrap img {
-          width: auto;
-          height: 100%;
-          object-fit: contain;
-          display: block;
-          user-select: none;
-          pointer-events: none;
-          filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
-        }
-
-        .hc-arrows {
+        /* ── Rim highlight layer ── */
+        .hc-letter::before {
+          content: attr(data-l);
           position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 100%;
-          z-index: 20;
-          display: flex;
-          justify-content: space-between;
-          padding: 0 40px;
+          inset: 0;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
+          background: linear-gradient(
+            120deg,
+            rgba(255,255,220,0.55) 0%,
+            rgba(255,240,160,0.20) 40%,
+            transparent 70%
+          );
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
           pointer-events: none;
         }
 
-        .hc-arrow {
-          width: 52px;
-          height: 52px;
+        /* ── Shimmer pseudo ── */
+        .hc-letter::after {
+          content: attr(data-l);
+          position: absolute;
+          inset: 0;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
+          background: linear-gradient(
+            105deg,
+            transparent   25%,
+            rgba(255,248,195,0.70) 50%,
+            transparent   75%
+          );
+          background-size: 250% 100%;
+          background-position: 200% 0;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          pointer-events: none;
+          opacity: 0;
+        }
+
+        /* ── Shimmer sweep layer ── */
+        .hc-letter::after {
+          content: attr(data-l);
+          position: absolute;
+          inset: 0;
+          font-family: inherit;
+          font-size: inherit;
+          font-weight: inherit;
+          line-height: inherit;
+          background: linear-gradient(
+            105deg,
+            transparent   20%,
+            rgba(255,252,210,0.85) 50%,
+            transparent   80%
+          );
+          background-size: 260% 100%;
+          background-position: 200% 0;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          pointer-events: none;
+          opacity: 0;
+        }
+
+        /* Shimmer trigger */
+        .hc-shimmer-active .hc-letter::after {
+          opacity: 1;
+          animation: hc-shimmer 1.6s cubic-bezier(0.4,0,0.2,1) forwards;
+        }
+        .hc-shimmer-active .hc-letter:nth-child(1)::after { animation-delay: 0.00s; }
+        .hc-shimmer-active .hc-letter:nth-child(2)::after { animation-delay: 0.08s; }
+        .hc-shimmer-active .hc-letter:nth-child(3)::after { animation-delay: 0.16s; }
+        .hc-shimmer-active .hc-letter:nth-child(4)::after { animation-delay: 0.24s; }
+        .hc-shimmer-active .hc-letter:nth-child(5)::after { animation-delay: 0.32s; }
+
+        @keyframes hc-shimmer {
+          0%   { background-position:  220% 0; opacity: 1; }
+          100% { background-position: -100% 0; opacity: 0; }
+        }
+
+        /* ── Hover/Touch lift ── */
+        .hc-letter:hover,
+        .hc-letter:active {
+          filter:
+            drop-shadow(0 0   80px rgba(255,220,100, 0.90))
+            drop-shadow(0 0   35px rgba(220,185,80,  0.75))
+            drop-shadow(0 10px 28px rgba(0,0,0, 0.80));
+          transform: translateY(-8px) scale(1.08) !important;
+          transition: filter 0.2s ease, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+          z-index: 10;
+        }
+
+        /* ── Touch ripple ring ── */
+        .hc-letter-ripple {
+          position: fixed;
           border-radius: 50%;
-          border: 1px solid rgba(220,202,187,0.25);
-          background: rgba(10,15,36,0.3);
-          backdrop-filter: blur(12px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
-          color: var(--gold);
-          font-size: 1.1rem;
-          user-select: none;
-          pointer-events: auto;
+          pointer-events: none;
+          z-index: 9999;
+          width: 10px;
+          height: 10px;
+          margin: -5px 0 0 -5px;
+          border: 2px solid rgba(220,185,100,0.8);
+          background: rgba(220,185,100,0.15);
+          animation: hc-ripple 0.7s cubic-bezier(0,0.5,0.5,1) forwards;
+        }
+        @keyframes hc-ripple {
+          0%   { transform: scale(0);   opacity: 1; }
+          100% { transform: scale(8);   opacity: 0; }
         }
 
-        .hc-arrow:hover {
-          background: rgba(220,202,187,0.15);
-          border-color: var(--gold);
-          transform: scale(1.1);
+        /* ── Idle breathe glow ── */
+        @keyframes hc-glow-pulse {
+          0%,100% {
+            filter:
+              drop-shadow(0 0   50px rgba(220,185,100, 0.50))
+              drop-shadow(0 0   20px rgba(201,169,110, 0.40))
+              drop-shadow(0 8px 22px rgba(0,0,0, 0.75));
+          }
+          50% {
+            filter:
+              drop-shadow(0 0   90px rgba(255,210,80,  0.75))
+              drop-shadow(0 0   40px rgba(220,185,100, 0.65))
+              drop-shadow(0 8px 30px rgba(0,0,0, 0.75));
+          }
         }
+        .hc-letter { animation: hc-glow-pulse 4s ease-in-out infinite; }
+        .hc-letter:nth-child(1) { animation-delay: 0.0s; }
+        .hc-letter:nth-child(2) { animation-delay: 0.4s; }
+        .hc-letter:nth-child(3) { animation-delay: 0.8s; }
+        .hc-letter:nth-child(4) { animation-delay: 1.2s; }
+        .hc-letter:nth-child(5) { animation-delay: 1.6s; }
 
-        .hc-arrow:active { transform: scale(0.95); }
-
+        /* ══════════════════════════════════════
+           PROGRESS DOTS
+        ══════════════════════════════════════ */
         .hc-dots {
           position: absolute;
-          bottom: 40px;
+          bottom: 38px;
           left: 50%;
           transform: translateX(-50%);
           z-index: 20;
           display: flex;
-          gap: 12px;
+          gap: 10px;
           align-items: center;
         }
-
         .hc-dot-wrap {
           cursor: pointer;
           padding: 6px;
         }
-
         .hc-dot {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: rgba(220,202,187,0.3);
-          transition: all 0.4s ease;
+          background: rgba(220,202,187,0.28);
+          transition: all 0.45s ease;
           position: relative;
           overflow: hidden;
         }
-
         .hc-dot.active {
-          width: 40px;
+          width: 42px;
           border-radius: 4px;
-          background: rgba(220,202,187,0.2);
+          background: rgba(220,202,187,0.18);
         }
-
         .hc-dot-fill {
           position: absolute;
           inset: 0;
@@ -320,87 +503,74 @@ export default function HeroCarousel() {
           border-radius: 4px;
           transform-origin: ${isRTL ? "right" : "left"};
         }
-
-        @keyframes hc-dot-progress {
+        @keyframes hc-dot-prog {
           from { transform: scaleX(0); }
           to   { transform: scaleX(1); }
         }
-
         .hc-dot-fill-anim {
-          animation: hc-dot-progress ${DURATION}ms linear forwards;
+          animation: hc-dot-prog ${DURATION}ms linear forwards;
           transform-origin: ${isRTL ? "right" : "left"};
         }
 
-        .hc-slide-content {
-          position: absolute;
-          bottom: 14%;
-          left: 8%;
-          z-index: 10;
-          max-width: 540px;
-          pointer-events: none;
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (max-width: 1024px) {
+          .hc-letter { font-size: clamp(3.5rem, 14vw, 9rem); }
         }
-
-        .hc-eyebrow {
-          font-size: 0.65rem;
-          color: var(--gold);
-          letter-spacing: 0.35em;
-          text-transform: uppercase;
-          margin-bottom: 14px;
-          opacity: 0.9;
-          font-family: var(--font-sans);
-        }
-
-        .hc-slide-title {
-          font-family: var(--font-serif);
-          font-size: clamp(2rem, 4vw, 3.2rem);
-          font-weight: 700;
-          text-transform: uppercase;
-          color: #fff;
-          line-height: 1.1;
-          margin-bottom: 14px;
-          letter-spacing: 0.02em;
-        }
-
-        .hc-slide-subtitle {
-          font-size: 0.88rem;
-          color: rgba(255,255,255,0.65);
-          line-height: 1.7;
-          font-family: var(--font-sans);
-          max-width: 420px;
-        }
-
         @media (max-width: 768px) {
-          .hc-slide-content { left: 6%; bottom: 18%; max-width: 85%; }
-          .hc-slide-title { font-size: clamp(1.6rem, 6vw, 2.2rem); }
-          .hc-slide-subtitle { font-size: 0.82rem; }
+          .hc-letter { font-size: clamp(3rem, 17vw, 6.5rem); }
+          .hc-dots   { bottom: 22px; }
+        }
+        @media (max-width: 480px) {
+          .hc-letter { font-size: clamp(2.4rem, 20vw, 5rem); gap: 0; }
+          .hc-nubia-wrap { gap: 0; }
         }
       `}</style>
 
       <div className="hc-root" ref={containerRef} role="region" aria-label="Hero Carousel">
-        
+
+        {/* Global background image */}
         <div className="hc-global-bg">
-          <img src="/abu_simbel_bg.png" alt="Abu Simbel" className="hc-global-bg-img" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/abu_simbel_bg.png" alt="Abu Simbel background" className="hc-global-bg-img" />
           <div className="hc-global-overlay" />
         </div>
 
-        {slides.map((slide, i) => (
+        {/* Slides */}
+        {slides.map((slide, si) => (
           <div
             key={slide.id}
             className="hc-slide"
-            ref={(el) => { slideRefs.current[i] = el; }}
-            aria-hidden={i !== current}
+            ref={(el) => { slideRefs.current[si] = el; }}
+            aria-hidden={si !== current}
           >
+            {/* NUBIA letter-by-letter */}
             <div
-              className="hc-nubia-text"
-              ref={(el) => { nubiaRefs.current[i] = el; }}
+              className="hc-nubia-wrap"
+              ref={(el) => { nubiaWrapRefs.current[si] = el; }}
             >
-              NUBIA
+              {LETTERS.map((letter, li) => (
+                <span
+                  key={li}
+                  className="hc-letter"
+                  data-l={letter}
+                  ref={(el) => {
+                    if (!letterRefs.current[si]) letterRefs.current[si] = Array(LETTERS.length).fill(null);
+                    letterRefs.current[si][li] = el;
+                  }}
+                  style={{ opacity: 0, position: "relative" }}
+                  onClick={spawnRipple}
+                  onTouchStart={spawnRipple}
+                >
+                  {letter}
+                </span>
+              ))}
             </div>
-
-            {/* Slide text content removed */}
           </div>
         ))}
 
+        {/* Progress dots */}
         <div className="hc-dots" role="tablist" aria-label="Slide navigation">
           {slides.map((_, i) => (
             <div
@@ -415,10 +585,7 @@ export default function HeroCarousel() {
             >
               <div className={`hc-dot ${i === current ? "active" : ""}`}>
                 {i === current && (
-                  <div
-                    key={dotKey}
-                    className="hc-dot-fill hc-dot-fill-anim"
-                  />
+                  <div key={dotKey} className="hc-dot-fill hc-dot-fill-anim" />
                 )}
               </div>
             </div>

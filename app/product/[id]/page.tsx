@@ -843,7 +843,7 @@ export default function ProductDetailsPage() {
       }}>
         {/* Tab Nav */}
         <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", borderBottom: "1px solid rgba(220,202,187,0.08)" }}>
-          <div style={{ display: "flex", gap: "0" }}>
+          <div style={{ display: "flex", gap: "0" , flexDirection: 'column' }}>
             {(["notes", "ritual", "story"] as const).map((tab) => (
               <button
                 key={tab}
