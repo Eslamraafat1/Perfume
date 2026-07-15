@@ -78,8 +78,8 @@ export default function ProductsPage() {
       );
       gsap.fromTo(
         ".prod-hero-title",
-        { opacity: 0, y: 60, clipPath: "inset(100% 0 0 0)" },
-        { opacity: 1, y: 0, clipPath: "inset(0% 0 0 0)", duration: 1.3, ease: "expo.out", delay: 0.3 }
+        { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 1.3, ease: "expo.out", delay: 0.3 }
       );
       gsap.fromTo(
         ".prod-hero-sub",
@@ -590,6 +590,10 @@ function ProductGridCard({
   onHover: () => void;
   onLeave: () => void;
 }) {
+  // Pick hover image: first gallery image if exists, otherwise same (no swap)
+  const hoverImage = product.images?.[0] ?? null;
+  const hasHoverImage = !!hoverImage && hoverImage !== product.image_url;
+
   return (
     <Link
       href={`/product/${product.id}`}
@@ -613,20 +617,83 @@ function ProductGridCard({
         animationDelay: `${index * 0.05}s`,
       }}
     >
-      {/* Image */}
+      {/* Image container */}
       <div style={{ position: "relative", height: "360px", overflow: "hidden", background: "var(--dark-2)" }}>
+
+        {/* PRIMARY image — always visible, fades out on hover if hover image exists */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={product.image_url}
           alt={product.name}
           style={{
+            position: "absolute",
+            inset: 0,
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1)",
-            transform: hovered ? "scale(1.1)" : "scale(1)",
+            transition: "opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1)",
+            transform: hovered ? "scale(1.08)" : "scale(1)",
+            opacity: hovered && hasHoverImage ? 0 : 1,
+            zIndex: 1,
           }}
         />
+
+        {/* HOVER image — slides up + fades in on hover */}
+        {hasHoverImage && (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={hoverImage}
+            alt={`${product.name} alternate view`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transition: "opacity 0.55s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1)",
+              transform: hovered ? "scale(1.05)" : "scale(1.12)",
+              opacity: hovered ? 1 : 0,
+              zIndex: 2,
+            }}
+          />
+        )}
+
+        {/* Shimmer line that sweeps across on hover */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 3,
+          background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.07) 50%, transparent 60%)",
+          backgroundSize: "200% 100%",
+          backgroundPositionX: hovered ? "0%" : "200%",
+          transition: "background-position 0.7s ease",
+          pointerEvents: "none",
+        }} />
+
+        {/* Corner indicator — only shows when hover image is available */}
+        {hasHoverImage && (
+          <div style={{
+            position: "absolute",
+            top: "12px",
+            left: "50%",
+            transform: `translateX(-50%) translateY(${hovered ? "0px" : "-30px"})`,
+            opacity: hovered ? 1 : 0,
+            transition: "all 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+            zIndex: 4,
+            background: "rgba(10,15,36,0.85)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(220,202,187,0.3)",
+            borderRadius: "20px",
+            padding: "4px 12px",
+            fontSize: "0.6rem",
+            color: "var(--gold)",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+          }}>
+            ✦ Alternative View
+          </div>
+        )}
 
         {/* Badge */}
         {product.badge && (
@@ -642,6 +709,7 @@ function ProductGridCard({
             textTransform: "uppercase",
             padding: "5px 12px",
             borderRadius: "20px",
+            zIndex: 5,
           }}>
             {product.badge}
           </span>
@@ -661,6 +729,7 @@ function ProductGridCard({
           textTransform: "uppercase",
           padding: "5px 10px",
           borderRadius: "20px",
+          zIndex: 5,
         }}>
           {product.category || "Luxury"}
         </span>
@@ -672,6 +741,7 @@ function ProductGridCard({
           background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
           opacity: hovered ? 1 : 0,
           transition: "opacity 0.4s ease",
+          zIndex: 3,
         }} />
 
         {/* Hover actions */}
@@ -685,6 +755,7 @@ function ProductGridCard({
           opacity: hovered ? 1 : 0,
           transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
           whiteSpace: "nowrap",
+          zIndex: 6,
         }}>
           <button
             onClick={onQuickAdd}
@@ -764,12 +835,7 @@ function ProductGridCard({
 
         {/* Notes preview */}
         {product.top_notes && (
-          <div style={{
-            display: "flex",
-            gap: "6px",
-            flexWrap: "wrap",
-            marginBottom: "16px",
-          }}>
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "16px" }}>
             {product.top_notes.split(",").slice(0, 3).map((note) => (
               <span key={note} style={{
                 fontSize: "0.65rem",
@@ -801,6 +867,20 @@ function ProductGridCard({
           }}>
             {product.price.toLocaleString()} <span style={{ fontSize: "0.8rem", fontWeight: 400 }}>EGP</span>
           </span>
+
+          {/* Dot indicators — shows how many images exist */}
+          <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+            {[product.image_url, ...(product.images || [])].slice(0, 4).map((_, i) => (
+              <div key={i} style={{
+                width: i === (hovered && hasHoverImage ? 1 : 0) ? "18px" : "6px",
+                height: "6px",
+                borderRadius: "3px",
+                background: i === (hovered && hasHoverImage ? 1 : 0) ? "var(--gold)" : "rgba(220,202,187,0.25)",
+                transition: "all 0.35s ease",
+              }} />
+            ))}
+          </div>
+
           <div style={{
             width: "36px",
             height: "36px",

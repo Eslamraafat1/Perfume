@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useProducts, Product } from "../context/ProductContext";
+import { useProducts } from "../context/ProductContext";
 import { useCart } from "../context/CartContext";
+import { useLanguage } from "../context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -14,143 +14,125 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const CATEGORIES = [
-  { id: "All", label: "All Fragrances", icon: "✦", image: "/perfume_hero.png" },
-  { id: "Oud & Woody", label: "Oud & Woody", icon: "🪵", image: "/perfume_3.png" },
-  { id: "Sweet & Floral", label: "Sweet & Floral", icon: "🌹", image: "/perfume_2.png" },
-  { id: "Fresh & Citrus", label: "Fresh & Citrus", icon: "🍋", image: "/perfume_5.png" },
-  { id: "Oriental Spice", label: "Oriental Spice", icon: "🌶", image: "/perfume_1.png" },
-];
-
-const PRICE_RANGES = [
-  { id: "all", label: "All Prices" },
-  { id: "0-500", label: "Under 500 EGP" },
-  { id: "500-1000", label: "500 – 1,000 EGP" },
-  { id: "1000-2000", label: "1,000 – 2,000 EGP" },
-  { id: "2000+", label: "Above 2,000 EGP" },
-];
-
-const GENDER_FILTERS = [
-  { id: "all",    label: "All",    labelAr: "الكل",   icon: "✦" },
-  { id: "men",    label: "Men",    labelAr: "رجالي",  icon: "♂" },
-  { id: "women",  label: "Women",  labelAr: "نسائي",  icon: "♀" },
-  { id: "unisex", label: "Unisex", labelAr: "مشترك", icon: "⚧" },
+const GENDER_SECTIONS = [
+  {
+    id: "men",
+    title: "For Him",
+    titleAr: "للرجال",
+    sub: "Bold, intense & commanding.",
+    subAr: "جريء، قوي، لا يُنسى.",
+    img: "/perfume_1.png",
+    accent: "#6ab0f5",
+    bg: "linear-gradient(135deg, #06091a 0%, #0d1b35 60%, #0a1428 100%)",
+    glow: "rgba(106,176,245,0.18)",
+    num: "01",
+  },
+  {
+    id: "women",
+    title: "For Her",
+    titleAr: "للنساء",
+    sub: "Elegant, floral & captivating.",
+    subAr: "أنيق، زهري، ساحر.",
+    img: "/perfume_2.png",
+    accent: "#f5a0c8",
+    bg: "linear-gradient(135deg, #1a050e 0%, #35091e 60%, #200710 100%)",
+    glow: "rgba(245,160,200,0.18)",
+    num: "02",
+  },
+  {
+    id: "unisex",
+    title: "Unisex",
+    titleAr: "للجنسين",
+    sub: "Balanced, fresh & harmonious.",
+    subAr: "متوازن، عصري، للجميع.",
+    img: "/perfume_3.png",
+    accent: "#dbcabb",
+    bg: "linear-gradient(135deg, #0a0f1a 0%, #161c2e 60%, #0d1120 100%)",
+    glow: "rgba(220,202,187,0.15)",
+    num: "03",
+  },
+  {
+    id: "oriental",
+    title: "Oriental",
+    titleAr: "شرقي",
+    sub: "Rich oud, amber & Eastern spice.",
+    subAr: "عود فاخر، عنبر، وتوابل شرقية.",
+    img: "/perfume_4.png",
+    accent: "#e8b86d",
+    bg: "linear-gradient(135deg, #130a02 0%, #2a1505 60%, #1a0d03 100%)",
+    glow: "rgba(232,184,109,0.18)",
+    num: "04",
+  },
 ];
 
 function CategoryContent() {
   const { products, loading } = useProducts();
   const { addToCart, isInCart } = useCart();
-  const searchParams = useSearchParams();
-  const categoryParam = searchParams.get("cat");
-
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("default");
-  const [priceRange, setPriceRange] = useState("all");
-  const [toast, setToast] = useState<string | null>(null);
-  const [filterOpen, setFilterOpen] = useState(false);
-
+  const { isRTL } = useLanguage();
   const pageRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (categoryParam) setSelectedCategory(categoryParam);
-  }, [categoryParam]);
+  function handleAdd(e: React.MouseEvent, product: any) {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart({ id: product.id, name: product.name, price: product.price, image_url: product.image_url, category: product.category });
+    setToast(product.name);
+    setTimeout(() => setToast(null), 2500);
+  }
 
-  // ─── Entrance animations ───
+  // ─── Hero entrance ───
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".cat-hero-title",
-        { opacity: 0, y: 60 },
-        { opacity: 1, y: 0, duration: 1.2, ease: "power3.out", delay: 0.1 }
+      gsap.fromTo(".cg-hero-tag",
+        { opacity: 0, y: 30, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 1, ease: "back.out(1.7)", delay: 0.1 }
       );
-      gsap.fromTo(
-        ".cat-hero-sub",
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 1, ease: "power2.out", delay: 0.4 }
+      gsap.fromTo(".cg-hero-title",
+        { opacity: 0, y: 70 },
+        { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", delay: 0.3 }
       );
-      gsap.fromTo(
-        ".cat-pill",
-        { opacity: 0, y: 20, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, stagger: 0.08, duration: 0.6, ease: "back.out(1.4)", delay: 0.5 }
+      gsap.fromTo(".cg-hero-line",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 1.2, ease: "power3.out", delay: 0.8 }
       );
-      gsap.fromTo(
-        ".filter-panel",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", delay: 0.7 }
+      gsap.fromTo(".cg-num",
+        { opacity: 0, x: -40 },
+        { opacity: 1, x: 0, stagger: 0.15, duration: 0.8, ease: "power3.out",
+          scrollTrigger: { trigger: ".cg-sections", start: "top 80%" } }
       );
     }, pageRef);
     return () => ctx.revert();
   }, []);
 
-  // ─── Animate cards when filter changes ───
+  // ─── Section scroll reveals ───
   useEffect(() => {
-    if (!gridRef.current || loading) return;
-    const cards = gridRef.current.querySelectorAll(".product-card");
-    gsap.fromTo(
-      cards,
-      { opacity: 0, y: 30, scale: 0.96 },
-      { opacity: 1, y: 0, scale: 1, stagger: 0.07, duration: 0.55, ease: "power2.out" }
-    );
-  }, [loading, selectedCategory, searchQuery, sortBy, priceRange]);
-
-  // ─── Filtering & Sorting ───
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    if (selectedCategory !== "All") {
-      result = result.filter(
-        (p) => p.category?.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q) ||
-          p.category?.toLowerCase().includes(q)
-      );
-    }
-
-    if (priceRange !== "all") {
-      result = result.filter((p) => {
-        if (priceRange === "0-500") return p.price < 500;
-        if (priceRange === "500-1000") return p.price >= 500 && p.price < 1000;
-        if (priceRange === "1000-2000") return p.price >= 1000 && p.price < 2000;
-        if (priceRange === "2000+") return p.price >= 2000;
-        return true;
+    const ctx = gsap.context(() => {
+      GENDER_SECTIONS.forEach((sec) => {
+        const el = document.querySelector(`.cg-section-${sec.id}`);
+        if (!el) return;
+        gsap.fromTo(`.cg-section-${sec.id} .cg-sec-text`,
+          { opacity: 0, x: isRTL ? 60 : -60 },
+          { opacity: 1, x: 0, duration: 1.1, ease: "expo.out",
+            scrollTrigger: { trigger: el, start: "top 70%" } }
+        );
+        gsap.fromTo(`.cg-section-${sec.id} .cg-sec-img`,
+          { opacity: 0, x: isRTL ? -60 : 60, scale: 0.92 },
+          { opacity: 1, x: 0, scale: 1, duration: 1.2, ease: "expo.out",
+            scrollTrigger: { trigger: el, start: "top 70%" } }
+        );
+        gsap.fromTo(`.cg-section-${sec.id} .cg-prod-card`,
+          { opacity: 0, y: 50, scale: 0.94 },
+          { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.7, ease: "power3.out",
+            scrollTrigger: { trigger: `.cg-section-${sec.id} .cg-products-row`, start: "top 82%" } }
+        );
       });
-    }
-
-    if (sortBy === "price-low") result.sort((a, b) => a.price - b.price);
-    else if (sortBy === "price-high") result.sort((a, b) => b.price - a.price);
-    else if (sortBy === "newest") {
-      result.sort(
-        (a, b) =>
-          new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
-      );
-    }
-
-    return result;
-  }, [products, selectedCategory, searchQuery, sortBy, priceRange]);
-
-  function handleQuickAdd(product: Product) {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      category: product.category,
-    });
-    setToast(product.name);
-    setTimeout(() => setToast(null), 2500);
-  }
+    }, pageRef);
+    return () => ctx.revert();
+  }, [isRTL, loading]);
 
   return (
-    <div ref={pageRef} style={{ background: "var(--black)", color: "var(--white)", minHeight: "100vh" }}>
+    <div ref={pageRef} style={{ background: "var(--black)", color: "var(--white)", minHeight: "100vh", overflowX: "hidden" }}>
       <Navbar />
 
       {/* Toast */}
@@ -161,132 +143,222 @@ function CategoryContent() {
         </div>
       )}
 
-      {/* ─── HERO BANNER ─── */}
-      <section className="cat-hero-banner">
-        <div className="cat-hero-bg" />
-        <div className="cat-hero-overlay" />
-        <div className="cat-hero-content">
-          <span className="section-tag" style={{ color: "var(--gold)", letterSpacing: "0.3em" }}>✦ Nubia Collection</span>
-          <h1 className="cat-hero-title">
-            Discover Our
-            <br />
-            <span className="gold-text">Fragrances</span>
+      {/* ══ HERO ══ */}
+      <section style={{
+        minHeight: "55vh", display: "flex", alignItems: "center", justifyContent: "center",
+        background: "linear-gradient(160deg, #06091a 0%, #0f1635 50%, #06091a 100%)",
+        position: "relative", overflow: "hidden", paddingTop: "100px",
+      }}>
+        {/* Grid bg */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(220,202,187,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(220,202,187,0.03) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
+        {/* Glow orbs */}
+        {GENDER_SECTIONS.map((s, i) => (
+          <div key={s.id} style={{
+            position: "absolute", borderRadius: "50%", pointerEvents: "none",
+            width: "300px", height: "300px",
+            background: `radial-gradient(circle, ${s.glow} 0%, transparent 70%)`,
+            left: `${15 + i * 20}%`, top: `${30 + (i % 2) * 20}%`,
+            filter: "blur(40px)", opacity: 0.6,
+          }} />
+        ))}
+        <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "0 24px", maxWidth: "900px" }}>
+          <span className="cg-hero-tag" style={{
+            display: "inline-block", border: "1px solid rgba(220,202,187,0.35)",
+            borderRadius: "40px", padding: "6px 22px", fontSize: "0.7rem",
+            letterSpacing: "0.3em", textTransform: "uppercase", color: "var(--gold)",
+            marginBottom: "28px", background: "rgba(220,202,187,0.05)",
+          }}>✦ Nubia Collection</span>
+          <h1 className="cg-hero-title" style={{
+            fontFamily: "var(--font-serif)", fontSize: "clamp(3rem,7vw,6rem)",
+            fontWeight: 700, textTransform: "uppercase", lineHeight: 1.05, marginBottom: "28px",
+          }}>
+            Find Your<br /><span className="gold-text">Signature</span>
           </h1>
-          <p className="cat-hero-sub">
-            Handcrafted luxury perfumes sourced from the world&apos;s rarest botanical gardens. Find your signature scent.
-          </p>
-        </div>
-      </section>
-
-      {/* ─── CATEGORY PILLS ─── */}
-      <section className="responsive-pad" style={{ padding: "50px 60px 0", maxWidth: "1300px", margin: "0 auto" }}>
-        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              className={`cat-pill${selectedCategory === cat.id ? " cat-pill-active" : ""}`}
-              onClick={() => setSelectedCategory(cat.id)}
-            >
-              <span style={{ fontSize: "1.1rem" }}>{cat.icon}</span>
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── FILTER PANEL ─── */}
-      <section className="responsive-pad" style={{ padding: "30px 60px 50px", maxWidth: "1300px", margin: "0 auto" }}>
-        <div className="filter-panel glass-panel" style={{ padding: "20px 28px" }}>
-          <div className="filter-panel-inner">
-            {/* Search */}
-            <div className="cat-search-wrapper">
-              <svg className="cat-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input
-                type="text"
-                className="search-field"
-                placeholder="Search fragrances, notes, categories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Price Range */}
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontSize: "0.72rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>Price:</span>
-              {PRICE_RANGES.map((r) => (
-                <button
-                  key={r.id}
-                  className={`filter-tab${priceRange === r.id ? " active" : ""}`}
-                  onClick={() => setPriceRange(r.id)}
-                  style={{ padding: "7px 16px", fontSize: "0.75rem" }}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Sort */}
-            <div className="sort-select-wrapper" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "0.72rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>Sort:</span>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="default">Recommended</option>
-                <option value="price-low">Price ↑</option>
-                <option value="price-high">Price ↓</option>
-                <option value="newest">Newest</option>
-              </select>
-            </div>
-
-            {/* Results count */}
-            <div style={{ fontSize: "0.8rem", color: "var(--white-muted)", whiteSpace: "nowrap" }}>
-              {loading ? "Loading..." : `${filteredProducts.length} fragrance${filteredProducts.length !== 1 ? "s" : ""}`}
-            </div>
+          <div className="cg-hero-line" style={{
+            width: "80px", height: "1px", background: "var(--gold)",
+            margin: "0 auto", transformOrigin: "left",
+          }} />
+          {/* Gender nav pills */}
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginTop: "40px" }}>
+            {GENDER_SECTIONS.map((s) => (
+              <a key={s.id} href={`#section-${s.id}`}
+                onClick={() => setActiveSection(s.id)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "8px",
+                  padding: "11px 26px", borderRadius: "50px",
+                  border: `1px solid ${activeSection === s.id ? s.accent : "rgba(220,202,187,0.18)"}`,
+                  background: activeSection === s.id ? `${s.accent}18` : "transparent",
+                  color: activeSection === s.id ? s.accent : "var(--white-muted)",
+                  fontSize: "0.8rem", fontWeight: activeSection === s.id ? 700 : 400,
+                  letterSpacing: "0.08em", textTransform: "uppercase",
+                  textDecoration: "none", transition: "all 0.3s ease",
+                  fontFamily: "var(--font-sans)",
+                }}
+              >
+                <span>{s.num}</span>
+                {isRTL ? s.titleAr : s.title}
+              </a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ─── PRODUCTS GRID ─── */}
-      <section className="responsive-pad" style={{ padding: "0 60px 120px", maxWidth: "1300px", margin: "0 auto" }}>
-        <div className="products-grid" ref={gridRef}>
-          {loading ? (
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="product-card" style={{ opacity: 0.4 }}>
-                <div className="product-card-image" style={{ background: "var(--dark-2)", height: "300px" }} />
-                <div className="product-card-body">
-                  <div style={{ height: "18px", background: "var(--dark-2)", marginBottom: "8px", borderRadius: "4px" }} />
-                  <div style={{ height: "14px", background: "var(--dark-2)", width: "60%", borderRadius: "4px" }} />
+      {/* ══ GENDER SECTIONS ══ */}
+      <div className="cg-sections">
+        {GENDER_SECTIONS.map((sec, secIdx) => {
+          const secProducts = loading ? [] : products.filter(p =>
+            sec.id === "oriental"
+              ? p.category?.toLowerCase().includes("oriental") || p.category?.toLowerCase().includes("oud")
+              : (p.gender || "unisex") === sec.id
+          ).slice(0, 4);
+          const isEven = secIdx % 2 === 0;
+
+          return (
+            <section
+              id={`section-${sec.id}`}
+              key={sec.id}
+              className={`cg-section-${sec.id}`}
+              style={{
+                padding: "120px 60px", position: "relative", overflow: "hidden",
+                background: sec.bg,
+                borderTop: `1px solid ${sec.accent}22`,
+              }}
+            >
+              {/* Ambient glow */}
+              <div style={{
+                position: "absolute", pointerEvents: "none",
+                width: "600px", height: "600px", borderRadius: "50%",
+                background: `radial-gradient(circle, ${sec.glow} 0%, transparent 70%)`,
+                [isEven ? "right" : "left"]: "-100px", top: "50%",
+                transform: "translateY(-50%)", filter: "blur(60px)",
+              }} />
+
+              <div style={{ maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+
+                {/* ── Watermark number — clipped to section ── */}
+                <div style={{
+                  position: "absolute",
+                  top: "0px",
+                  [isEven ? "right" : "left"]: "0px",
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "clamp(6rem, 12vw, 14rem)",
+                  fontWeight: 800,
+                  color: `${sec.accent}0e`,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  pointerEvents: "none", userSelect: "none",
+                  lineHeight: 1, zIndex: 0,
+                  overflow: "hidden",
+                }} className="cg-num">{sec.num}</div>
+
+                {/* ── Section header row ── */}
+                <div className={`cg-sec-text`} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+                  marginBottom: "70px", flexWrap: "wrap", gap: "24px",
+                  flexDirection: isRTL ? "row-reverse" : "row",
+                  position: "relative", zIndex: 3,
+                }}>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: sec.accent, letterSpacing: "0.3em", textTransform: "uppercase", display: "block", marginBottom: "14px" }}>
+                      ✦ {isRTL ? sec.subAr : sec.sub}
+                    </span>
+                    <h2 style={{
+                      fontFamily: "var(--font-serif)", fontWeight: 700, textTransform: "uppercase",
+                      fontSize: "clamp(2.8rem,5vw,5rem)", lineHeight: 1.05, color: "#fff",
+                    }}>
+                      {isRTL ? sec.titleAr : sec.title}
+                    </h2>
+                  </div>
+                  <Link href={`/products?gender=${sec.id}`} style={{
+                    display: "inline-flex", alignItems: "center", gap: "10px",
+                    border: `1px solid ${sec.accent}55`, borderRadius: "50px",
+                    padding: "13px 30px", color: sec.accent,
+                    fontSize: "0.78rem", fontWeight: 600, letterSpacing: "0.1em",
+                    textTransform: "uppercase", textDecoration: "none",
+                    transition: "all 0.3s ease", background: `${sec.accent}0d`,
+                    fontFamily: "var(--font-sans)",
+                  }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = `${sec.accent}22`;
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = `${sec.accent}0d`;
+                      (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+                    }}
+                  >
+                    {isRTL ? "تسوق الآن" : "Shop All"} →
+                  </Link>
                 </div>
+
+                {/* ── Feature image + product cards ── */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "340px 1fr",
+                  gap: "28px", alignItems: "start",
+                  direction: isEven ? "ltr" : "rtl",
+                }}>
+
+                  {/* Feature image */}
+                  <div className="cg-sec-img" style={{
+                    borderRadius: "24px", overflow: "hidden",
+                    border: `1px solid ${sec.accent}30`,
+                    height: "460px", position: "relative",
+                    boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 60px ${sec.glow}`,
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={sec.img} alt={sec.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.7s ease" }}
+                      onMouseEnter={(e) => ((e.target as HTMLElement).style.transform = "scale(1.05)")}
+                      onMouseLeave={(e) => ((e.target as HTMLElement).style.transform = "scale(1)")}
+                    />
+                    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, ${sec.bg.split(",")[0].replace("linear-gradient(135deg, ", "")} 0%, transparent 50%)` }} />
+                    <div style={{
+                      position: "absolute", bottom: "24px", left: "24px",
+                      background: "rgba(0,0,0,0.6)", backdropFilter: "blur(12px)",
+                      border: `1px solid ${sec.accent}40`, borderRadius: "14px",
+                      padding: "14px 20px",
+                    }}>
+                      <div style={{ fontSize: "0.6rem", color: sec.accent, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: "4px" }}>Collection</div>
+                      <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", color: "#fff", fontWeight: 700, textTransform: "uppercase" }}>
+                        {isRTL ? sec.titleAr : sec.title}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Products grid */}
+                  <div className="cg-products-row" style={{
+                    display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "20px", direction: "ltr",
+                  }}>
+                    {loading
+                      ? Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="cg-prod-card" style={{
+                            background: "rgba(255,255,255,0.04)", borderRadius: "16px",
+                            height: "280px", animation: "pulse 1.8s infinite",
+                          }} />
+                        ))
+                      : secProducts.length === 0
+                      ? (
+                          <div style={{ gridColumn: "1/-1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "280px", gap: "16px" }}>
+                            <div style={{ fontSize: "3rem", opacity: 0.2 }}>🌿</div>
+                            <p style={{ color: "var(--white-muted)", fontSize: "0.9rem" }}>No fragrances yet in this collection.</p>
+                            <Link href="/dashboard" style={{ fontSize: "0.75rem", color: sec.accent, textDecoration: "none", border: `1px solid ${sec.accent}44`, padding: "8px 20px", borderRadius: "30px" }}>
+                              Add Products →
+                            </Link>
+                          </div>
+                        )
+                      : secProducts.map((product, i) => (
+                          <CatGenderCard key={product.id} product={product} index={i} accent={sec.accent} inCart={isInCart(product.id)} onAdd={(e) => handleAdd(e, product)} />
+                        ))
+                    }
+                  </div>
+                </div>
+
               </div>
-            ))
-          ) : filteredProducts.length === 0 ? (
-            <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "100px 20px" }}>
-              <div style={{ fontSize: "4rem", opacity: 0.3, marginBottom: "20px" }}>🌿</div>
-              <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.5rem", marginBottom: "12px" }}>No Fragrances Match</h3>
-              <p style={{ color: "var(--white-muted)", marginBottom: "32px", fontSize: "0.9rem" }}>
-                Try adjusting your search or resetting filters.
-              </p>
-              <button
-                className="btn-gold-outline"
-                onClick={() => { setSelectedCategory("All"); setSearchQuery(""); setSortBy("default"); setPriceRange("all"); }}
-              >
-                Reset All Filters
-              </button>
-            </div>
-          ) : (
-            filteredProducts.map((product, index) => (
-              <CategoryProductCard
-                key={product.id}
-                product={product}
-                index={index}
-                onQuickAdd={() => handleQuickAdd(product)}
-                inCart={isInCart(product.id)}
-              />
-            ))
-          )}
-        </div>
-      </section>
+            </section>
+          );
+        })}
+      </div>
 
       <Footer />
     </div>
@@ -301,63 +373,93 @@ export default function CategoryPage() {
   );
 }
 
-/* ─── Category Product Card ─── */
-function CategoryProductCard({
-  product,
-  index,
-  onQuickAdd,
-  inCart,
+/* ─── Gender Product Card ─── */
+function CatGenderCard({
+  product, index, accent, inCart, onAdd,
 }: {
-  product: Product;
-  index: number;
-  onQuickAdd: () => void;
-  inCart: boolean;
+  product: any; index: number; accent: string; inCart: boolean;
+  onAdd: (e: React.MouseEvent) => void;
 }) {
+  const [hovered, setHovered] = useState(false);
+  const hoverImg = product.images?.[0] ?? null;
+  const hasHover = !!hoverImg && hoverImg !== product.image_url;
+
   return (
-    <div className="product-card" style={{ animationDelay: `${index * 0.05}s` }}>
-      <div className="product-card-image" style={{ position: "relative", height: "340px", overflow: "hidden" }}>
+    <Link
+      href={`/product/${product.id}`}
+      className="cg-prod-card"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: "block", textDecoration: "none", color: "inherit",
+        background: "rgba(10,15,36,0.7)",
+        border: hovered ? `1px solid ${accent}66` : "1px solid rgba(220,202,187,0.08)",
+        borderRadius: "18px", overflow: "hidden",
+        transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+        transform: hovered ? "translateY(-8px) scale(1.02)" : "translateY(0) scale(1)",
+        boxShadow: hovered ? `0 24px 60px rgba(0,0,0,0.5), 0 0 30px ${accent}22` : "0 4px 16px rgba(0,0,0,0.3)",
+        animationDelay: `${index * 0.08}s`,
+      }}
+    >
+      {/* Image */}
+      <div style={{ position: "relative", height: "220px", overflow: "hidden", background: "var(--dark-2)" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={product.image_url}
-          alt={product.name}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-        />
-        {product.badge && <span className="product-card-badge">{product.badge}</span>}
-        <div className="product-card-overlay" />
-        <div className="product-card-actions">
-          <button
-            className="product-card-quick-add"
-            onClick={(e) => { e.preventDefault(); onQuickAdd(); }}
-          >
-            {inCart ? "✓ In Cart" : "+ Add to Cart"}
-          </button>
-          <Link href={`/product/${product.id}`} className="product-card-view-btn">
-            View Details
-          </Link>
-        </div>
+        <img src={product.image_url} alt={product.name} style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+          transition: "opacity 0.5s ease, transform 0.7s ease",
+          opacity: hovered && hasHover ? 0 : 1,
+          transform: hovered ? "scale(1.08)" : "scale(1)", zIndex: 1,
+        }} />
+        {hasHover && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={hoverImg} alt="" style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+            transition: "opacity 0.5s ease, transform 0.7s ease",
+            opacity: hovered ? 1 : 0, transform: hovered ? "scale(1.04)" : "scale(1.1)", zIndex: 2,
+          }} />
+        )}
+        {product.badge && (
+          <span style={{
+            position: "absolute", top: "12px", left: "12px", zIndex: 5,
+            background: `linear-gradient(135deg, ${accent}, ${accent}bb)`,
+            color: "#000", fontSize: "0.58rem", fontWeight: 700,
+            letterSpacing: "0.1em", textTransform: "uppercase",
+            padding: "4px 10px", borderRadius: "20px",
+          }}>{product.badge}</span>
+        )}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 3,
+          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)",
+          opacity: hovered ? 1 : 0, transition: "opacity 0.35s ease",
+        }} />
+        <button onClick={onAdd} style={{
+          position: "absolute", bottom: "14px", left: "50%", zIndex: 6,
+          transform: hovered ? "translateX(-50%) translateY(0)" : "translateX(-50%) translateY(14px)",
+          opacity: hovered ? 1 : 0, transition: "all 0.35s ease",
+          background: inCart ? "rgba(76,175,80,0.9)" : `${accent}ee`,
+          color: "#000", border: "none", padding: "9px 22px",
+          borderRadius: "30px", fontSize: "0.7rem", fontWeight: 700,
+          letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer",
+          whiteSpace: "nowrap",
+        }}>
+          {inCart ? "✓ In Cart" : "+ Add to Cart"}
+        </button>
       </div>
-      <div className="product-card-body">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "4px" }}>
-          <span style={{ fontSize: "0.7rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-            {product.category || "Luxury Fragrance"}
-          </span>
-          <div style={{ color: "var(--gold)", fontSize: "0.7rem" }}>★★★★★</div>
+      {/* Body */}
+      <div style={{ padding: "16px 18px" }}>
+        <div style={{ fontSize: "0.62rem", color: accent, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "5px" }}>
+          {product.category || "Luxury"}
         </div>
-        <h3 className="product-card-name" style={{ fontFamily: "var(--font-title)", fontSize: "1.15rem", color: "var(--white)", margin: "4px 0 6px" }}>
+        <h3 style={{ fontFamily: "var(--font-title)", fontSize: "0.95rem", color: "#fff", marginBottom: "6px", lineHeight: 1.3 }}>
           {product.name}
         </h3>
-        <p className="product-card-desc" style={{ color: "var(--white-muted)", fontSize: "0.8rem", marginBottom: "16px", minHeight: "36px" }}>
-          {product.description}
-        </p>
-        <div className="product-card-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "14px" }}>
-          <span className="product-price" style={{ color: "var(--gold)", fontWeight: 600, fontSize: "1.1rem" }}>
-            {product.price.toLocaleString()} EGP
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", paddingTop: "10px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <span style={{ fontFamily: "var(--font-serif)", color: accent, fontSize: "1.05rem", fontWeight: 700 }}>
+            {product.price.toLocaleString()} <span style={{ fontSize: "0.7rem", fontWeight: 400 }}>EGP</span>
           </span>
-          <Link href={`/product/${product.id}`} className="btn-gold-outline" style={{ padding: "7px 18px", fontSize: "0.72rem" }}>
-            Details
-          </Link>
+          <span style={{ fontSize: "0.62rem", color: "var(--gold)", letterSpacing: "1px" }}>★★★★★</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

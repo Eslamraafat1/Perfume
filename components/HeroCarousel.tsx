@@ -202,7 +202,7 @@ export default function HeroCarousel() {
           position: absolute;
           z-index: 1;
           font-family: var(--font-serif);
-          font-size: clamp(6rem, 25vw, 22rem);
+          font-size: clamp(3rem, 12vw, 10rem);
           font-weight: 800;
           text-transform: uppercase;
           color: rgba(220, 202, 187, 0.15);
@@ -210,11 +210,14 @@ export default function HeroCarousel() {
           white-space: nowrap;
           pointer-events: none;
           user-select: none;
-          background: linear-gradient(180deg, rgba(220, 202, 187, 0.4) 0%, rgba(220, 202, 187, 0.05) 100%);
+          background: linear-gradient(180deg, rgba(220, 202, 187, 0.25) 0%, rgba(220, 202, 187, 0.04) 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           filter: drop-shadow(0px 10px 30px rgba(0,0,0,0.5));
           will-change: transform, opacity;
+          /* Prevent bleed outside carousel bounds */
+          max-width: 100%;
+          overflow: hidden;
         }
 
         .hc-img-wrap {
@@ -227,6 +230,7 @@ export default function HeroCarousel() {
           display: flex;
           align-items: center;
           justify-content: center;
+          
         }
 
         .hc-img-wrap img {
@@ -327,10 +331,48 @@ export default function HeroCarousel() {
           transform-origin: ${isRTL ? "right" : "left"};
         }
 
+        .hc-slide-content {
+          position: absolute;
+          bottom: 14%;
+          left: 8%;
+          z-index: 10;
+          max-width: 540px;
+          pointer-events: none;
+        }
+
+        .hc-eyebrow {
+          font-size: 0.65rem;
+          color: var(--gold);
+          letter-spacing: 0.35em;
+          text-transform: uppercase;
+          margin-bottom: 14px;
+          opacity: 0.9;
+          font-family: var(--font-sans);
+        }
+
+        .hc-slide-title {
+          font-family: var(--font-serif);
+          font-size: clamp(2rem, 4vw, 3.2rem);
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #fff;
+          line-height: 1.1;
+          margin-bottom: 14px;
+          letter-spacing: 0.02em;
+        }
+
+        .hc-slide-subtitle {
+          font-size: 0.88rem;
+          color: rgba(255,255,255,0.65);
+          line-height: 1.7;
+          font-family: var(--font-sans);
+          max-width: 420px;
+        }
+
         @media (max-width: 768px) {
-          .hc-img-wrap { height: 60vh; }
-          .hc-arrows { padding: 0 16px; }
-          .hc-arrow { width: 44px; height: 44px; }
+          .hc-slide-content { left: 6%; bottom: 18%; max-width: 85%; }
+          .hc-slide-title { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+          .hc-slide-subtitle { font-size: 0.82rem; }
         }
       `}</style>
 
@@ -355,35 +397,9 @@ export default function HeroCarousel() {
               NUBIA
             </div>
 
-            <div
-              className="hc-img-wrap"
-              ref={(el) => { imgRefs.current[i] = el; }}
-            >
-              <img src={slide.img} alt="Perfume" />
-            </div>
+            {/* Slide text content removed */}
           </div>
         ))}
-
-        <div className="hc-arrows">
-          <button
-            className="hc-arrow"
-            onClick={() => goTo((current - 1 + slides.length) % slides.length)}
-            aria-label="Previous slide"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button
-            className="hc-arrow"
-            onClick={() => goTo((current + 1) % slides.length)}
-            aria-label="Next slide"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ transform: isRTL ? 'rotate(180deg)' : 'none' }}>
-              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        </div>
 
         <div className="hc-dots" role="tablist" aria-label="Slide navigation">
           {slides.map((_, i) => (

@@ -101,7 +101,8 @@ export default function CategorySection() {
           flex-direction: column;
           align-items: center;
           position: relative;
-          z-index: 5;
+          z-index: 1;
+          overflow: hidden;
         }
 
         .cat-header {
@@ -111,7 +112,7 @@ export default function CategorySection() {
 
         .cat-main-title {
           font-family: var(--font-serif);
-          font-size: clamp(2.2rem, 4vw, 3.5rem);
+          font-size: clamp(1.3rem, 2.2vw, 2rem);
           text-transform: uppercase;
           color: #fff;
           margin-top: 14px;
