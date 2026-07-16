@@ -36,14 +36,20 @@ export default function Navbar() {
     <>
       <header className="header-container">
         {/* ─── ANNOUNCEMENT BAR ─── */}
-        <div className="announcement-bar">
-          <div className="announcement-track" style={{ direction: isRTL ? "rtl" : "ltr" }}>
-            <div className="announcement-item">{t("ann_1")}</div>
-            <div className="announcement-item">{t("ann_2")}</div>
-            <div className="announcement-item">{t("ann_3")}</div>
-            <div className="announcement-item">{t("ann_1")}</div>
-            <div className="announcement-item">{t("ann_2")}</div>
-            <div className="announcement-item">{t("ann_3")}</div>
+        <div className="announcement-bar" dir={isRTL ? "rtl" : "ltr"}>
+          <div className="announcement-track">
+            {/* Group 1 */}
+            <div className="announcement-group">
+              <div className="announcement-item">{t("ann_1")}</div>
+              <div className="announcement-item">{t("ann_2")}</div>
+              <div className="announcement-item">{t("ann_3")}</div>
+            </div>
+            {/* Group 2 (Duplicate for seamless loop) */}
+            <div className="announcement-group">
+              <div className="announcement-item">{t("ann_1")}</div>
+              <div className="announcement-item">{t("ann_2")}</div>
+              <div className="announcement-item">{t("ann_3")}</div>
+            </div>
           </div>
         </div>
 

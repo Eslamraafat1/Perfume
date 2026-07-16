@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, Amiri, Cairo, Tajawal } from "next/font/google";
+import { Bodoni_Moda, Inter, Amiri, Cairo, Tajawal } from "next/font/google";
 import "./globals.css";
 import { ProductProvider } from "./context/ProductContext";
 import { CartProvider } from "./context/CartContext";
@@ -9,9 +9,9 @@ import { HeroSlidesProvider } from "./context/HeroSlidesContext";
 import FragranceFinderWidget from "@/components/FragranceFinderWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 
-const playfair = Playfair_Display({
+const bodoni = Bodoni_Moda({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-bodoni",
   display: "swap",
 });
 
@@ -59,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable} ${amiri.variable} ${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${bodoni.variable} ${inter.variable} ${amiri.variable} ${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <SiteContentProvider>
           <LanguageProvider>

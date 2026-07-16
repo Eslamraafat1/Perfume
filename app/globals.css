@@ -24,9 +24,9 @@
   --white: #ffffff;
   --white-muted: #d0cbd6;
   --accent: #dbcabb;
-  --font-serif: 'Agraham', var(--font-playfair), 'Cormorant Garamond', Georgia, serif;
+  --font-serif: var(--font-bodoni), 'Cormorant Garamond', Georgia, serif;
   --font-sans: var(--font-inter), 'Inter', system-ui, sans-serif;
-  --font-title: 'Agraham', 'Bricolage Grotesque', var(--font-sans);
+  --font-title: var(--font-bodoni), 'Bricolage Grotesque', var(--font-sans);
   --radius: 12px;
   --radius-lg: 20px;
   --shadow-gold: 0 0 40px rgba(220, 202, 187, 0.25);
@@ -36,7 +36,7 @@
 
 html[lang="ar"],
 [dir="rtl"] {
-  --font-serif: var(--font-tajawal), var(--font-amiri), var(--font-playfair), 'Cormorant Garamond', Georgia, serif;
+  --font-serif: var(--font-tajawal), var(--font-amiri), var(--font-bodoni), 'Cormorant Garamond', Georgia, serif;
   --font-sans: var(--font-tajawal), var(--font-cairo), var(--font-inter), 'Inter', system-ui, sans-serif;
   --font-title: var(--font-tajawal), 'Bricolage Grotesque', var(--font-sans);
 }
@@ -394,7 +394,7 @@ body {
   font-size: clamp(2rem, 4vw, 3.5rem);
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
   margin-bottom: 16px;
 }
 
@@ -1380,7 +1380,7 @@ body {
 /* Typography Overrides */
 .hero-title, .section-title, .topbar-title, .footer-brand, .sidebar-logo-text {
   font-family: var(--font-title);
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
 }
 
 /* Announcement Bar */
@@ -1401,18 +1401,34 @@ body {
 .announcement-track {
   display: flex;
   white-space: nowrap;
-  animation: marquee 10s linear infinite;
+  animation: marquee 15s linear infinite;
+}
+
+.announcement-group {
+  display: flex;
+  flex-shrink: 0;
+  min-width: 100%;
+  justify-content: space-around;
 }
 
 .announcement-item {
   padding: 0 40px;
   display: inline-block;
-      font-size: 15px;
+  font-size: 15px;
 }
 
 @keyframes marquee {
   0% { transform: translateX(0%); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-rtl {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(50%); }
+}
+
+[dir="rtl"] .announcement-track {
+  animation-name: marquee-rtl;
 }
 
 /* Glassmorphism utility */

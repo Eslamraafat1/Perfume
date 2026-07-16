@@ -301,7 +301,8 @@ export default function HeroCarousel() {
           font-size: clamp(4.5rem, 14vw, 13rem);
           font-weight: 900;
           text-transform: uppercase;
-          line-height: 0.95;
+          line-height: 1.5;
+          padding: 0.2em 0;
           letter-spacing: -0.01em;
           transform-style: preserve-3d;
           will-change: transform, opacity, filter;
@@ -548,6 +549,7 @@ export default function HeroCarousel() {
             {/* NUBIA letter-by-letter */}
             <div
               className="hc-nubia-wrap"
+              dir="ltr"
               ref={(el) => { nubiaWrapRefs.current[si] = el; }}
             >
               {LETTERS.map((letter, li) => (
