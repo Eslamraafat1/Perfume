@@ -285,7 +285,7 @@ export default function HeroCarousel() {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: clamp(2px, 0.6vw, 10px);
+          gap: clamp(1px, 0.4vw, 8px);
           user-select: none;
           perspective: 900px;
           transform-style: preserve-3d;
@@ -298,11 +298,10 @@ export default function HeroCarousel() {
           display: inline-block;
           position: relative;
           font-family: var(--font-serif);
-          font-size: clamp(4.5rem, 14vw, 13rem);
+          font-size: clamp(3.5rem, 11vw, 11rem);
           font-weight: 900;
           text-transform: uppercase;
-          line-height: 1.5;
-          padding: 0.2em 0;
+          line-height: 1;
           letter-spacing: -0.01em;
           transform-style: preserve-3d;
           will-change: transform, opacity, filter;
@@ -313,10 +312,11 @@ export default function HeroCarousel() {
           /* ── Strong visible gold ── */
           background: linear-gradient(
             165deg,
-            #fff5cc  0%,
-            #e8ca80 30%,
-            #c9a96e 60%,
-            #8c6237 100%
+            #fff9e6  0%,
+            #eed599 25%,
+            #dcb570 50%,
+            #b68c4a 75%,
+            #8a5d2e 100%
           );
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -526,6 +526,179 @@ export default function HeroCarousel() {
         @media (max-width: 480px) {
           .hc-letter { font-size: clamp(2.4rem, 20vw, 5rem); gap: 0; }
           .hc-nubia-wrap { gap: 0; }
+        }
+
+        /* ══════════════════════════════════════
+           SLIDE CONTENT COLUMN
+        ══════════════════════════════════════ */
+        .hc-slide {
+          flex-direction: column;
+          justify-content: center;
+          padding-bottom: 80px;
+        }
+        .hc-slide-content {
+          position: relative;
+          z-index: 5;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0;
+        }
+
+        /* ══════════════════════════════════════
+           EYEBROW
+        ══════════════════════════════════════ */
+        .hc-eyebrow {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 18px;
+          opacity: 0;
+          animation: hc-fade-up 1s ease 0.8s forwards;
+        }
+        .hc-eyebrow-line {
+          display: block;
+          width: 48px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(220,185,100,0.7), transparent);
+        }
+        .hc-eyebrow-text {
+          font-family: var(--font-sans, sans-serif);
+          font-size: 0.68rem;
+          letter-spacing: 0.28em;
+          text-transform: uppercase;
+          color: rgba(220,185,100,0.85);
+          white-space: nowrap;
+        }
+
+        /* ══════════════════════════════════════
+           SUBTITLE
+        ══════════════════════════════════════ */
+        .hc-subtitle {
+          font-family: var(--font-sans, sans-serif);
+          font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+          font-weight: 300;
+          letter-spacing: 0.06em;
+          color: rgba(220,202,187,0.75);
+          text-align: center;
+          max-width: 480px;
+          margin: 12px 0 36px;
+          line-height: 1.7;
+          opacity: 0;
+          animation: hc-fade-up 1s ease 1.2s forwards;
+        }
+
+        /* ══════════════════════════════════════
+           CTA BUTTONS
+        ══════════════════════════════════════ */
+        .hc-cta-row {
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          opacity: 0;
+          animation: hc-fade-up 1s ease 1.5s forwards;
+        }
+        .hc-btn-primary {
+          display: inline-block;
+          padding: 13px 34px;
+          font-size: 0.75rem;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          font-family: var(--font-sans, sans-serif);
+          font-weight: 600;
+          color: #0a0d1a;
+          background: linear-gradient(135deg, #e8ca80, #c9a96e, #dbb878);
+          border: none;
+          border-radius: 2px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 24px rgba(220,185,100,0.35);
+        }
+        .hc-btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 36px rgba(220,185,100,0.55);
+          background: linear-gradient(135deg, #f2d890, #d4b57a, #e8ca80);
+        }
+        .hc-btn-ghost {
+          display: inline-block;
+          padding: 12px 32px;
+          font-size: 0.75rem;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          font-family: var(--font-sans, sans-serif);
+          font-weight: 500;
+          color: rgba(220,185,100,0.90);
+          background: transparent;
+          border: 1px solid rgba(220,185,100,0.40);
+          border-radius: 2px;
+          cursor: pointer;
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+        .hc-btn-ghost:hover {
+          border-color: rgba(220,185,100,0.85);
+          color: #e8ca80;
+          background: rgba(220,185,100,0.08);
+          transform: translateY(-2px);
+        }
+
+        /* ══════════════════════════════════════
+           SCROLL INDICATOR
+        ══════════════════════════════════════ */
+        .hc-scroll-hint {
+          position: absolute;
+          bottom: 32px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 20;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          opacity: 0;
+          animation: hc-fade-up 1s ease 2s forwards;
+        }
+        .hc-scroll-mouse {
+          width: 22px;
+          height: 36px;
+          border: 1.5px solid rgba(220,185,100,0.5);
+          border-radius: 12px;
+          display: flex;
+          justify-content: center;
+          padding-top: 6px;
+        }
+        .hc-scroll-wheel {
+          width: 3px;
+          height: 7px;
+          background: rgba(220,185,100,0.85);
+          border-radius: 2px;
+          animation: hc-scroll-bounce 1.8s ease-in-out infinite;
+        }
+        @keyframes hc-scroll-bounce {
+          0%,100% { transform: translateY(0); opacity: 1; }
+          50%      { transform: translateY(7px); opacity: 0.3; }
+        }
+        .hc-scroll-label {
+          font-size: 0.6rem;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          color: rgba(220,185,100,0.5);
+          font-family: var(--font-sans, sans-serif);
+        }
+
+        @keyframes hc-fade-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+          .hc-subtitle { font-size: 0.82rem; max-width: 320px; }
+          .hc-cta-row { flex-direction: column; gap: 12px; }
+          .hc-btn-primary, .hc-btn-ghost { width: 220px; text-align: center; }
+          .hc-scroll-hint { display: none; }
+          .hc-eyebrow-text { font-size: 0.6rem; }
+          .hc-eyebrow-line { width: 28px; }
         }
       `}</style>
 

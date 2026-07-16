@@ -292,11 +292,11 @@ function CategoryContent() {
                 </div>
 
                 {/* ── Feature image + product cards ── */}
-                <div style={{
+                <div className="cg-grid-container" style={{
                   display: "grid",
                   gridTemplateColumns: "340px 1fr",
                   gap: "28px", alignItems: "start",
-                  direction: isEven ? "ltr" : "rtl",
+                  direction: isEven ? (isRTL ? "rtl" : "ltr") : (isRTL ? "ltr" : "rtl"),
                 }}>
 
                   {/* Feature image */}
@@ -305,6 +305,7 @@ function CategoryContent() {
                     border: `1px solid ${sec.accent}30`,
                     height: "460px", position: "relative",
                     boxShadow: `0 30px 80px rgba(0,0,0,0.6), 0 0 60px ${sec.glow}`,
+                    direction: isRTL ? "rtl" : "ltr",
                   }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={sec.img} alt={sec.title} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.7s ease" }}
@@ -328,7 +329,7 @@ function CategoryContent() {
                   {/* Products grid */}
                   <div className="cg-products-row" style={{
                     display: "grid", gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: "20px", direction: "ltr",
+                    gap: "20px", direction: isRTL ? "rtl" : "ltr",
                   }}>
                     {loading
                       ? Array.from({ length: 4 }).map((_, i) => (

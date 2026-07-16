@@ -41,8 +41,8 @@ html[lang="ar"],
   --font-title: var(--font-tajawal), 'Bricolage Grotesque', var(--font-sans);
 }
 
-html[lang="ar"] *,
-[dir="rtl"] * {
+html[lang="ar"] *:not([dir="ltr"]):not([dir="ltr"] *),
+[dir="rtl"] *:not([dir="ltr"]):not([dir="ltr"] *) {
   letter-spacing: normal !important;
 }
 
@@ -1387,48 +1387,49 @@ body {
 .announcement-bar {
   background: var(--dark-3);
   color: var(--gold);
-  font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: 0.2em;
   text-transform: uppercase;
   height: 36px;
   display: flex;
   align-items: center;
   overflow: hidden;
   border-bottom: 1px solid rgba(220, 202, 187, 0.15);
+  direction: ltr; /* Fully isolate from page RTL direction */
 }
 
 .announcement-track {
   display: flex;
-  white-space: nowrap;
-  animation: marquee 15s linear infinite;
+  flex-shrink: 0;
+  width: max-content;
+  direction: ltr; /* Always LTR so translate(-50%) works correctly */
+  animation: marquee-scroll 20s linear infinite;
+  will-change: transform;
 }
 
 .announcement-group {
   display: flex;
   flex-shrink: 0;
-  min-width: 100%;
+  align-items: center;
+  min-width: 100vw;
   justify-content: space-around;
 }
 
 .announcement-item {
-  padding: 0 40px;
   display: inline-block;
-  font-size: 15px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  padding: 0 2.5em;
 }
 
-@keyframes marquee {
-  0% { transform: translateX(0%); }
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
-@keyframes marquee-rtl {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(50%); }
-}
-
-[dir="rtl"] .announcement-track {
-  animation-name: marquee-rtl;
+.announcement-bar:hover .announcement-track {
+  animation-play-state: paused;
 }
 
 /* Glassmorphism utility */
@@ -3922,81 +3923,146 @@ img, video, iframe {
 }
 
 /* ===========================================================================
-   CATEGORY GENDER SECTIONS — RESPONSIVE
+   COMPREHENSIVE RESPONSIVE BREAKPOINTS (MOBILE & TABLET)
    =========================================================================== */
-@media (max-width: 1024px) {
-  .cg-section-men, .cg-section-women,
-  .cg-section-unisex, .cg-section-oriental {
-    padding: 90px 40px !important;
-  }
-}
 
-@media (max-width: 860px) {
-  .cg-section-men > div > div:last-child,
-  .cg-section-women > div > div:last-child,
-  .cg-section-unisex > div > div:last-child,
-  .cg-section-oriental > div > div:last-child {
+/* ── TABLET (max-width: 1024px) ── */
+@media (max-width: 1024px) {
+  .section, .story-section, .products-inner, .newsletter-section {
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+  }
+  .navbar {
+    padding: 0 40px !important;
+  }
+  .footer {
+    padding: 80px 40px 40px !important;
+  }
+  .cg-section-men, .cg-section-women, .cg-section-unisex, .cg-section-oriental {
+    padding: 80px 40px !important;
+  }
+  .cg-grid-container {
     grid-template-columns: 1fr !important;
-    direction: ltr !important;
   }
   .cg-sec-img {
     height: 300px !important;
   }
+}
+
+/* ── MOBILE LARGE (max-width: 768px) ── */
+@media (max-width: 768px) {
+  .section, .story-section, .products-inner, .newsletter-section, .notes-section, .category-showcase-section {
+    padding: 60px 24px !important;
+  }
+  .hero-content {
+    padding: 0 24px !important;
+  }
+  .navbar {
+    padding: 0 24px !important;
+  }
+  .navbar-links {
+    display: none !important;
+  }
+  .footer {
+    padding: 60px 24px 32px !important;
+  }
+  .footer-inner {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 40px !important;
+  }
+  .newsletter-form {
+    flex-direction: column !important;
+  }
+  .cg-section-men, .cg-section-women, .cg-section-unisex, .cg-section-oriental {
+    padding: 60px 24px !important;
+  }
+  .cg-sec-img {
+    height: 260px !important;
+  }
   .cg-products-row {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+  .dashboard-sidebar {
+    display: none !important;
+  }
+  .dashboard-main {
+    margin-left: 0 !important;
+  }
+  .dashboard-content {
+    padding: 24px !important;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }
 
-@media (max-width: 600px) {
-  .cg-section-men, .cg-section-women,
-  .cg-section-unisex, .cg-section-oriental {
-    padding: 70px 20px !important;
+/* ── MOBILE SMALL (max-width: 480px) ── */
+@media (max-width: 480px) {
+  .section, .story-section, .products-inner, .newsletter-section, .notes-section, .category-showcase-section {
+    padding: 50px 16px !important;
   }
-  .cg-sec-text {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    margin-bottom: 40px !important;
+  .hero-content {
+    padding: 0 16px !important;
+  }
+  .navbar {
+    padding: 0 16px !important;
+    height: 70px !important;
+  }
+  .footer {
+    padding: 50px 16px 30px !important;
+  }
+  .footer-inner {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .products-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .category-cards {
+    grid-template-columns: 1fr !important;
+  }
+  .cg-section-men, .cg-section-women, .cg-section-unisex, .cg-section-oriental {
+    padding: 50px 16px !important;
   }
   .cg-sec-img {
-    height: 240px !important;
+    height: 220px !important;
   }
   .cg-products-row {
     grid-template-columns: 1fr !important;
   }
+  .stats-grid, .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .story-image-grid {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+  }
+  .story-image-grid > div {
+    height: 250px !important;
+  }
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 20px;
+    max-width: none !important;
+    transform: none;
+    border-radius: 12px;
+  }
+  .section-title, .hero-title {
+    font-size: clamp(2rem, 8vw, 2.5rem) !important;
+  }
 }
 
-/* ===========================================================================
-   GLOBAL SECTION ISOLATION — prevents text/content bleeding between sections
-   =========================================================================== */
-
-/* Every top-level section gets its own stacking context */
-main > section,
-.hc-root,
-.cat-section,
-.lookbook-section,
-.gift-section,
-.notes-marquee-section,
-.editorial-section,
-.discovery-section,
-.process-section,
-.cg-section-men,
-.cg-section-women,
-.cg-section-unisex,
-.cg-section-oriental {
-  isolation: isolate;
-  overflow: hidden;
+/* Fix product grid minmax overflow */
+.products-grid, .related-grid, div[style*="minmax(280px"] {
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)) !important;
 }
 
-/* Watermark / decorative large text must never escape its container */
-.cg-num,
-.hc-nubia-text,
-.cat-vertical-title {
-  overflow: hidden;
+/* Global Overflow Guard */
+*, *::before, *::after {
+  max-width: 100vw;
 }
-
-/* Hero title clip-path animations — wrap in overflow:hidden container */
-.prod-hero-title,
-.cg-hero-title,
-.cat-hero-title {
-  overflow: visible;
+html, body {
+  overflow-x: hidden;
+  width: 100%;
 }

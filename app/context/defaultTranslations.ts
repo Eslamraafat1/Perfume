@@ -26,7 +26,7 @@ export const defaultTranslations: Record<string, string> = {
   en_ann_3: "✦ EXPERIENCE THE ART OF INVISIBLE BEAUTY ✦",
 
   ar_ann_1: "✦ خصم ١٠٪ على أول طلب | استخدم كود: LUXE10 ✦",
-  ar_ann_2: "✦ شحن مجاني لجميع الطلبات فوق  30٠٠ جنيه داخل مصر ✦",
+  ar_ann_2: "✦ شحن مجاني لجميع الطلبات فوق ٣٠٠٠ جنيه داخل مصر ✦",
   ar_ann_3: "✦ اختبر فن الجمال الخفي ✦",
 
   /* ── Hero ── */
