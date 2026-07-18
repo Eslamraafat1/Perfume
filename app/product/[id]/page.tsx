@@ -273,76 +273,191 @@ export default function ProductDetailsPage() {
         <div className="pd-grid">
           {/* ── LEFT: Image Column ── */}
           <div style={{ position: "sticky", top: "120px" }}>
-            {/* Main image with 3D effect */}
-            <div
-              ref={imageRef}
-              className="pd-image-wrap"
-              style={{
-                position: "relative",
-                borderRadius: "24px",
-                overflow: "hidden",
-                background: "linear-gradient(135deg, var(--dark-2) 0%, var(--dark-3) 100%)",
-                border: "1px solid rgba(220,202,187,0.15)",
-                aspectRatio: "3/4",
-              }}
-            >
-              {product.badge && (
-                <div style={{
-                  position: "absolute", top: "20px", left: "20px", zIndex: 3,
-                  background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-                  color: "var(--black)", fontSize: "0.65rem", fontWeight: 700,
-                  letterSpacing: "0.15em", textTransform: "uppercase",
-                  padding: "7px 16px", borderRadius: "30px",
-                  boxShadow: "0 4px 20px rgba(220,202,187,0.4)",
-                }}>
-                  {product.badge}
+            {/* Main image with arrow navigation */}
+            {(() => {
+              const allImages = [product.image_url, ...(product.images || [])];
+              const activeIdx = allImages.indexOf(selectedImage || product.image_url);
+              const currentIdx = activeIdx === -1 ? 0 : activeIdx;
+              const goPrev = () => {
+                const prev = (currentIdx - 1 + allImages.length) % allImages.length;
+                setImageLoaded(false);
+                setTimeout(() => setSelectedImage(allImages[prev]), 50);
+              };
+              const goNext = () => {
+                const next = (currentIdx + 1) % allImages.length;
+                setImageLoaded(false);
+                setTimeout(() => setSelectedImage(allImages[next]), 50);
+              };
+              return (
+                <div style={{ position: "relative" }}>
+                  <div
+                    ref={imageRef}
+                    className="pd-image-wrap"
+                    style={{
+                      position: "relative",
+                      borderRadius: "24px",
+                      overflow: "hidden",
+                      background: "linear-gradient(135deg, var(--dark-2) 0%, var(--dark-3) 100%)",
+                      border: "1px solid rgba(220,202,187,0.15)",
+                      aspectRatio: "3/4",
+                    }}
+                  >
+                    {product.badge && (
+                      <div style={{
+                        position: "absolute", top: "20px", left: "20px", zIndex: 3,
+                        background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+                        color: "var(--black)", fontSize: "0.65rem", fontWeight: 700,
+                        letterSpacing: "0.15em", textTransform: "uppercase",
+                        padding: "7px 16px", borderRadius: "30px",
+                        boxShadow: "0 4px 20px rgba(220,202,187,0.4)",
+                      }}>
+                        {product.badge}
+                      </div>
+                    )}
+
+                    {/* Ambient glow */}
+                    <div className="pd-glow" style={{
+                      position: "absolute", inset: "-20%",
+                      background: "radial-gradient(circle at 50% 50%, rgba(220,202,187,0.2) 0%, transparent 70%)",
+                      pointerEvents: "none", zIndex: 1,
+                    }} />
+
+                    <Image
+                      src={selectedImage || product.image_url}
+                      alt={product.name}
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 90vw, 45vw"
+                      onLoadingComplete={() => setImageLoaded(true)}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                        transformStyle: "preserve-3d",
+                        opacity: imageLoaded ? 1 : 0,
+                        transition: "opacity 0.5s ease",
+                      }}
+                    />
+
+                    {/* Corner decorations */}
+                    {["top-left", "top-right", "bottom-left", "bottom-right"].map((pos) => (
+                      <div key={pos} style={{
+                        position: "absolute",
+                        [pos.includes("top") ? "top" : "bottom"]: "16px",
+                        [pos.includes("left") ? "left" : "right"]: "16px",
+                        width: "20px",
+                        height: "20px",
+                        borderTop: pos.includes("top") ? "2px solid rgba(220,202,187,0.4)" : "none",
+                        borderBottom: pos.includes("bottom") ? "2px solid rgba(220,202,187,0.4)" : "none",
+                        borderLeft: pos.includes("left") ? "2px solid rgba(220,202,187,0.4)" : "none",
+                        borderRight: pos.includes("right") ? "2px solid rgba(220,202,187,0.4)" : "none",
+                        zIndex: 2,
+                      }} />
+                    ))}
+
+                    {/* ── Arrow buttons overlay on main image ── */}
+                    {allImages.length > 1 && (
+                      <>
+                        {/* Left arrow */}
+                        <button
+                          onClick={goPrev}
+                          aria-label="Previous image"
+                          style={{
+                            position: "absolute", left: "14px", top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 4,
+                            width: "42px", height: "42px",
+                            background: "rgba(10,15,36,0.65)",
+                            backdropFilter: "blur(8px)",
+                            border: "1px solid rgba(220,202,187,0.3)",
+                            borderRadius: "50%",
+                            color: "var(--gold)",
+                            fontSize: "1.4rem",
+                            cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.25s ease",
+                            lineHeight: 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.2)";
+                            (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)";
+                            (e.currentTarget as HTMLElement).style.transform = "translateY(-50%) scale(1.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = "rgba(10,15,36,0.65)";
+                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)";
+                            (e.currentTarget as HTMLElement).style.transform = "translateY(-50%) scale(1)";
+                          }}
+                        >‹</button>
+
+                        {/* Right arrow */}
+                        <button
+                          onClick={goNext}
+                          aria-label="Next image"
+                          style={{
+                            position: "absolute", right: "14px", top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 4,
+                            width: "42px", height: "42px",
+                            background: "rgba(10,15,36,0.65)",
+                            backdropFilter: "blur(8px)",
+                            border: "1px solid rgba(220,202,187,0.3)",
+                            borderRadius: "50%",
+                            color: "var(--gold)",
+                            fontSize: "1.4rem",
+                            cursor: "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.25s ease",
+                            lineHeight: 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = "rgba(220,202,187,0.2)";
+                            (e.currentTarget as HTMLElement).style.borderColor = "var(--gold)";
+                            (e.currentTarget as HTMLElement).style.transform = "translateY(-50%) scale(1.1)";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.background = "rgba(10,15,36,0.65)";
+                            (e.currentTarget as HTMLElement).style.borderColor = "rgba(220,202,187,0.3)";
+                            (e.currentTarget as HTMLElement).style.transform = "translateY(-50%) scale(1)";
+                          }}
+                        >›</button>
+
+                        {/* Image counter dots */}
+                        <div style={{
+                          position: "absolute", bottom: "16px", left: "50%",
+                          transform: "translateX(-50%)",
+                          zIndex: 4,
+                          display: "flex", gap: "6px", alignItems: "center",
+                        }}>
+                          {allImages.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => { setImageLoaded(false); setTimeout(() => setSelectedImage(allImages[i]), 50); }}
+                              aria-label={`Image ${i + 1}`}
+                              style={{
+                                width: i === currentIdx ? "20px" : "7px",
+                                height: "7px",
+                                borderRadius: "4px",
+                                background: i === currentIdx ? "var(--gold)" : "rgba(220,202,187,0.4)",
+                                border: "none",
+                                padding: 0,
+                                cursor: "pointer",
+                                transition: "all 0.3s ease",
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
+              );
+            })()}
 
-              {/* Ambient glow */}
-              <div className="pd-glow" style={{
-                position: "absolute", inset: "-20%",
-                background: "radial-gradient(circle at 50% 50%, rgba(220,202,187,0.2) 0%, transparent 70%)",
-                pointerEvents: "none", zIndex: 1,
-              }} />
 
-              <Image
-                src={selectedImage || product.image_url}
-                alt={product.name}
-                fill
-                priority
-                sizes="(max-width: 1024px) 90vw, 45vw"
-                onLoadingComplete={() => setImageLoaded(true)}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                  transformStyle: "preserve-3d",
-                  opacity: imageLoaded ? 1 : 0,
-                  transition: "opacity 0.5s ease",
-                }}
-              />
-
-              {/* Corner decorations */}
-              {["top-left", "top-right", "bottom-left", "bottom-right"].map((pos) => (
-                <div key={pos} style={{
-                  position: "absolute",
-                  [pos.includes("top") ? "top" : "bottom"]: "16px",
-                  [pos.includes("left") ? "left" : "right"]: "16px",
-                  width: "20px",
-                  height: "20px",
-                  borderTop: pos.includes("top") ? "2px solid rgba(220,202,187,0.4)" : "none",
-                  borderBottom: pos.includes("bottom") ? "2px solid rgba(220,202,187,0.4)" : "none",
-                  borderLeft: pos.includes("left") ? "2px solid rgba(220,202,187,0.4)" : "none",
-                  borderRight: pos.includes("right") ? "2px solid rgba(220,202,187,0.4)" : "none",
-                  zIndex: 2,
-                }} />
-              ))}
-            </div>
-
-            {/* ── Creative Image Gallery ── */}
-            {((product.images && product.images.length > 0) || true) && (
+            {/* Thumbnails */}
+            {[product.image_url, ...(product.images || [])].length > 1 && (
               <div style={{
                 marginTop: "16px",
                 display: "grid",
@@ -367,11 +482,11 @@ export default function ProductDetailsPage() {
                       transform: selectedImage === imgSrc ? "scale(1.05)" : "scale(1)",
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                    onMouseLeave={(e) => { if(selectedImage !== imgSrc) (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}
+                    onMouseLeave={(e) => { if (selectedImage !== imgSrc) (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}
                   >
                     <Image
                       src={imgSrc}
-                      alt=""
+                      alt={`${product.name} image ${i + 1}`}
                       fill
                       sizes="80px"
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
