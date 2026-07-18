@@ -3073,7 +3073,7 @@ body {
   .pd-grid {
     grid-template-columns: 1fr;
   }
-  .pd-image-wrap { height: 524px; }
+  .pd-image-wrap { height: 430px; }
 }
 
 @media (min-width: 1025px) {

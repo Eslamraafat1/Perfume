@@ -340,8 +340,8 @@ export default function CategorySection() {
             position: absolute;
             ${isRTL ? "left: -10%;" : "right: -10%;"}
             bottom: -10%;
-            width: 70%;
-            height: 90%;
+            width: 113%;
+            height: 117%;
             transform: translateY(${isRTL ? "-10%" : "10%"}) scale(0.8);
             opacity: 0.2;
           }
