@@ -1415,7 +1415,7 @@ body {
   display: flex;
   flex-shrink: 0;
   width: 200vw;
-  animation: marquee-scroll 60s linear infinite;
+  animation: marquee-scroll 25s linear infinite;
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
