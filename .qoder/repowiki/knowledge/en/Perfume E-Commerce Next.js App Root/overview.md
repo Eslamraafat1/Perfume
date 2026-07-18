@@ -1,0 +1,1 @@
+Next.js 16 application root for a perfume e-commerce site, wiring TypeScript, Tailwind CSS v4, ESLint web-vitals rules, and Supabase image hosting.

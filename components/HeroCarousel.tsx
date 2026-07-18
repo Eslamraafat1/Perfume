@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useHeroSlides } from "@/app/context/HeroSlidesContext";
@@ -39,14 +40,23 @@ export default function HeroCarousel() {
     const els = letterRefs.current[si]?.filter(Boolean) as HTMLSpanElement[];
     if (!els || els.length === 0) return;
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     gsap.killTweensOf(els);
-    gsap.set(els, { y: 100, opacity: 0, rotateX: -80, scale: 0.6, filter: "blur(18px)", transformOrigin: "50% 100%" });
+    gsap.set(els, { 
+      y: 100, 
+      opacity: 0, 
+      rotateX: -80, 
+      scale: 0.6, 
+      filter: isMobile ? "none" : "blur(18px)", 
+      transformOrigin: "50% 100%" 
+    });
     gsap.to(els, {
       y: 0,
       opacity: 1,
       rotateX: 0,
       scale: 1,
-      filter: "blur(0px)",
+      filter: isMobile ? "none" : "blur(0px)",
       duration: 1.1,
       ease: "expo.out",
       stagger: { each: 0.09, from: "start" },
@@ -68,6 +78,8 @@ export default function HeroCarousel() {
     const els = letterRefs.current[si]?.filter(Boolean) as HTMLSpanElement[];
     if (!els || els.length === 0) return;
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     gsap.killTweensOf(els);
     const yVals   = [-90, 70, -60, 80, -100];
     const rxVals  = [50, -40, 35, -50, 60];
@@ -79,7 +91,7 @@ export default function HeroCarousel() {
         opacity: 0,
         rotateX: rxVals[li] ?? 45,
         scale: scVals[li] ?? 0.4,
-        filter: "blur(14px)",
+        filter: isMobile ? "none" : "blur(14px)",
         duration: 0.6,
         ease: "power3.in",
         delay: li * 0.05,
@@ -143,35 +155,54 @@ export default function HeroCarousel() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slideIds]);
 
-  /* ─── 3D per-letter parallax on mouse ─── */
+  /* ─── 3D per-letter parallax on mouse (optimized) ─── */
   useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) return;
     const container = containerRef.current;
     if (!container) return;
 
+    const els = letterRefs.current[current]?.filter(Boolean) as HTMLSpanElement[];
+    if (!els || els.length === 0) return;
+
+    const setters = els.map((el, li) => {
+      const sign = li % 2 === 0 ? 1 : -1;
+      const depth = sign * (li * 0.4 + 0.8);
+      return {
+        x: gsap.quickTo(el, "x", { duration: 0.45 }),
+        y: gsap.quickTo(el, "y", { duration: 0.45 }),
+        rotateY: gsap.quickTo(el, "rotateY", { duration: 0.45 }),
+        rotateX: gsap.quickTo(el, "rotateX", { duration: 0.45 }),
+        depth,
+      };
+    });
+
+    let rafId: number | null = null;
+    let pending: { xP: number; yP: number } | null = null;
+
     const onMove = (e: MouseEvent) => {
       const { width, height } = container.getBoundingClientRect();
-      const xP = (e.clientX / width  - 0.5) * 2;
+      const xP = (e.clientX / width - 0.5) * 2;
       const yP = (e.clientY / height - 0.5) * 2;
-
-      const els = letterRefs.current[current]?.filter(Boolean) as HTMLSpanElement[];
-      if (!els) return;
-      els.forEach((el, li) => {
-        const sign  = li % 2 === 0 ? 1 : -1;
-        const depth = sign * (li * 0.4 + 0.8);
-        gsap.to(el, {
-          x: xP * -14 * depth * 0.25,
-          y: yP * -8  * depth * 0.25,
-          rotateY: xP * 5,
-          rotateX: yP * -3,
-          duration: 1.8,
-          ease: "power2.out",
-          overwrite: "auto",
+      pending = { xP, yP };
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        if (!pending) return;
+        setters.forEach((s) => {
+          s.x(pending!.xP * -14 * s.depth * 0.25);
+          s.y(pending!.yP * -8 * s.depth * 0.25);
+          s.rotateY(pending!.xP * 5);
+          s.rotateX(pending!.yP * -3);
         });
+        pending = null;
+        rafId = null;
       });
     };
 
-    container.addEventListener("mousemove", onMove);
-    return () => container.removeEventListener("mousemove", onMove);
+    container.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      container.removeEventListener("mousemove", onMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [current]);
 
   /* ─── Keyboard nav ─── */
@@ -321,12 +352,16 @@ export default function HeroCarousel() {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+        }
 
-          /* Strong glow */
-          filter:
-            drop-shadow(0 0   50px rgba(220,185,100, 0.55))
-            drop-shadow(0 0   20px rgba(201,169,110, 0.45))
-            drop-shadow(0 8px 22px rgba(0,0,0, 0.75));
+        @media (min-width: 769px) {
+          .hc-letter {
+            /* Strong glow */
+            filter:
+              drop-shadow(0 0   50px rgba(220,185,100, 0.55))
+              drop-shadow(0 0   20px rgba(201,169,110, 0.45))
+              drop-shadow(0 8px 22px rgba(0,0,0, 0.75));
+          }
         }
 
         /* ── Rim highlight layer ── */
@@ -444,27 +479,15 @@ export default function HeroCarousel() {
           100% { transform: scale(8);   opacity: 0; }
         }
 
-        /* ── Idle breathe glow ── */
-        @keyframes hc-glow-pulse {
-          0%,100% {
+        /* ── Static gold glow (animation disabled for GPU/CPU performance) ── */
+        @media (min-width: 769px) {
+          .hc-letter {
             filter:
-              drop-shadow(0 0   50px rgba(220,185,100, 0.50))
-              drop-shadow(0 0   20px rgba(201,169,110, 0.40))
+              drop-shadow(0 0 50px rgba(220,185,100, 0.50))
+              drop-shadow(0 0 20px rgba(201,169,110, 0.40))
               drop-shadow(0 8px 22px rgba(0,0,0, 0.75));
           }
-          50% {
-            filter:
-              drop-shadow(0 0   90px rgba(255,210,80,  0.75))
-              drop-shadow(0 0   40px rgba(220,185,100, 0.65))
-              drop-shadow(0 8px 30px rgba(0,0,0, 0.75));
-          }
         }
-        .hc-letter { animation: hc-glow-pulse 4s ease-in-out infinite; }
-        .hc-letter:nth-child(1) { animation-delay: 0.0s; }
-        .hc-letter:nth-child(2) { animation-delay: 0.4s; }
-        .hc-letter:nth-child(3) { animation-delay: 0.8s; }
-        .hc-letter:nth-child(4) { animation-delay: 1.2s; }
-        .hc-letter:nth-child(5) { animation-delay: 1.6s; }
 
         /* ══════════════════════════════════════
            PROGRESS DOTS
@@ -706,8 +729,17 @@ export default function HeroCarousel() {
 
         {/* Global background image */}
         <div className="hc-global-bg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/abu_simbel_bg.png" alt="Abu Simbel background" className="hc-global-bg-img" />
+          <Image
+            src="/abu_simbel_bg.png"
+            alt="Abu Simbel background"
+            fill
+            priority
+            sizes="100vw"
+            quality={85}
+            className="hc-global-bg-img"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx4eHRoaHSQtJSEkLzYvL0A9Ljo7Ujo4P0ZDS0dMTU5PUVVDWkRHQ11VT0tUVVZfW1//2wBDAR..."
+          />
           <div className="hc-global-overlay" />
         </div>
 

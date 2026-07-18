@@ -1,0 +1,1 @@
+Run `npm run dev` / `npm run build` / `npm run start` (scripts delegate to `next dev/build/start`). Database schema must be applied first via `supabase-setup.sql` against a Supabase project before the app can load images from `*.supabase.co`.

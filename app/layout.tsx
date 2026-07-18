@@ -8,6 +8,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { HeroSlidesProvider } from "./context/HeroSlidesContext";
 import FragranceFinderWidget from "@/components/FragranceFinderWidget";
 import ScrollToTop from "@/components/ScrollToTop";
+import GlobalRouteLoader from "@/components/GlobalRouteLoader";
 
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
@@ -69,6 +70,7 @@ export default function RootLayout({
                   {children}
                   <ScrollToTop />
                   <FragranceFinderWidget />
+                  <GlobalRouteLoader />
                 </ProductProvider>
               </HeroSlidesProvider>
             </CartProvider>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/app/context/ProductContext";
@@ -73,30 +74,9 @@ export default function ProductDetailsPage() {
     fetchProductAndRelated();
   }, [id]);
 
-  // Parallax + magnetic cursor on image
+  // Removed Parallax + magnetic cursor on image
   useEffect(() => {
-    const img = imageRef.current;
-    const cursor = magicCursorRef.current;
-    if (!img || !cursor) return;
-
-    const handleMove = (e: MouseEvent) => {
-      const rect = img.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * 20;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * 20;
-      gsap.to(img.querySelector("img"), { rotateY: x, rotateX: -y, duration: 0.6, ease: "power2.out", transformPerspective: 800 });
-      gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.15, opacity: 1 });
-    };
-    const handleLeave = () => {
-      gsap.to(img.querySelector("img"), { rotateY: 0, rotateX: 0, duration: 0.8, ease: "elastic.out(1,0.5)" });
-      gsap.to(cursor, { opacity: 0 });
-    };
-
-    img.addEventListener("mousemove", handleMove);
-    img.addEventListener("mouseleave", handleLeave);
-    return () => {
-      img.removeEventListener("mousemove", handleMove);
-      img.removeEventListener("mouseleave", handleLeave);
-    };
+    // 360 cursor effect removed per user request
   }, [loading, product]);
 
   // Animate glowing orbs
@@ -115,37 +95,6 @@ export default function ProductDetailsPage() {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline();
 
-      // Image: cinematic reveal from bottom
-      tl.fromTo(
-        ".pd-image-wrap",
-        { clipPath: "inset(100% 0 0 0)", opacity: 0 },
-        { clipPath: "inset(0% 0 0 0)", opacity: 1, duration: 1.4, ease: "expo.out" }
-      );
-
-      // Scent bars animate in
-      tl.fromTo(
-        ".scent-bar-fill",
-        { width: "0%" },
-        { width: (i, el) => el.dataset.pct + "%", duration: 1.2, ease: "power3.out", stagger: 0.2 },
-        "-=0.6"
-      );
-
-      // Right column: stagger up
-      tl.fromTo(
-        ".pd-stagger",
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: "power3.out" },
-        "-=1"
-      );
-
-      // Size buttons pop in
-      tl.fromTo(
-        ".size-btn",
-        { opacity: 0, scale: 0.7 },
-        { opacity: 1, scale: 1, stagger: 0.07, duration: 0.5, ease: "back.out(2)" },
-        "-=0.4"
-      );
-
       // Floating glow
       gsap.to(".pd-glow", {
         scale: 1.4,
@@ -155,6 +104,18 @@ export default function ProductDetailsPage() {
         repeat: -1,
         ease: "sine.inOut",
       });
+
+      // Product info stagger reveal
+      gsap.fromTo(
+        ".pd-stagger",
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1, y: 0,
+          stagger: 0.08,
+          duration: 0.85,
+          ease: "power3.out",
+        }
+      );
 
       // Scent cards reveal
       gsap.fromTo(
@@ -255,32 +216,6 @@ export default function ProductDetailsPage() {
     >
       <Navbar />
 
-      {/* Magic cursor for image */}
-      <div
-        ref={magicCursorRef}
-        style={{
-          position: "fixed",
-          width: "80px",
-          height: "80px",
-          border: "2px solid var(--gold)",
-          borderRadius: "50%",
-          pointerEvents: "none",
-          zIndex: 9999,
-          transform: "translate(-50%,-50%)",
-          opacity: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "0.65rem",
-          color: "var(--gold)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          backdropFilter: "blur(4px)",
-          background: "rgba(0,0,0,0.3)",
-        }}
-      >
-        360°
-      </div>
 
       {/* Toast */}
       {addedToast && (
@@ -305,7 +240,7 @@ export default function ProductDetailsPage() {
       }} />
 
       {/* ─── BREADCRUMB ─── */}
-      <div className="responsive-pad" style={{ padding: "110px 60px 0", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
+      <div className="responsive-pad " style={{ padding: "110px 60px 0", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.78rem", color: "var(--white-muted)" }}>
           <Link href="/" style={{ color: "var(--white-muted)", textDecoration: "none", transition: "color 0.2s" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold)")}
@@ -349,7 +284,6 @@ export default function ProductDetailsPage() {
                 background: "linear-gradient(135deg, var(--dark-2) 0%, var(--dark-3) 100%)",
                 border: "1px solid rgba(220,202,187,0.15)",
                 aspectRatio: "3/4",
-                cursor: "none",
               }}
             >
               {product.badge && (
@@ -372,11 +306,13 @@ export default function ProductDetailsPage() {
                 pointerEvents: "none", zIndex: 1,
               }} />
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={selectedImage || product.image_url}
                 alt={product.name}
-                onLoad={() => setImageLoaded(true)}
+                fill
+                priority
+                sizes="(max-width: 1024px) 90vw, 45vw"
+                onLoadingComplete={() => setImageLoaded(true)}
                 style={{
                   width: "100%",
                   height: "100%",
@@ -433,8 +369,13 @@ export default function ProductDetailsPage() {
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
                     onMouseLeave={(e) => { if(selectedImage !== imgSrc) (e.currentTarget as HTMLElement).style.opacity = "0.6"; }}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <Image
+                      src={imgSrc}
+                      alt=""
+                      fill
+                      sizes="80px"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
                     {selectedImage === imgSrc && (
                       <div style={{ position: "absolute", inset: 0, border: "2px solid var(--gold)", borderRadius: "12px" }} />
                     )}
@@ -820,19 +761,7 @@ export default function ProductDetailsPage() {
         </div>
       </section>
 
-      {/* ─── NEW SECTION: EDITORIAL GALLERY ─── */}
-      {product.images && product.images.length > 0 && (
-        <section style={{ padding: "0 60px 80px", maxWidth: "1300px", margin: "0 auto", position: "relative", zIndex: 2 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {product.images.map((img, idx) => (
-              <div key={idx} className="reveal-el" style={{ width: "100%", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.1)", background: "var(--dark-2)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt={`${product.name} gallery ${idx + 1}`} style={{ width: "100%", height: "auto", display: "block", objectFit: "cover", maxHeight: "800px" }} />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+    
 
       {/* ─── SECTION 2: TABS ─── */}
       <section style={{
@@ -843,7 +772,7 @@ export default function ProductDetailsPage() {
       }}>
         {/* Tab Nav */}
         <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "0 60px", borderBottom: "1px solid rgba(220,202,187,0.08)" }}>
-          <div style={{ display: "flex", gap: "0" , flexDirection: 'column' }}>
+          <div style={{ display: "flex", gap: "0" }}>
             {(["notes", "ritual", "story"] as const).map((tab) => (
               <button
                 key={tab}
@@ -981,11 +910,12 @@ export default function ProductDetailsPage() {
                 </p>
                 <Link href="/about" className="btn-gold-outline">Discover Our Nubia →</Link>
               </div>
-              <div style={{ height: "450px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.15)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div style={{ position: "relative", height: "450px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(220,202,187,0.15)" }}>
+                <Image
                   src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800"
                   alt="Perfume craftsmanship"
+                  fill
+                  sizes="(max-width: 1024px) 90vw, 40vw"
                   style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s ease" }}
                   onMouseEnter={(e) => ((e.target as HTMLElement).style.transform = "scale(1.05)")}
                   onMouseLeave={(e) => ((e.target as HTMLElement).style.transform = "scale(1)")}
@@ -1042,10 +972,11 @@ export default function ProductDetailsPage() {
                   }}
                 >
                   <div style={{ position: "relative", height: "280px", overflow: "hidden" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={rel.image_url}
                       alt={rel.name}
+                      fill
+                      sizes="(max-width: 768px) 90vw, 280px"
                       style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s ease" }}
                       onMouseEnter={(e) => ((e.target as HTMLElement).style.transform = "scale(1.08)")}
                       onMouseLeave={(e) => ((e.target as HTMLElement).style.transform = "scale(1)")}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -53,18 +54,45 @@ export default function ProductsPage() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const cursorGlowRef = useRef<HTMLDivElement>(null);
 
-  // Custom cursor
+  // Custom cursor — optimized with GSAP quickTo, disabled on touch devices
   useEffect(() => {
+    const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+    if (isTouch) return;
+
     const cursor = cursorRef.current;
     const glow = cursorGlowRef.current;
     if (!cursor || !glow) return;
 
-    const move = (e: MouseEvent) => {
-      gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0.1 });
-      gsap.to(glow, { x: e.clientX, y: e.clientY, duration: 0.4 });
+    const setCursorX = gsap.quickTo(cursor, "x", { duration: 0.08 });
+    const setCursorY = gsap.quickTo(cursor, "y", { duration: 0.08 });
+    const setGlowX = gsap.quickTo(glow, "x", { duration: 0.25 });
+    const setGlowY = gsap.quickTo(glow, "y", { duration: 0.25 });
+
+    gsap.set([cursor, glow], { xPercent: -50, yPercent: -50 });
+
+    let rafId: number | null = null;
+    let pending: { x: number; y: number } | null = null;
+
+    const onMove = (e: MouseEvent) => {
+      pending = { x: e.clientX, y: e.clientY };
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        if (pending) {
+          setCursorX(pending.x);
+          setCursorY(pending.y);
+          setGlowX(pending.x);
+          setGlowY(pending.y);
+          pending = null;
+        }
+        rafId = null;
+      });
     };
-    window.addEventListener("mousemove", move);
-    return () => window.removeEventListener("mousemove", move);
+
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // Entrance animations
@@ -192,7 +220,6 @@ export default function ProductsPage() {
           position: "fixed", width: "12px", height: "12px",
           background: "var(--gold)", borderRadius: "50%",
           pointerEvents: "none", zIndex: 9999,
-          transform: "translate(-50%,-50%)",
           mixBlendMode: "difference",
         }}
       />
@@ -202,7 +229,6 @@ export default function ProductsPage() {
           position: "fixed", width: "40px", height: "40px",
           border: "1px solid rgba(220,202,187,0.4)", borderRadius: "50%",
           pointerEvents: "none", zIndex: 9998,
-          transform: "translate(-50%,-50%)",
         }}
       />
 
@@ -238,8 +264,8 @@ export default function ProductsPage() {
           backgroundSize: "60px 60px",
         }} />
 
-        {/* Floating particles */}
-        {[...Array(8)].map((_, i) => (
+        {/* Floating particles — reduced for performance */}
+        {[...Array(4)].map((_, i) => (
           <div key={i} className="hero-particle" style={{
             position: "absolute",
             width: `${4 + i * 2}px`,
@@ -621,10 +647,12 @@ function ProductGridCard({
       <div style={{ position: "relative", height: "360px", overflow: "hidden", background: "var(--dark-2)" }}>
 
         {/* PRIMARY image — always visible, fades out on hover if hover image exists */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={product.image_url}
           alt={product.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="prod-img-primary"
           style={{
             position: "absolute",
             inset: 0,
@@ -640,10 +668,12 @@ function ProductGridCard({
 
         {/* HOVER image — slides up + fades in on hover */}
         {hasHoverImage && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
+          <Image
             src={hoverImage}
             alt={`${product.name} alternate view`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="prod-img-hover"
             style={{
               position: "absolute",
               inset: 0,
@@ -939,10 +969,12 @@ function ProductListCard({
     >
       {/* Image */}
       <div style={{ position: "relative", overflow: "hidden", height: "180px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={product.image_url}
           alt={product.name}
+          fill
+          sizes="(max-width: 768px) 100vw, 240px"
+          className="prod-list-img"
           style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s ease" }}
           onMouseEnter={(e) => ((e.target as HTMLElement).style.transform = "scale(1.06)")}
           onMouseLeave={(e) => ((e.target as HTMLElement).style.transform = "scale(1)")}

@@ -1,0 +1,19 @@
+schema_version: 1
+module_path: ""
+title: Perfume E-Commerce Next.js App Root
+scope:
+    - .gitignore
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - eslint.config.mjs
+    - next.config.ts
+    - package.json
+    - postcss.config.mjs
+    - supabase-setup.sql
+    - tsconfig.json
+    - package-lock.json
+    - product_detail_fullpage.png
+source_files: []
+depends_on: []
+related_to: []

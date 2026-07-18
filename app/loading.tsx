@@ -8,26 +8,21 @@ export default function RootLoading() {
         inset: 0,
         zIndex: 99999,
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         background: "var(--black)",
-        gap: "28px",
       }}
     >
-      <div className="loading-spinner" />
       <div
         style={{
-          color: "var(--gold)",
-          fontSize: "0.75rem",
-          letterSpacing: "0.25em",
-          textTransform: "uppercase",
-          fontFamily: "var(--font-sans)",
-          opacity: 0.6,
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          border: "2px solid rgba(220,202,187,0.15)",
+          borderTopColor: "var(--gold)",
+          animation: "nl-spin 0.8s linear infinite",
         }}
-      >
-        Loading
-      </div>
+      />
     </div>
   );
 }

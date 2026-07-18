@@ -1,0 +1,2 @@
+- TypeScript paths use the `@/*` alias mapped to the repository root, so imports resolve relative to the project root rather than using long relative paths.
+- Configuration files are ES modules (`.mjs`/`.ts`) using named exports and explicit type imports (e.g. `import type { NextConfig }`), avoiding CommonJS throughout the root.

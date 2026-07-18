@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -65,52 +66,15 @@ export default function HomePage() {
     return () => clearInterval(t);
   }, []);
 
-  /* ── GSAP Master Timeline ── */
+  /* ── GSAP scroll reveals ── */
   useEffect(() => {
     const ctx = gsap.context(() => {
-      /* 1. Scroll reveals for everything */
       ScrollTrigger.batch(".fade-up", {
-        onEnter: (els) => gsap.fromTo(els, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: "power3.out" }),
+        onEnter: (els) =>
+          gsap.fromTo(els, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.85, stagger: 0.1, ease: "power3.out" }),
         start: "top 88%",
       });
-
-      /* 3. Category cards parallax */
-      document.querySelectorAll(".cat-card-bg").forEach((el) => {
-        gsap.to(el, {
-          y: -30,
-          ease: "none",
-          scrollTrigger: { trigger: el.parentElement, scrub: 1.5 },
-        });
-      });
-
-      /* 4. Process timeline */
-      gsap.fromTo(".process-line", { scaleY: 0 }, { scaleY: 1, duration: 1.8, ease: "power2.inOut", scrollTrigger: { trigger: ".process-section", start: "top 70%" } });
-
-      /* 5. Counters */
-      const counters = [
-        { el: ".cnt-products", to: products.length || 24 },
-        { el: ".cnt-hours", to: 12 },
-        { el: ".cnt-years", to: 8 },
-      ];
-      counters.forEach(({ el, to }) => {
-        const target = document.querySelector(el);
-        if (!target) return;
-        gsap.fromTo(target, { textContent: 0 }, {
-          textContent: to,
-          duration: 2,
-          ease: "power2.out",
-          snap: { textContent: 1 },
-          scrollTrigger: { trigger: target, start: "top 85%" },
-        });
-      });
-
-      /* 6. Note cards stagger */
-      gsap.fromTo(".note-item", { opacity: 0, rotateY: 20, x: 30 }, {
-        opacity: 1, rotateY: 0, x: 0, stagger: 0.1, duration: 0.7, ease: "back.out(1.2)",
-        scrollTrigger: { trigger: ".notes-marquee-section", start: "top 80%" },
-      });
     }, pageRef);
-
     return () => ctx.revert();
   }, [products.length]);
 
@@ -281,10 +245,12 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
       <div style={{ position: "relative", height: "340px", overflow: "hidden", background: "var(--dark-2)" }}>
 
         {/* Primary image */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={product.image_url}
           alt={product.name}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          className="home-prod-img-primary"
           style={{
             position: "absolute", inset: 0,
             width: "100%", height: "100%", objectFit: "cover",
@@ -297,10 +263,12 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
 
         {/* Hover image */}
         {hasHoverImage && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
+          <Image
             src={hoverImage}
             alt={`${product.name} alternate`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            className="home-prod-img-hover"
             style={{
               position: "absolute", inset: 0,
               width: "100%", height: "100%", objectFit: "cover",

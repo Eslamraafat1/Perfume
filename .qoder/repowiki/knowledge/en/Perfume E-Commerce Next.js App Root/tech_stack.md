@@ -1,0 +1,1 @@
+Next.js 16.2.9 with React 19.2.4, Tailwind CSS v4 via `@tailwindcss/postcss`, GSAP 3.15 for animations, Supabase JS client v2 for data/images, ESLint 9 flat config with core-web-vitals + typescript presets, TypeScript 5 with `bundler` moduleResolution.

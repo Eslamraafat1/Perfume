@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useMemo } from "react";
 import { useSiteContent } from "./SiteContentContext";
 
 export type Lang = "en" | "ar";
@@ -18,12 +18,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en");
   const { get: sc } = useSiteContent();
 
+  const isRTL = useMemo(() => lang === "ar", [lang]);
+
   /* Sync <html> attributes when language changes */
   useEffect(() => {
     const html = document.documentElement;
     html.setAttribute("lang", lang);
-    html.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
-  }, [lang]);
+    html.setAttribute("dir", isRTL ? "rtl" : "ltr");
+  }, [lang, isRTL]);
 
   const toggleLang = useCallback(() => {
     setLang((prev) => (prev === "en" ? "ar" : "en"));
@@ -43,8 +45,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     [lang, sc]
   );
 
+  const contextValue = useMemo(() => ({
+    lang,
+    isRTL,
+    toggleLang,
+    t,
+  }), [lang, isRTL, toggleLang, t]);
+
   return (
-    <LanguageContext.Provider value={{ lang, isRTL: lang === "ar", toggleLang, t }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );

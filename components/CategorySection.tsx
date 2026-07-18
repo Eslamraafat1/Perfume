@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useSiteContent } from "@/app/context/SiteContentContext";
@@ -94,7 +95,14 @@ export default function CategorySection() {
                 </div>
 
                 <div className="cat-img-wrapper">
-                  <img src={cat.img} alt={cat.title} className="cat-img" />
+                  <Image
+                    src={cat.img}
+                    alt={cat.title}
+                    fill
+                    sizes="(max-width: 768px) 90vw, 50vw"
+                    className="cat-img"
+                    style={{ objectFit: "contain" }}
+                  />
                 </div>
                 
                 {/* Vertical title for non-active state */}
@@ -193,7 +201,7 @@ export default function CategorySection() {
           ${isRTL ? "left: 10%;" : "right: 10%;"}
           bottom: -5%;
           height: 110%;
-          width: 45%;
+          width: 82%;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -210,10 +218,13 @@ export default function CategorySection() {
 
         .cat-img {
           height: 100%;
-          width: auto;
-          max-width: 100%;
-          object-fit: contain;
-          filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+          width: 100%;
+        }
+
+        @media (min-width: 769px) {
+          .cat-img {
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+          }
         }
 
         .cat-text {
