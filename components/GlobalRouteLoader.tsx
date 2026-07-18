@@ -1,86 +1,83 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import NubiaLoader from "./NubiaLoader";
 
-const MIN_DISPLAY_MS = 320;
+const MIN_DISPLAY_MS = 400;
+const SHOW_DELAY_MS  = 80; // wait a tiny bit before showing — avoids flicker on fast loads
 
 export default function GlobalRouteLoader() {
-  const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
+  const pathname   = usePathname();
+  const prevPath   = useRef(pathname);
+  const showTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const minTimer   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shownAt    = useRef<number>(0);
+
   const [visible, setVisible] = useState(false);
 
-  const showLoader = useCallback(() => {
-    setIsLoading(true);
-    const showTimer = setTimeout(() => setVisible(true), 40);
-    return () => clearTimeout(showTimer);
+  const clearAll = () => {
+    if (showTimer.current) clearTimeout(showTimer.current);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    if (minTimer.current)  clearTimeout(minTimer.current);
+  };
+
+  const show = useCallback(() => {
+    clearAll();
+    showTimer.current = setTimeout(() => {
+      shownAt.current = Date.now();
+      setVisible(true);
+    }, SHOW_DELAY_MS);
   }, []);
 
-  const hideLoader = useCallback(() => {
-    setVisible(false);
-    const hideTimer = setTimeout(() => setIsLoading(false), 320);
-    return () => clearTimeout(hideTimer);
+  const hide = useCallback(() => {
+    clearAll();
+    const elapsed   = Date.now() - shownAt.current;
+    const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+    hideTimer.current = setTimeout(() => setVisible(false), remaining);
   }, []);
 
+  // Hide when the route actually changes
   useEffect(() => {
-    if (!isLoading) return;
-    const timer = setTimeout(hideLoader, MIN_DISPLAY_MS);
-    return () => clearTimeout(timer);
-  }, [pathname, isLoading, hideLoader]);
+    if (pathname !== prevPath.current) {
+      prevPath.current = pathname;
+      hide();
+    }
+  }, [pathname, hide]);
 
-  useEffect(() => {
-    const originalPushState = window.history.pushState.bind(window.history);
-    const originalReplaceState = window.history.replaceState.bind(window.history);
-
-    const handleChange = () => showLoader();
-
-    window.history.pushState = (...args) => {
-      handleChange();
-      return originalPushState(...args);
-    };
-
-    window.history.replaceState = (...args) => {
-      handleChange();
-      return originalReplaceState(...args);
-    };
-
-    window.addEventListener("popstate", handleChange);
-
-    return () => {
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-      window.removeEventListener("popstate", handleChange);
-    };
-  }, [showLoader]);
-
+  // Intercept anchor clicks — only trigger for real cross-page navigations
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest("a") as HTMLAnchorElement | null;
+      const anchor = (e.target as HTMLElement).closest("a") as HTMLAnchorElement | null;
       if (!anchor) return;
 
       const href = anchor.getAttribute("href");
       if (!href) return;
+
+      // Skip external, hash, mailto, tel, download, _blank
       if (
         href.startsWith("http") ||
+        href.startsWith("//") ||
         href.startsWith("#") ||
         href.startsWith("mailto:") ||
         href.startsWith("tel:") ||
         anchor.getAttribute("download") ||
         anchor.target === "_blank"
-      ) {
-        return;
-      }
+      ) return;
 
-      showLoader();
+      // Skip if navigating to the same path (including hash changes)
+      const targetPath = href.split("?")[0].split("#")[0];
+      if (targetPath === pathname || targetPath === "") return;
+
+      show();
     };
 
-    document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
-  }, [showLoader]);
+    document.addEventListener("click", onClick, { capture: true });
+    return () => document.removeEventListener("click", onClick, { capture: true });
+  }, [pathname, show]);
 
-  if (!isLoading) return null;
+  if (!visible) return null;
 
   return (
     <div
@@ -88,11 +85,13 @@ export default function GlobalRouteLoader() {
         position: "fixed",
         inset: 0,
         zIndex: 999999,
-        opacity: visible ? 1 : 0,
-        transition: "opacity 0.3s ease",
-        pointerEvents: visible ? "auto" : "none",
+        animation: "nlFadeIn 0.25s ease forwards",
       }}
     >
+      <style>{`
+        @keyframes nlFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes nlFadeOut { from { opacity: 1; } to { opacity: 0; } }
+      `}</style>
       <NubiaLoader />
     </div>
   );

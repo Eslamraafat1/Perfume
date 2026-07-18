@@ -9,7 +9,32 @@ import React, {
 } from "react";
 import { supabase } from "@/lib/supabase";
 
-export type ProductGender = "men" | "women" | "unisex";
+export type ProductGender = "men" | "women" | "unisex" | "oriental";
+
+export type FragranceFamily =
+  | "Floral"
+  | "Woody"
+  | "Oriental & Spicy"
+  | "Fresh & Citrus"
+  | "Oud & Amber"
+  | "Aquatic & Marine"
+  | "Gourmand & Sweet"
+  | "Musk & Powdery"
+  | "Green & Aromatic"
+  | "Chypre";
+
+export const FRAGRANCE_FAMILIES: FragranceFamily[] = [
+  "Floral",
+  "Woody",
+  "Oriental & Spicy",
+  "Fresh & Citrus",
+  "Oud & Amber",
+  "Aquatic & Marine",
+  "Gourmand & Sweet",
+  "Musk & Powdery",
+  "Green & Aromatic",
+  "Chypre",
+];
 
 export interface Product {
   id: string;
@@ -20,6 +45,7 @@ export interface Product {
   badge?: string | null;
   category?: string;
   gender?: ProductGender;
+  fragrance_family?: FragranceFamily | string;
   top_notes?: string;
   heart_notes?: string;
   base_notes?: string;

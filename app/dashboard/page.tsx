@@ -6,7 +6,7 @@ import { useProducts } from "../context/ProductContext";
 import { useSiteContent } from "../context/SiteContentContext";
 import { useHeroSlides, DEFAULT_SLIDES, HeroSlide } from "../context/HeroSlidesContext";
 import { supabase, STORAGE_BUCKET } from "@/lib/supabase";
-import { Product } from "../context/ProductContext";
+import { Product, FRAGRANCE_FAMILIES } from "../context/ProductContext";
 
 export default function DashboardPage() {
   const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
@@ -42,7 +42,8 @@ export default function DashboardPage() {
   const [badge, setBadge] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [category, setCategory] = useState("");
-  const [gender, setGender] = useState<"men" | "women" | "unisex">("unisex");
+  const [gender, setGender] = useState<"men" | "women" | "unisex" | "oriental">("unisex");
+  const [fragranceFamily, setFragranceFamily] = useState("");
   const [topNotes, setTopNotes] = useState("");
   const [heartNotes, setHeartNotes] = useState("");
   const [baseNotes, setBaseNotes] = useState("");
@@ -107,6 +108,7 @@ export default function DashboardPage() {
     setImagePreview(null);
     setCategory("");
     setGender("unisex");
+    setFragranceFamily("");
     setTopNotes("");
     setHeartNotes("");
     setBaseNotes("");
@@ -136,6 +138,7 @@ export default function DashboardPage() {
     setImagePreview(p.image_url);
     setCategory(p.category || "");
     setGender(p.gender || "unisex");
+    setFragranceFamily(p.fragrance_family || "");
     setTopNotes(p.top_notes || "");
     setHeartNotes(p.heart_notes || "");
     setBaseNotes(p.base_notes || "");
@@ -203,6 +206,7 @@ export default function DashboardPage() {
         badge: badge.trim() || null,
         category: category.trim() || undefined,
         gender,
+        fragrance_family: fragranceFamily || undefined,
         top_notes: topNotes.trim() || undefined,
         heart_notes: heartNotes.trim() || undefined,
         base_notes: baseNotes.trim() || undefined,
@@ -581,12 +585,13 @@ export default function DashboardPage() {
                   {/* Gender */}
                   <div className="form-group">
                     <label className="form-label">Gender</label>
-                    <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-                      {(["men", "women", "unisex"] as const).map((g) => {
+                    <div style={{ display: "flex", gap: "10px", marginTop: "4px", flexWrap: "wrap" }}>
+                      {(["men", "women", "unisex", "oriental"] as const).map((g) => {
                         const meta = {
-                          men:    { label: "رجالي", icon: "♂", color: "#6ab0f5" },
-                          women:  { label: "نسائي",  icon: "♀", color: "#f5a0c8" },
-                          unisex: { label: "مشترك", icon: "⚧", color: "var(--gold)" },
+                          men:      { label: "رجالي",  labelEn: "Men",      icon: "♂",  color: "#6ab0f5", rgb: "106,176,245" },
+                          women:    { label: "نسائي",  labelEn: "Women",    icon: "♀",  color: "#f5a0c8", rgb: "245,160,200" },
+                          unisex:   { label: "مشترك",  labelEn: "Unisex",   icon: "⚧",  color: "#dbcabb", rgb: "220,202,187" },
+                          oriental: { label: "شرقي",   labelEn: "Oriental", icon: "🌙", color: "#e8b86d", rgb: "232,184,109" },
                         }[g];
                         const active = gender === g;
                         return (
@@ -595,11 +600,12 @@ export default function DashboardPage() {
                             type="button"
                             onClick={() => setGender(g)}
                             style={{
-                              flex: 1,
+                              flex: "1 1 calc(25% - 8px)",
+                              minWidth: "80px",
                               padding: "14px 10px",
                               borderRadius: "12px",
                               border: active ? `1.5px solid ${meta.color}` : "1px solid rgba(220,202,187,0.15)",
-                              background: active ? `rgba(${g === "men" ? "106,176,245" : g === "women" ? "245,160,200" : "220,202,187"},0.1)` : "rgba(255,255,255,0.03)",
+                              background: active ? `rgba(${meta.rgb},0.1)` : "rgba(255,255,255,0.03)",
                               color: active ? meta.color : "var(--white-muted)",
                               cursor: "pointer",
                               fontFamily: "var(--font-sans)",
@@ -610,15 +616,59 @@ export default function DashboardPage() {
                               alignItems: "center",
                               gap: "6px",
                               transition: "all 0.25s ease",
-                              boxShadow: active ? `0 4px 20px rgba(${g === "men" ? "106,176,245" : g === "women" ? "245,160,200" : "220,202,187"},0.2)` : "none",
+                              boxShadow: active ? `0 4px 20px rgba(${meta.rgb},0.2)` : "none",
                             }}
                           >
                             <span style={{ fontSize: "1.4rem" }}>{meta.icon}</span>
-                            <span>{meta.label}</span>
+                            <span>{meta.labelEn}</span>
+                            <span style={{ fontSize: "0.72rem", opacity: 0.7 }}>{meta.label}</span>
                           </button>
                         );
                       })}
                     </div>
+                  </div>
+
+                  {/* Fragrance Family */}
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="product-fragrance-family">
+                      Fragrance Family
+                    </label>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "8px" }}>
+                      {FRAGRANCE_FAMILIES.map((fam) => {
+                        const active = fragranceFamily === fam;
+                        return (
+                          <button
+                            key={fam}
+                            type="button"
+                            onClick={() => setFragranceFamily(active ? "" : fam)}
+                            style={{
+                              padding: "8px 16px",
+                              borderRadius: "30px",
+                              border: active
+                                ? "1.5px solid var(--gold)"
+                                : "1px solid rgba(220,202,187,0.18)",
+                              background: active
+                                ? "rgba(220,202,187,0.12)"
+                                : "rgba(255,255,255,0.03)",
+                              color: active ? "var(--gold)" : "var(--white-muted)",
+                              fontSize: "0.78rem",
+                              fontWeight: active ? 700 : 400,
+                              cursor: "pointer",
+                              fontFamily: "var(--font-sans)",
+                              transition: "all 0.2s ease",
+                              boxShadow: active ? "0 2px 12px rgba(220,202,187,0.2)" : "none",
+                            }}
+                          >
+                            {fam}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {fragranceFamily && (
+                      <p style={{ fontSize: "0.72rem", color: "var(--gold)", marginTop: "8px" }}>
+                        ✦ Selected: {fragranceFamily}
+                      </p>
+                    )}
                   </div>
                   
                   {/* Notes */}

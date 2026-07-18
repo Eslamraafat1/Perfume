@@ -50,10 +50,18 @@ alter table public.products add column if not exists images text[];
 alter table public.products add column if not exists video_url text;
 alter table public.products add column if not exists badge text;
 -- =============================================
--- Gender column (men / women / unisex)
+-- Gender column (men / women / unisex / oriental)
 -- =============================================
-alter table public.products add column if not exists gender text default 'unisex'
-  check (gender in ('men', 'women', 'unisex'));
+-- Drop old constraint first, then re-add with oriental included
+alter table public.products drop constraint if exists products_gender_check;
+alter table public.products add column if not exists gender text default 'unisex';
+alter table public.products add constraint products_gender_check
+  check (gender in ('men', 'women', 'unisex', 'oriental'));
+
+-- =============================================
+-- Fragrance Family column
+-- =============================================
+alter table public.products add column if not exists fragrance_family text;
 
 -- =============================================
 -- 4. Create site_content table for dynamic text/images

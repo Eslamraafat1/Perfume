@@ -207,9 +207,7 @@ function CategoryContent() {
       <div className="cg-sections">
         {GENDER_SECTIONS.map((sec, secIdx) => {
           const secProducts = loading ? [] : products.filter(p =>
-            sec.id === "oriental"
-              ? p.category?.toLowerCase().includes("oriental") || p.category?.toLowerCase().includes("oud")
-              : (p.gender || "unisex") === sec.id
+            (p.gender || "unisex") === sec.id
           ).slice(0, 4);
           const isEven = secIdx % 2 === 0;
 

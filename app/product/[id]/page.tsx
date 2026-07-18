@@ -574,12 +574,13 @@ export default function ProductDetailsPage() {
             {product.gender && (
               <div className="pd-stagger" style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "14px" }}>
                 {(() => {
-                  const gMap = {
-                    men:    { label: "رجالي",   labelEn: "Men",    icon: "♂", bg: "rgba(106,176,245,0.12)", border: "rgba(106,176,245,0.35)", color: "#6ab0f5" },
-                    women:  { label: "نسائي",   labelEn: "Women",  icon: "♀", bg: "rgba(245,160,200,0.12)", border: "rgba(245,160,200,0.35)", color: "#f5a0c8" },
-                    unisex: { label: "مشترك",   labelEn: "Unisex", icon: "⚧", bg: "rgba(220,202,187,0.10)", border: "rgba(220,202,187,0.35)", color: "var(--gold)" },
+                  const gMap: Record<string, { label: string; labelEn: string; icon: string; bg: string; border: string; color: string }> = {
+                    men:      { label: "رجالي",  labelEn: "Men",      icon: "♂",  bg: "rgba(106,176,245,0.12)", border: "rgba(106,176,245,0.35)", color: "#6ab0f5" },
+                    women:    { label: "نسائي",  labelEn: "Women",    icon: "♀",  bg: "rgba(245,160,200,0.12)", border: "rgba(245,160,200,0.35)", color: "#f5a0c8" },
+                    unisex:   { label: "مشترك",  labelEn: "Unisex",   icon: "⚧",  bg: "rgba(220,202,187,0.10)", border: "rgba(220,202,187,0.35)", color: "var(--gold)" },
+                    oriental: { label: "شرقي",   labelEn: "Oriental", icon: "🌙", bg: "rgba(232,184,109,0.12)", border: "rgba(232,184,109,0.35)", color: "#e8b86d" },
                   };
-                  const g = gMap[product.gender];
+                  const g = gMap[product.gender] ?? gMap["unisex"];
                   return (
                     <span style={{
                       display: "inline-flex", alignItems: "center", gap: "6px",
@@ -593,6 +594,23 @@ export default function ProductDetailsPage() {
                     </span>
                   );
                 })()}
+              </div>
+            )}
+
+            {/* Fragrance Family Badge */}
+            {product.fragrance_family && (
+              <div className="pd-stagger" style={{ display: "inline-flex", alignItems: "center", marginBottom: "14px", marginInlineStart: "8px" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  background: "rgba(220,202,187,0.07)",
+                  border: "1px solid rgba(220,202,187,0.25)",
+                  color: "var(--gold)",
+                  borderRadius: "50px",
+                  padding: "5px 14px", fontSize: "0.72rem",
+                  fontWeight: 600, letterSpacing: "0.08em",
+                }}>
+                  ✦ {product.fragrance_family}
+                </span>
               </div>
             )}
 
