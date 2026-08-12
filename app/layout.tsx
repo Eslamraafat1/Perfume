@@ -9,6 +9,8 @@ import { HeroSlidesProvider } from "./context/HeroSlidesContext";
 import FragranceFinderWidget from "@/components/FragranceFinderWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 import GlobalRouteLoader from "@/components/GlobalRouteLoader";
+import SplashCursor from "@/components/SplashCursor";
+import ScratchGiftCard from "@/components/ScratchGiftCard";
 
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
@@ -71,6 +73,8 @@ export default function RootLayout({
                   <ScrollToTop />
                   <FragranceFinderWidget />
                   <GlobalRouteLoader />
+                  <SplashCursor RAINBOW_MODE={false} COLOR="#a89558" />
+                  <ScratchGiftCard />
                 </ProductProvider>
               </HeroSlidesProvider>
             </CartProvider>

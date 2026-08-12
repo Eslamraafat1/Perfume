@@ -34,7 +34,10 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
         data.forEach(({ key, value }: { key: string; value: string }) => {
           map[key] = value;
         });
-        setContent(map);
+        setContent((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(map)) return prev;
+          return map;
+        });
       }
     } catch (err) {
       console.warn("SiteContent: failed to fetch, using defaults.", err);

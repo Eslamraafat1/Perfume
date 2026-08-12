@@ -935,58 +935,32 @@ export default function ProductDetailsPage() {
         </div>
 
         <div className="responsive-pad" style={{ maxWidth: "1300px", margin: "0 auto", padding: "70px 60px 90px" }}>
-          {/* NOTES TAB */}
+          {/* NOTES TAB — Interactive Fragrance Pyramid */}
           {activeTab === "notes" && (
             <div>
               <div style={{ textAlign: "center", marginBottom: "60px" }}>
                 <span className="section-tag" style={{ color: "var(--gold)" }}>✦ Olfactory Architecture</span>
                 <h2 className="section-title" style={{ marginTop: "12px", fontSize: "2.4rem" }}>The Scent Pyramid</h2>
                 <p style={{ color: "var(--white-muted)", maxWidth: "540px", margin: "14px auto 0", fontSize: "0.92rem", lineHeight: 1.8 }}>
-                  This fragrance unfolds in three distinctive acts, each revealing new layers of olfactory complexity.
+                  This fragrance unfolds in three distinctive acts — hover each layer to discover its soul.
                 </p>
               </div>
-              <div className="notes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "28px" }}>
-                {[
-                  { num: "I", label: "Top Notes", sub: "The Awakening — First 30 mins", value: product.top_notes, icon: "✨", color: "#f6f0ea" },
-                  { num: "II", label: "Heart Notes", sub: "The Essence — 2 to 6 hours", value: product.heart_notes, icon: "🌹", color: "#dbcabb" },
-                  { num: "III", label: "Base Notes", sub: "The Legacy — 6+ hours", value: product.base_notes, icon: "🪵", color: "#bba998" },
-                ].map((note) =>
-                  note.value ? (
-                    <div key={note.num} className="note-card" style={{
-                      background: "rgba(10,15,36,0.8)",
-                      backdropFilter: "blur(12px)",
-                      border: "1px solid rgba(220,202,187,0.1)",
-                      borderTop: `3px solid ${note.color}`,
-                      borderRadius: "20px",
-                      padding: "36px 28px",
-                      transition: "all 0.35s ease",
-                    }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(-6px)";
-                        (e.currentTarget as HTMLElement).style.boxShadow = "0 20px 60px rgba(0,0,0,0.5)";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-                        (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                      }}
-                    >
-                      <div style={{ fontSize: "2.2rem", marginBottom: "16px" }}>{note.icon}</div>
-                      <div style={{ fontFamily: "var(--font-serif)", color: note.color, fontSize: "2rem", marginBottom: "8px", fontWeight: 700 }}>{note.num}.</div>
-                      <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.1rem", color: "var(--white)", marginBottom: "6px" }}>{note.label}</h3>
-                      <p style={{ fontSize: "0.7rem", color: "var(--gold-dark)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "16px" }}>{note.sub}</p>
-                      <p style={{ color: "var(--white-muted)", fontSize: "0.88rem", lineHeight: 1.7 }}>{note.value}</p>
-                    </div>
-                  ) : null
-                )}
-                {!product.top_notes && !product.heart_notes && !product.base_notes && (
-                  <div style={{ gridColumn: "1/-1", textAlign: "center", color: "var(--white-muted)", padding: "60px" }}>
-                    <span style={{ fontSize: "3rem", opacity: 0.3 }}>🌿</span>
-                    <p style={{ marginTop: "16px" }}>Olfactory notes not specified for this fragrance.</p>
-                  </div>
-                )}
-              </div>
+
+              {(product.top_notes || product.heart_notes || product.base_notes) ? (
+                <FragrancePyramid
+                  topNotes={product.top_notes || ""}
+                  heartNotes={product.heart_notes || ""}
+                  baseNotes={product.base_notes || ""}
+                />
+              ) : (
+                <div style={{ textAlign: "center", color: "var(--white-muted)", padding: "60px" }}>
+                  <span style={{ fontSize: "3rem", opacity: 0.3 }}>🌿</span>
+                  <p style={{ marginTop: "16px" }}>Olfactory notes not specified for this fragrance.</p>
+                </div>
+              )}
             </div>
           )}
+
 
           {/* RITUAL TAB */}
           {activeTab === "ritual" && (
@@ -1162,5 +1136,283 @@ export default function ProductDetailsPage() {
 
       <Footer />
     </main>
+  );
+}
+
+/* ════════════════════════════════════════════════════════
+   INTERACTIVE FRAGRANCE PYRAMID COMPONENT
+   ════════════════════════════════════════════════════════ */
+function FragrancePyramid({
+  topNotes,
+  heartNotes,
+  baseNotes,
+}: {
+  topNotes: string;
+  heartNotes: string;
+  baseNotes: string;
+}) {
+  const [active, setActive] = React.useState<number | null>(1);
+  const pyramidRef = React.useRef<HTMLDivElement>(null);
+
+  const layers = [
+    {
+      idx: 0,
+      label: "Top Notes",
+      labelAr: "النوتات العلوية",
+      time: "First 30 min · The Awakening",
+      notes: topNotes,
+      icon: "✨",
+      emoji: "🌸",
+      color: "#f6f0ea",
+      glow: "rgba(246,240,234,0.18)",
+      gradient: "linear-gradient(135deg, rgba(246,240,234,0.12), rgba(246,240,234,0.03))",
+      borderColor: "rgba(246,240,234,0.3)",
+      width: "55%",
+    },
+    {
+      idx: 1,
+      label: "Heart Notes",
+      labelAr: "النوتات القلبية",
+      time: "2 to 6 hours · The Essence",
+      notes: heartNotes,
+      icon: "🌹",
+      emoji: "🌺",
+      color: "#dbcabb",
+      glow: "rgba(219,202,187,0.2)",
+      gradient: "linear-gradient(135deg, rgba(219,202,187,0.15), rgba(219,202,187,0.04))",
+      borderColor: "rgba(219,202,187,0.35)",
+      width: "75%",
+    },
+    {
+      idx: 2,
+      label: "Base Notes",
+      labelAr: "النوتات القاعدية",
+      time: "6+ hours · The Legacy",
+      notes: baseNotes,
+      icon: "🪵",
+      emoji: "🌿",
+      color: "#c9a96e",
+      glow: "rgba(201,169,110,0.25)",
+      gradient: "linear-gradient(135deg, rgba(201,169,110,0.18), rgba(201,169,110,0.05))",
+      borderColor: "rgba(201,169,110,0.4)",
+      width: "100%",
+    },
+  ];
+
+  const activeLayer = active !== null ? layers[active] : null;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "60px" }}>
+      <style>{`
+        @keyframes pyramidGlow {
+          0%, 100% { box-shadow: 0 0 0px rgba(201,169,110,0); }
+          50% { box-shadow: 0 0 40px rgba(201,169,110,0.2); }
+        }
+        @keyframes floatIngredient {
+          0%, 100% { transform: translateY(0px) rotate(-2deg); }
+          50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @keyframes revealText {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmerLine {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .pyr-layer {
+          cursor: pointer;
+          transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+          position: relative;
+          overflow: hidden;
+        }
+        .pyr-layer::after {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%;
+          width: 60%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+          transition: none;
+        }
+        .pyr-layer:hover::after, .pyr-layer.active::after {
+          animation: shimmerLine 0.6s ease forwards;
+        }
+        .pyr-layer:hover {
+          transform: scaleX(1.02) !important;
+        }
+        .pyr-layer.active {
+          transform: scaleX(1.03) !important;
+        }
+        .pyr-ingredient-float {
+          animation: floatIngredient 3.5s ease-in-out infinite;
+        }
+        .pyr-detail-reveal {
+          animation: revealText 0.45s ease forwards;
+        }
+      `}</style>
+
+      {/* The Pyramid Stack */}
+      <div ref={pyramidRef} style={{ width: "100%", maxWidth: "700px", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+        {/* Label above */}
+        <div style={{ fontSize: "0.65rem", letterSpacing: "0.35em", color: "rgba(220,202,187,0.4)", textTransform: "uppercase", marginBottom: "16px" }}>
+          ✦ Tap a layer to explore
+        </div>
+
+        {layers.filter(l => l.notes).map((layer) => {
+          const isActive = active === layer.idx;
+          return (
+            <div
+              key={layer.idx}
+              className={`pyr-layer ${isActive ? "active" : ""}`}
+              onClick={() => setActive(isActive ? null : layer.idx)}
+              style={{
+                width: layer.width,
+                minHeight: isActive ? "110px" : "70px",
+                background: isActive
+                  ? layer.gradient
+                  : "rgba(255,255,255,0.02)",
+                border: `1px solid ${isActive ? layer.borderColor : "rgba(255,255,255,0.06)"}`,
+                borderRadius: "16px",
+                padding: "0 28px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "20px",
+                boxShadow: isActive ? `0 8px 40px ${layer.glow}, inset 0 1px 0 rgba(255,255,255,0.08)` : "none",
+              }}
+            >
+              {/* Left: icon + label */}
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1 }}>
+                <div style={{
+                  width: "44px", height: "44px", borderRadius: "50%", flexShrink: 0,
+                  background: `radial-gradient(circle, ${layer.glow} 0%, transparent 70%)`,
+                  border: `1px solid ${isActive ? layer.borderColor : "rgba(255,255,255,0.06)"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "1.4rem",
+                  transition: "all 0.3s ease",
+                }}>
+                  {layer.icon}
+                </div>
+                <div>
+                  <div style={{
+                    fontFamily: "var(--font-serif)",
+                    fontSize: "clamp(0.9rem,2vw,1.15rem)",
+                    fontWeight: 700,
+                    color: isActive ? layer.color : "rgba(255,255,255,0.7)",
+                    transition: "color 0.3s",
+                    letterSpacing: "0.05em",
+                  }}>
+                    {layer.label}
+                  </div>
+                  <div style={{
+                    fontSize: "0.65rem", letterSpacing: "0.15em",
+                    color: isActive ? layer.color : "rgba(255,255,255,0.3)",
+                    textTransform: "uppercase", marginTop: "2px",
+                    transition: "color 0.3s",
+                  }}>
+                    {layer.time}
+                  </div>
+                  {/* Expanded notes text */}
+                  {isActive && (
+                    <p className="pyr-detail-reveal" style={{
+                      marginTop: "10px",
+                      color: "rgba(255,255,255,0.75)",
+                      fontSize: "clamp(0.8rem,1.8vw,0.92rem)",
+                      lineHeight: 1.75,
+                      maxWidth: "420px",
+                    }}>
+                      {layer.notes}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: floating emoji ingredient */}
+              <div style={{ flexShrink: 0, textAlign: "center" }}>
+                <div className={isActive ? "pyr-ingredient-float" : ""} style={{
+                  fontSize: isActive ? "3rem" : "1.8rem",
+                  opacity: isActive ? 1 : 0.3,
+                  transition: "all 0.4s ease",
+                  filter: isActive ? `drop-shadow(0 0 12px ${layer.color})` : "none",
+                }}>
+                  {layer.emoji}
+                </div>
+              </div>
+
+              {/* Chevron */}
+              <div style={{
+                flexShrink: 0,
+                color: isActive ? layer.color : "rgba(255,255,255,0.2)",
+                fontSize: "1rem",
+                transform: isActive ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "all 0.35s ease",
+              }}>▾</div>
+            </div>
+          );
+        })}
+
+        {/* Pyramid base label */}
+        <div style={{
+          marginTop: "20px",
+          fontSize: "0.62rem", letterSpacing: "0.4em", color: "rgba(201,169,110,0.35)",
+          textTransform: "uppercase",
+          display: "flex", alignItems: "center", gap: "12px",
+        }}>
+          <span style={{ width: "40px", height: "1px", background: "rgba(201,169,110,0.2)" }} />
+          Olfactory Pyramid
+          <span style={{ width: "40px", height: "1px", background: "rgba(201,169,110,0.2)" }} />
+        </div>
+      </div>
+
+      {/* Detail panel */}
+      {activeLayer && (
+        <div className="pyr-detail-reveal" style={{
+          width: "100%", maxWidth: "700px",
+          background: `linear-gradient(135deg, rgba(10,15,36,0.9), rgba(15,22,45,0.95))`,
+          border: `1px solid ${activeLayer.borderColor}`,
+          borderRadius: "24px",
+          padding: "clamp(24px,4vw,44px)",
+          backdropFilter: "blur(20px)",
+          boxShadow: `0 20px 60px rgba(0,0,0,0.5), 0 0 60px ${activeLayer.glow}`,
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          gap: "24px",
+          alignItems: "center",
+        }}>
+          <div>
+            <div style={{ fontSize: "0.65rem", letterSpacing: "0.3em", color: activeLayer.color, textTransform: "uppercase", marginBottom: "10px" }}>
+              {activeLayer.icon} {activeLayer.label} · {activeLayer.time.split("·")[0].trim()}
+            </div>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.2rem,2.5vw,1.7rem)", color: "#fff", marginBottom: "14px", lineHeight: 1.3 }}>
+              {activeLayer.notes.split(",")[0].trim()}
+              {activeLayer.notes.split(",").length > 1 && (
+                <span style={{ color: activeLayer.color }}> & more</span>
+              )}
+            </h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              {activeLayer.notes.split(",").map((note, i) => (
+                <span key={i} style={{
+                  padding: "5px 14px",
+                  borderRadius: "40px",
+                  border: `1px solid ${activeLayer.borderColor}`,
+                  background: `${activeLayer.glow}`,
+                  color: activeLayer.color,
+                  fontSize: "0.78rem",
+                  letterSpacing: "0.05em",
+                }}>
+                  {note.trim()}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{
+            fontSize: "clamp(3rem,6vw,5rem)",
+            filter: `drop-shadow(0 0 20px ${activeLayer.color})`,
+          }} className="pyr-ingredient-float">
+            {activeLayer.emoji}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

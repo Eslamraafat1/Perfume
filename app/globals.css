@@ -1462,11 +1462,17 @@ body {
 
 /* Glowing Gold Text & Details */
 .gold-text {
-  color: var(--gold);
-  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold), var(--gold-light), var(--gold-dark));
+  background-size: 250% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(220, 202, 187, 0.25);
+  background-clip: text;
+  animation: goldShimmer 4s linear infinite;
+}
+
+@keyframes goldShimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 250% center; }
 }
 
 /* Glowing Outline Button */
@@ -4149,6 +4155,7 @@ html, body {
     radial-gradient(ellipse at 50% 0%, rgba(25, 41, 84, 0.9) 0%, var(--black) 55%),
     var(--black);
   overflow: hidden;
+  pointer-events: none; /* Never block user interactions */
 }
 
 .nubia-loader-aurora {

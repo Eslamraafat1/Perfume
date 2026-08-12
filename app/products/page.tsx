@@ -47,6 +47,13 @@ export default function ProductsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [toast, setToast] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sizeModal, setSizeModal] = useState<Product | null>(null);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, sortBy, genderFilter]);
 
   const pageRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -197,18 +204,35 @@ export default function ProductsPage() {
     return result;
   }, [products, selectedCategory, searchQuery, sortBy, genderFilter]);
 
+  const itemsPerPage = 9;
+
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, currentPage]);
+
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredProducts.length / itemsPerPage);
+  }, [filteredProducts.length]);
+
   function handleQuickAdd(e: React.MouseEvent, product: Product) {
     e.preventDefault();
     e.stopPropagation();
+    // Open size picker modal instead of direct add
+    setSizeModal(product);
+  }
+
+  function handleConfirmSize(product: Product, size: string, price: number) {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price,
       image_url: product.image_url,
       category: product.category,
-    });
-    setToast(product.name);
-    setTimeout(() => setToast(null), 2500);
+    }, size);
+    setSizeModal(null);
+    setToast(`${product.name} — ${size}`);
+    setTimeout(() => setToast(null), 2800);
   }
 
   return (
@@ -567,7 +591,7 @@ export default function ProductsPage() {
                   </button>
                 </div>
               )
-              : filteredProducts.map((product, index) =>
+              : paginatedProducts.map((product, index) =>
                   view === "grid" ? (
                     <ProductGridCard
                       key={product.id}
@@ -590,10 +614,132 @@ export default function ProductsPage() {
                   )
                 )}
           </div>
+
+          {/* ─── PAGINATION CONTROLS ─── */}
+          {totalPages > 1 && (
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+              marginTop: "60px",
+              paddingTop: "40px",
+              borderTop: "1px solid rgba(220, 202, 187, 0.08)",
+            }}>
+              {/* Prev Button */}
+              <button
+                disabled={currentPage === 1}
+                onClick={() => {
+                  setCurrentPage(prev => Math.max(prev - 1, 1));
+                  window.scrollTo({ top: gridRef.current ? gridRef.current.offsetTop - 150 : 300, behavior: "smooth" });
+                }}
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  border: "1px solid rgba(220, 202, 187, 0.15)",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  color: currentPage === 1 ? "var(--white-muted)" : "var(--white)",
+                  opacity: currentPage === 1 ? 0.4 : 1,
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                }}
+                className="pag-btn"
+              >
+                ←
+              </button>
+
+              {/* Page Numbers */}
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const pageNum = idx + 1;
+                const isActive = currentPage === pageNum;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      setCurrentPage(pageNum);
+                      window.scrollTo({ top: gridRef.current ? gridRef.current.offsetTop - 150 : 300, behavior: "smooth" });
+                    }}
+                    style={{
+                      width: "44px",
+                      height: "44px",
+                      borderRadius: "50%",
+                      border: isActive ? "1px solid var(--gold)" : "1px solid rgba(220, 202, 187, 0.15)",
+                      background: isActive ? "linear-gradient(135deg, var(--gold), var(--gold-dark))" : "rgba(255, 255, 255, 0.02)",
+                      color: isActive ? "var(--black)" : "var(--white)",
+                      fontWeight: isActive ? 700 : 400,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: isActive ? "0 0 20px rgba(220, 202, 187, 0.35)" : "none",
+                    }}
+                    className={`pag-btn ${isActive ? "active" : ""}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* Next Button */}
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => {
+                  setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                  window.scrollTo({ top: gridRef.current ? gridRef.current.offsetTop - 150 : 300, behavior: "smooth" });
+                }}
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  border: "1px solid rgba(220, 202, 187, 0.15)",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  color: currentPage === totalPages ? "var(--white-muted)" : "var(--white)",
+                  opacity: currentPage === totalPages ? 0.4 : 1,
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.1rem",
+                }}
+                className="pag-btn"
+              >
+                →
+              </button>
+
+              <style>{`
+                .pag-btn {
+                  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .pag-btn:not(:disabled):hover {
+                  border-color: var(--gold) !important;
+                  background: rgba(220, 202, 187, 0.12) !important;
+                  transform: translateY(-2px);
+                  box-shadow: 0 4px 15px rgba(220, 202, 187, 0.15);
+                }
+                .pag-btn.active:hover {
+                  background: linear-gradient(135deg, var(--gold), var(--gold-dark)) !important;
+                  transform: translateY(-2px) scale(1.05);
+                }
+              `}</style>
+            </div>
+          )}
         </div>
       </section>
 
       <Footer />
+
+      {/* ─── SIZE PICKER MODAL ─── */}
+      {sizeModal && (
+        <SizePickerModal
+          product={sizeModal}
+          onClose={() => setSizeModal(null)}
+          onConfirm={(size, price) => handleConfirmSize(sizeModal, size, price)}
+        />
+      )}
     </div>
   );
 }
@@ -1060,5 +1206,244 @@ function SkeletonCard({ view }: { view: "grid" | "list" }) {
       borderRadius: "16px",
       animation: "pulse 1.8s ease-in-out infinite",
     }} />
+  );
+}
+
+/* ─── Size Picker Modal ─── */
+export function SizePickerModal({
+  product,
+  onClose,
+  onConfirm,
+}: {
+  product: Product;
+  onClose: () => void;
+  onConfirm: (size: string, price: number) => void;
+}) {
+  const DEFAULT_SIZES = [
+    { size: "30ml", price: Math.round(product.price * 0.65) },
+    { size: "50ml", price: product.price },
+    { size: "100ml", price: Math.round(product.price * 1.55) },
+  ];
+  const sizes = product.sizes?.length ? product.sizes : DEFAULT_SIZES;
+  const [selected, setSelected] = useState(sizes[1]?.size ?? sizes[0]?.size);
+
+  const selectedObj = sizes.find((s) => s.size === selected) ?? sizes[0];
+
+  function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) onClose();
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      onClick={handleBackdrop}
+      style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "rgba(0,0,0,0.75)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "20px",
+        animation: "fadeInModal 0.25s ease",
+      }}
+    >
+      <style>{`
+        @keyframes fadeInModal {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes slideUpModal {
+          from { opacity: 0; transform: translateY(32px) scale(0.96); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes shimmerSizeBtn {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        .size-chip {
+          cursor: pointer;
+          border-radius: 14px;
+          padding: 16px 12px;
+          text-align: center;
+          transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+          position: relative;
+          overflow: hidden;
+          flex: 1;
+          min-width: 72px;
+        }
+        .size-chip:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+        .size-chip.size-active { box-shadow: 0 8px 30px rgba(201,169,110,0.35); }
+        .modal-confirm-btn {
+          width: 100%; padding: 18px 24px; border: none; border-radius: 16px;
+          background: linear-gradient(135deg, #c9a96e, #a07840, #c9a96e);
+          background-size: 200% auto;
+          animation: shimmerSizeBtn 3s linear infinite;
+          color: #0a0d1a; font-weight: 800; font-size: 0.9rem;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+          font-family: var(--font-sans);
+        }
+        .modal-confirm-btn:hover {
+          transform: translateY(-2px) scale(1.01);
+          box-shadow: 0 16px 40px rgba(201,169,110,0.45);
+        }
+        .modal-confirm-btn:active { transform: scale(0.98); }
+      `}</style>
+
+      <div style={{
+        background: "linear-gradient(145deg, #0c1226, #131d38, #0c1226)",
+        border: "1px solid rgba(201,169,110,0.2)",
+        borderRadius: "28px",
+        width: "100%", maxWidth: "480px",
+        boxShadow: "0 40px 100px rgba(0,0,0,0.8), 0 0 80px rgba(201,169,110,0.08)",
+        animation: "slideUpModal 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+        overflow: "hidden",
+      }}>
+        {/* Gold accent bar */}
+        <div style={{ height: "3px", background: "linear-gradient(90deg, transparent, #c9a96e, #f0d890, #c9a96e, transparent)" }} />
+
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "16px",
+          padding: "24px 24px 18px",
+          borderBottom: "1px solid rgba(201,169,110,0.1)",
+        }}>
+          {/* Thumbnail */}
+          <div style={{
+            width: "68px", height: "68px", borderRadius: "12px",
+            overflow: "hidden", flexShrink: 0,
+            border: "1px solid rgba(201,169,110,0.2)",
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={product.image_url} alt={product.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "0.6rem", color: "var(--gold)", letterSpacing: "0.28em", textTransform: "uppercase", marginBottom: "4px" }}>
+              {product.category || "Luxury Fragrance"}
+            </div>
+            <div style={{
+              fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+              color: "#fff", lineHeight: 1.25,
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {product.name}
+            </div>
+            {product.gender && (
+              <div style={{ fontSize: "0.66rem", color: "rgba(220,202,187,0.45)", marginTop: "3px" }}>
+                {product.gender === "men" ? "♂ For Him" : product.gender === "women" ? "♀ For Her" : "⚧ Unisex"}
+              </div>
+            )}
+          </div>
+
+          <button onClick={onClose} style={{
+            flexShrink: 0, background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.08)", borderRadius: "50%",
+            width: "34px", height: "34px", color: "rgba(255,255,255,0.5)",
+            cursor: "pointer", fontSize: "0.9rem",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.2s",
+          }}>
+            ✕
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ padding: "22px 24px 26px" }}>
+          <div style={{
+            fontSize: "0.66rem", letterSpacing: "0.28em",
+            color: "rgba(220,202,187,0.45)", textTransform: "uppercase", marginBottom: "14px",
+          }}>
+            ✦ Select Your Size
+          </div>
+
+          {/* Size chips */}
+          <div style={{ display: "flex", gap: "10px", marginBottom: "24px" }}>
+            {sizes.map((s) => {
+              const isActive = s.size === selected;
+              return (
+                <div
+                  key={s.size}
+                  className={`size-chip${isActive ? " size-active" : ""}`}
+                  onClick={() => setSelected(s.size)}
+                  style={{
+                    background: isActive
+                      ? "linear-gradient(135deg, rgba(201,169,110,0.22), rgba(201,169,110,0.06))"
+                      : "rgba(255,255,255,0.04)",
+                    border: isActive
+                      ? "1.5px solid rgba(201,169,110,0.65)"
+                      : "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  {isActive && (
+                    <div style={{
+                      position: "absolute", top: "7px", right: "7px",
+                      width: "5px", height: "5px", borderRadius: "50%",
+                      background: "#c9a96e", boxShadow: "0 0 6px #c9a96e",
+                    }} />
+                  )}
+                  <div style={{
+                    fontFamily: "var(--font-serif)", fontSize: "1.05rem", fontWeight: 700,
+                    color: isActive ? "#f0d890" : "rgba(255,255,255,0.65)",
+                    marginBottom: "4px", transition: "color 0.2s",
+                  }}>
+                    {s.size}
+                  </div>
+                  <div style={{
+                    fontSize: "0.7rem",
+                    color: isActive ? "#c9a96e" : "rgba(220,202,187,0.4)",
+                    fontWeight: 600, transition: "color 0.2s",
+                  }}>
+                    {s.price.toLocaleString()} EGP
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Summary row */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "12px 16px",
+            background: "rgba(201,169,110,0.05)",
+            border: "1px solid rgba(201,169,110,0.12)",
+            borderRadius: "12px", marginBottom: "18px",
+          }}>
+            <div style={{ fontSize: "0.78rem", color: "rgba(220,202,187,0.6)" }}>
+              Selected: <span style={{ color: "#fff", fontWeight: 600 }}>{selected}</span>
+            </div>
+            <div style={{
+              fontFamily: "var(--font-serif)", fontSize: "1.15rem", fontWeight: 800,
+              background: "linear-gradient(90deg,#c9a96e,#f0d890,#c9a96e)",
+              backgroundSize: "200% auto",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>
+              {selectedObj?.price.toLocaleString()} EGP
+            </div>
+          </div>
+
+          {/* Confirm */}
+          <button
+            className="modal-confirm-btn"
+            onClick={() => onConfirm(selectedObj.size, selectedObj.price)}
+          >
+            ✦ Add to Cart — {selectedObj?.size}
+          </button>
+
+          <div style={{
+            textAlign: "center", marginTop: "14px",
+            fontSize: "0.65rem", color: "rgba(220,202,187,0.3)", letterSpacing: "0.04em",
+          }}>
+            🔒 Secure &nbsp;·&nbsp; 🚚 Fast Delivery &nbsp;·&nbsp; 🔄 Easy Returns
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

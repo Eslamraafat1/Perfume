@@ -73,6 +73,12 @@ function CategoryContent() {
   const [toast, setToast] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
+  // Stable refs — survive re-renders without resetting
+  const heroCtxRef = useRef<ReturnType<typeof gsap.context> | null>(null);
+  const sectionsCtxRef = useRef<ReturnType<typeof gsap.context> | null>(null);
+  const hasAnimatedHero = useRef(false);
+  const hasAnimatedSections = useRef(false);
+
   function handleAdd(e: React.MouseEvent, product: any) {
     e.preventDefault();
     e.stopPropagation();
@@ -81,9 +87,12 @@ function CategoryContent() {
     setTimeout(() => setToast(null), 2500);
   }
 
-  // ─── Hero entrance ───
+  // ─── Hero entrance (run ONCE, cleanup only on unmount) ───
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    if (hasAnimatedHero.current) return;
+    hasAnimatedHero.current = true;
+
+    heroCtxRef.current = gsap.context(() => {
       gsap.fromTo(".cg-hero-tag",
         { opacity: 0, y: 30, scale: 0.9 },
         { opacity: 1, y: 0, scale: 1, duration: 1, ease: "back.out(1.7)", delay: 0.1 }
@@ -99,37 +108,51 @@ function CategoryContent() {
       gsap.fromTo(".cg-num",
         { opacity: 0, x: -40 },
         { opacity: 1, x: 0, stagger: 0.15, duration: 0.8, ease: "power3.out",
-          scrollTrigger: { trigger: ".cg-sections", start: "top 80%" } }
+          scrollTrigger: { trigger: ".cg-sections", start: "top 80%", once: true } }
       );
     }, pageRef);
-    return () => ctx.revert();
-  }, []);
+    // ✅ NO return cleanup here — we don't want hero elements reverting on re-render
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Section scroll reveals ───
+  // ─── Section scroll reveals (fire once when products are ready) ───
   useEffect(() => {
-    const ctx = gsap.context(() => {
+    // Only animate when products have loaded AND we haven't animated yet
+    if (loading || products.length === 0 || hasAnimatedSections.current) return;
+    hasAnimatedSections.current = true;
+
+    sectionsCtxRef.current = gsap.context(() => {
       GENDER_SECTIONS.forEach((sec) => {
         const el = document.querySelector(`.cg-section-${sec.id}`);
         if (!el) return;
         gsap.fromTo(`.cg-section-${sec.id} .cg-sec-text`,
           { opacity: 0, x: isRTL ? 60 : -60 },
           { opacity: 1, x: 0, duration: 1.1, ease: "expo.out",
-            scrollTrigger: { trigger: el, start: "top 70%" } }
+            scrollTrigger: { trigger: el, start: "top 70%", once: true } }
         );
         gsap.fromTo(`.cg-section-${sec.id} .cg-sec-img`,
           { opacity: 0, x: isRTL ? -60 : 60, scale: 0.92 },
           { opacity: 1, x: 0, scale: 1, duration: 1.2, ease: "expo.out",
-            scrollTrigger: { trigger: el, start: "top 70%" } }
+            scrollTrigger: { trigger: el, start: "top 70%", once: true } }
         );
         gsap.fromTo(`.cg-section-${sec.id} .cg-prod-card`,
           { opacity: 0, y: 50, scale: 0.94 },
           { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.7, ease: "power3.out",
-            scrollTrigger: { trigger: `.cg-section-${sec.id} .cg-products-row`, start: "top 82%" } }
+            scrollTrigger: { trigger: `.cg-section-${sec.id} .cg-products-row`, start: "top 82%", once: true } }
         );
       });
     }, pageRef);
-    return () => ctx.revert();
-  }, [isRTL, loading]);
+    // ✅ NO return cleanup — elements must STAY visible after animation completes
+  }, [loading, products.length, isRTL]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Cleanup GSAP only on actual unmount (page navigation away) ───
+  useEffect(() => {
+    return () => {
+      heroCtxRef.current?.revert();
+      sectionsCtxRef.current?.revert();
+      hasAnimatedHero.current = false;
+      hasAnimatedSections.current = false;
+    };
+  }, []);
 
   return (
     <div ref={pageRef} style={{ background: "var(--black)", color: "var(--white)", minHeight: "100vh", overflowX: "hidden" }}>
@@ -207,7 +230,7 @@ function CategoryContent() {
       <div className="cg-sections">
         {GENDER_SECTIONS.map((sec, secIdx) => {
           const secProducts = loading ? [] : products.filter(p =>
-            (p.gender || "unisex") === sec.id
+            (p.gender || "unisex").toString().toLowerCase() === sec.id
           ).slice(0, 4);
           const isEven = secIdx % 2 === 0;
 

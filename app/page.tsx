@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useProducts } from "./context/ProductContext";
+import { useProducts, Product } from "./context/ProductContext";
 import { useCart } from "./context/CartContext";
 import { useSiteContent } from "./context/SiteContentContext";
 import { useLanguage } from "./context/LanguageContext";
@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HeroCarousel from "@/components/HeroCarousel";
 import CategorySection from "@/components/CategorySection";
+import { SizePickerModal } from "./products/page";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,14 +44,36 @@ const TESTIMONIAL_KEYS = [
 
 export default function HomePage() {
   const { products, loading } = useProducts();
+  const { addToCart, isInCart } = useCart();
   const { get: sc } = useSiteContent();
   const { t, isRTL } = useLanguage();
   const pageRef = useRef<HTMLDivElement>(null);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [sizeModal, setSizeModal] = useState<Product | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const featuredProducts = products.slice(0, 4);
+
+  function handleQuickAdd(e: React.MouseEvent, product: Product) {
+    e.preventDefault();
+    e.stopPropagation();
+    setSizeModal(product);
+  }
+
+  function handleConfirmSize(product: Product, size: string, price: number) {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price,
+      image_url: product.image_url,
+      category: product.category,
+    }, size);
+    setSizeModal(null);
+    setToast(`${product.name} — ${size}`);
+    setTimeout(() => setToast(null), 2800);
+  }
 
   // Build categories dynamically from Supabase site_content
   const CATEGORIES_DATA = [
@@ -164,7 +187,12 @@ export default function HomePage() {
                 </div>
               )
               : featuredProducts.map((product, i) => (
-                  <HomeProductCard key={product.id} product={product} index={i} />
+                  <HomeProductCard
+                    key={product.id}
+                    product={product}
+                    index={i}
+                    onQuickAdd={(e) => handleQuickAdd(e, product)}
+                  />
                 ))}
           </div>
         </div>
@@ -199,27 +227,43 @@ export default function HomePage() {
 
 
       <Footer />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="toast">
+          <span className="toast-icon">✦</span>
+          <span className="toast-msg">{toast} {t("prod_added_to_cart") || "added to cart!"}</span>
+        </div>
+      )}
+
+      {/* Size Picker Modal */}
+      {sizeModal && (
+        <SizePickerModal
+          product={sizeModal}
+          onClose={() => setSizeModal(null)}
+          onConfirm={(size, price) => handleConfirmSize(sizeModal, size, price)}
+        />
+      )}
     </div>
   );
 }
 
 /* ─── Home Product Card ─── */
-function HomeProductCard({ product, index }: { product: any; index: number }) {
-  const { addToCart, isInCart } = useCart();
+function HomeProductCard({
+  product,
+  index,
+  onQuickAdd,
+}: {
+  product: any;
+  index: number;
+  onQuickAdd: (e: React.MouseEvent) => void;
+}) {
+  const { isInCart } = useCart();
   const { t } = useLanguage();
   const [hovered, setHovered] = useState(false);
-  const [added, setAdded] = useState(false);
 
   const hoverImage = product.images?.[0] ?? null;
   const hasHoverImage = !!hoverImage && hoverImage !== product.image_url;
-
-  function handleAdd(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart({ id: product.id, name: product.name, price: product.price, image_url: product.image_url, category: product.category });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2200);
-  }
 
   return (
     <Link
@@ -338,9 +382,9 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
           transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)", whiteSpace: "nowrap",
         }}>
           <button
-            onClick={handleAdd}
+            onClick={onQuickAdd}
             style={{
-              background: added ? "rgba(76,175,80,0.92)" : "rgba(220,202,187,0.96)",
+              background: isInCart(product.id) ? "rgba(76,175,80,0.92)" : "rgba(220,202,187,0.96)",
               color: "var(--black)", border: "none",
               padding: "11px 22px", borderRadius: "30px",
               fontSize: "0.73rem", fontWeight: 700,
@@ -348,7 +392,7 @@ function HomeProductCard({ product, index }: { product: any; index: number }) {
               cursor: "pointer", transition: "all 0.2s",
             }}
           >
-            {added ? t("prod_added") : isInCart(product.id) ? t("prod_in_cart") : t("prod_add")}
+            {isInCart(product.id) ? t("prod_in_cart") : t("prod_add")}
           </button>
           <div style={{
             background: "rgba(10,15,36,0.88)", backdropFilter: "blur(10px)",

@@ -72,23 +72,31 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
+  const fetchProducts = useCallback(async (showLoading = false) => {
+    if (showLoading) setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching products:", error.message);
-    } else {
-      setProducts(data ?? []);
+      if (error) {
+        console.error("Error fetching products:", error.message);
+      } else if (data) {
+        setProducts((prev) => {
+          if (prev.length === data.length && JSON.stringify(prev) === JSON.stringify(data)) {
+            return prev;
+          }
+          return data;
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    fetchProducts(true);
 
     // Real-time subscription — updates home page instantly when dashboard adds a product
     const channel = supabase
@@ -97,7 +105,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
         "postgres_changes",
         { event: "*", schema: "public", table: "products" },
         () => {
-          fetchProducts();
+          fetchProducts(false);
         }
       )
       .subscribe();
