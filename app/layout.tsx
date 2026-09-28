@@ -44,15 +44,93 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mazad-ecru.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Nubia — Fine Fragrances",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Nubia | Luxury Fine Fragrances & Niche Perfumes",
+    template: "%s | Nubia Fine Fragrances",
+  },
   description:
-    "Discover our exclusive collection of luxury perfumes. Each fragrance is a masterpiece crafted from the world's finest ingredients.",
-  keywords: "luxury perfume, fine fragrance, oud, rose, niche perfume",
+    "Discover Nubia's exclusive collection of luxury niche perfumes and extrait de parfum. Handcrafted with the world's rarest botanical essences and aged to perfection.",
+  keywords: [
+    "luxury perfume",
+    "fine fragrance",
+    "niche perfume",
+    "oud perfume",
+    "عطور نيش",
+    "عطور فاخرة",
+    "عطور مصر",
+    "Nubia perfume",
+    "extrait de parfum",
+    "موقع عطور",
+  ],
+  authors: [{ name: "Nubia Maison Luxe" }],
+  creator: "Nubia",
+  publisher: "Nubia",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Nubia — Fine Fragrances",
-    description: "Discover our exclusive collection of luxury perfumes.",
+    title: "Nubia — Luxury Fine Fragrances & Perfumes",
+    description:
+      "Crafted from the world's rarest botanical essences. Explore our exclusive collection of luxury perfumes.",
+    url: siteUrl,
+    siteName: "Nubia Fragrances",
+    images: [
+      {
+        url: "/perfume_hero.png",
+        width: 1200,
+        height: 630,
+        alt: "Nubia Luxury Fine Fragrance",
+      },
+    ],
+    locale: "ar_EG",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nubia — Luxury Fine Fragrances",
+    description:
+      "Crafted from the world's rarest botanical essences. Explore our exclusive luxury perfumes.",
+    images: ["/perfume_hero.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: "google7ef3ee91e72fc7b6",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  name: "Nubia Fine Fragrances",
+  url: siteUrl,
+  logo: `${siteUrl}/perfume_hero.png`,
+  description:
+    "Luxury niche perfumery offering extrait de parfum handcrafted from the world's rarest botanical essences.",
+  currenciesAccepted: "EGP, USD",
+  paymentAccepted: "Credit Card, Cash on Delivery",
+  priceRange: "$$$",
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "EG",
   },
 };
 
@@ -64,6 +142,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${bodoni.variable} ${inter.variable} ${amiri.variable} ${cairo.variable} ${tajawal.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <SiteContentProvider>
           <LanguageProvider>
             <CartProvider>
