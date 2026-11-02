@@ -1,5 +1,7 @@
 # Nubia — Luxury Perfume Store
 
+[![E2E Tests](https://github.com/Eslamraafat1/Perfume/actions/workflows/e2e.yml/badge.svg)](https://github.com/Eslamraafat1/Perfume/actions/workflows/e2e.yml)
+
 A high-end luxury perfume web application built with **Next.js 15 (App Router)** and **Supabase** (PostgreSQL database + Storage for images).
 
 ---
@@ -62,3 +64,7 @@ Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard) to acces
 2. Import the repository into [Vercel](https://vercel.com).
 3. Add the `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` as environment variables in Vercel.
 4. Deploy! 🚀
+
+## 🧪 Testing
+
+Automated **Playwright** end-to-end tests run on every push via **GitHub Actions** (desktop + mobile Chrome). See [`e2e/`](./e2e).
