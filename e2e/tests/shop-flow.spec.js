@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
  * floating buttons can't sit on top of it on small (or slow) screens.
  */
 async function clickCentered(locator) {
-  await locator.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await locator.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }));
   await locator.click();
 }
 
@@ -137,15 +137,19 @@ test.describe('Checkout', () => {
     const name = page.getByLabel('Full Name *');
     const email = page.getByLabel('Email Address *');
 
-    await clickCentered(submit);
+    // Submit with Enter (implicit form submission) — triggers native validation
+    await name.press('Enter');
     await expect(page).toHaveURL(/\/checkout$/);
     expect(await name.evaluate((el) => el.validity.valueMissing)).toBe(true);
 
     await name.fill('Test Customer');
     await email.fill('not-an-email');
-    await clickCentered(submit);
+    await email.press('Enter');
     await expect(page).toHaveURL(/\/checkout$/);
     expect(await email.evaluate((el) => el.validity.typeMismatch)).toBe(true);
+
+    // Nothing was submitted
+    expect(await page.evaluate(() => localStorage.getItem('last-order'))).toBeNull();
   });
 
   test('a valid cash-on-delivery order reaches the confirmation page', async ({ page }) => {
