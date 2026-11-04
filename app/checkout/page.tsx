@@ -10,7 +10,10 @@ import gsap from "gsap";
 const INSTAPAY_NUMBER = "01069166033";
 
 export default function CheckoutPage() {
-  const { items, totalItems, totalPrice, clearCart } = useCart();
+  const { items, hydrated, totalItems, totalPrice, clearCart } = useCart();
+  // Set once the order is placed so the empty-cart redirect does not hijack
+  // the navigation to /order-confirmation.
+  const orderPlacedRef = useRef(false);
   const router = useRouter();
   const pageRef = useRef<HTMLDivElement>(null);
 
@@ -31,12 +34,13 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty (only after the cart has been restored from
+  // localStorage — otherwise a page reload would always bounce to /cart)
   useEffect(() => {
-    if (items.length === 0) {
+    if (hydrated && items.length === 0 && !orderPlacedRef.current) {
       router.push("/cart");
     }
-  }, [items, router]);
+  }, [hydrated, items, router]);
 
   // Entrance Animations
   useEffect(() => {
@@ -189,6 +193,7 @@ export default function CheckoutPage() {
         })
       );
 
+      orderPlacedRef.current = true;
       window.open(whatsappUrl, "_blank");
       clearCart();
       router.push("/order-confirmation");
@@ -553,12 +558,13 @@ export default function CheckoutPage() {
                 </h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   <div className="form-group">
-                    <label className="form-label">Full Name *</label>
+                    <label className="form-label" htmlFor="co-name">Full Name *</label>
                     <input
                       type="text"
                       required
                       className="form-input"
                       placeholder="e.g. Eslam Raafat"
+                      id="co-name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
@@ -566,23 +572,25 @@ export default function CheckoutPage() {
 
                   <div className="checkout-form-row-2">
                     <div className="form-group">
-                      <label className="form-label">Email Address *</label>
+                      <label className="form-label" htmlFor="co-email">Email Address *</label>
                       <input
                         type="email"
                         required
                         className="form-input"
                         placeholder="yourname@domain.com"
+                        id="co-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Phone Number *</label>
+                      <label className="form-label" htmlFor="co-phone">Phone Number *</label>
                       <input
                         type="tel"
                         required
                         className="form-input"
                         placeholder="e.g. 01012345678"
+                        id="co-phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                       />
@@ -591,9 +599,10 @@ export default function CheckoutPage() {
 
                   <div className="checkout-form-row-1-2">
                     <div className="form-group">
-                      <label className="form-label">Governorate *</label>
+                      <label className="form-label" htmlFor="co-governorate">Governorate *</label>
                       <select
                         className="form-input"
+                        id="co-governorate"
                         value={governorate}
                         onChange={(e) => setGovernorate(e.target.value)}
                         style={{ background: "var(--dark)" }}
@@ -608,12 +617,13 @@ export default function CheckoutPage() {
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Detailed Address *</label>
+                      <label className="form-label" htmlFor="co-address">Detailed Address *</label>
                       <input
                         type="text"
                         required
                         className="form-input"
                         placeholder="Street, Building, Apartment No."
+                        id="co-address"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                       />
@@ -621,10 +631,11 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Order Notes (Optional)</label>
+                    <label className="form-label" htmlFor="co-notes">Order Notes (Optional)</label>
                     <textarea
                       className="form-textarea"
                       placeholder="Any specific delivery instructions, gift notes, or customization preferences..."
+                      id="co-notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={3}

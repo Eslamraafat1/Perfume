@@ -137,8 +137,25 @@ function GoldFireworks() {
 /* ─────────────────────────────────────────────────────────
    Main page
 ───────────────────────────────────────────────────────── */
+/** Shape written to localStorage("last-order") by the checkout page. */
+interface StoredOrder {
+  id: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  governorate: string;
+  shipping_address: string;
+  order_notes?: string;
+  payment_method: string;
+  items: { id: string; name: string; price: number; quantity: number; size?: string }[];
+  subtotal: number;
+  shipping: number;
+  discount: number;
+  total: number;
+}
+
 export default function OrderConfirmationPage() {
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<StoredOrder | null>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -464,7 +481,7 @@ export default function OrderConfirmationPage() {
             <div style={{ borderTop: "1px solid rgba(201,169,110,0.08)", paddingTop: "20px", marginBottom: "20px" }}>
               <div style={{ fontSize: "0.68rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.2em", marginBottom: "14px" }}>🛍 Items Ordered</div>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {order.items?.map((item: any, idx: number) => (
+                {order.items?.map((item, idx: number) => (
                   <div key={idx} style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center",
                     padding: "10px 16px", borderRadius: "12px",

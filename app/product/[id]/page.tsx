@@ -852,11 +852,11 @@ export default function ProductDetailsPage() {
                     src={(() => {
                       const url = product.video_url;
                       if (!url) return "";
-                      let match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+                      const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
                       if (match && match[1]) return `https://www.youtube.com/embed/${match[1]}`;
-                      let vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                      const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
                       if (vimeoMatch && vimeoMatch[1]) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-                      let tiktokMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+                      const tiktokMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
                       if (tiktokMatch && tiktokMatch[1]) return `https://www.tiktok.com/embed/v2/${tiktokMatch[1]}`;
                       return url;
                     })()}

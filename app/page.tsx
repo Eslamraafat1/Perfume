@@ -254,7 +254,7 @@ function HomeProductCard({
   index,
   onQuickAdd,
 }: {
-  product: any;
+  product: Product;
   index: number;
   onQuickAdd: (e: React.MouseEvent) => void;
 }) {

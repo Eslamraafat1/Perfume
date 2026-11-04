@@ -110,7 +110,7 @@ export default function CartPage() {
                       <button
                         onClick={() => removeFromCart(item.id, item.size)}
                         className="cart-remove-btn"
-                        aria-label="Remove item"
+                        aria-label={`Remove ${item.name}`}
                       >
                         ✕
                       </button>
@@ -119,9 +119,9 @@ export default function CartPage() {
                     <div className="cart-item-footer">
                       {/* Quantity control */}
                       <div className="qty-control">
-                        <button onClick={() => updateQty(item.id, item.quantity - 1, item.size)}>−</button>
-                        <span>{item.quantity}</span>
-                        <button onClick={() => updateQty(item.id, item.quantity + 1, item.size)}>+</button>
+                        <button onClick={() => updateQty(item.id, item.quantity - 1, item.size)} aria-label={`Decrease quantity of ${item.name}`}>−</button>
+                        <span aria-label="Quantity">{item.quantity}</span>
+                        <button onClick={() => updateQty(item.id, item.quantity + 1, item.size)} aria-label={`Increase quantity of ${item.name}`}>+</button>
                       </div>
                       <span style={{ fontFamily: "var(--font-serif)", color: "var(--gold)", fontSize: "1.2rem", fontWeight: 600 }}>
                         {(item.price * item.quantity).toLocaleString()} EGP
@@ -199,6 +199,7 @@ export default function CartPage() {
                 <div style={{ display: "flex", gap: "10px" }}>
                   <input
                     type="text"
+                    aria-label="Promo code"
                     placeholder="Enter code (e.g. LUXE10)"
                     className="form-input"
                     style={{ flex: 1, padding: "10px 16px", borderRadius: "40px", fontSize: "0.85rem" }}

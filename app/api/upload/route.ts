@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { supabaseUrl, supabaseAnonKey, STORAGE_BUCKET } from "@/lib/supabase";
 
 export async function POST(request: Request) {
   try {
@@ -14,17 +15,6 @@ export async function POST(request: Request) {
       );
     }
 
-    let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || supabaseUrl.includes("placeholder-url-please-set-in-env") || supabaseUrl.includes("your-supabase-url")) {
-      supabaseUrl = "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
-    }
-
-    if (!supabaseAnonKey || supabaseAnonKey === "placeholder-anon-key" || supabaseAnonKey === "your-anon-key-here") {
-      supabaseAnonKey = "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
-    }
-
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -34,7 +24,7 @@ export async function POST(request: Request) {
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from(STORAGE_BUCKET)
       .upload(fileName, buffer, {
         contentType: file.type || "image/jpeg",
         upsert: false,
@@ -49,17 +39,17 @@ export async function POST(request: Request) {
 
     // Get the public URL
     const { data: urlData } = supabase.storage
-      .from("product-images")
+      .from(STORAGE_BUCKET)
       .getPublicUrl(fileName);
 
     return NextResponse.json({
       success: true,
       imageUrl: urlData.publicUrl,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[Upload API] Error processing request:", err);
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      { error: err instanceof Error ? err.message : "Internal server error" },
       { status: 500 }
     );
   }

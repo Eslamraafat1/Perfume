@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useProducts } from "@/app/context/ProductContext";
+import type { CartItem } from "@/app/context/CartContext";
 import { useCart } from "@/app/context/CartContext";
 
 /* ─── Data ─── */
@@ -196,15 +197,7 @@ export default function FragranceFinderWidget() {
       .slice(0, 4);
   }, [showResults, selections, products]);
 
-  /* Keyboard & body lock */
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  });
-
+  /* Body lock */
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
@@ -229,6 +222,15 @@ export default function FragranceFinderWidget() {
       setShowResults(false);
     }, 400);
   };
+
+  /* Close on Escape */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
 
   const handleSelect = (choice: Choice) => {
     if (isAnimating) return;
@@ -612,7 +614,7 @@ interface ModalContentProps {
   onBack: () => void;
   onClose: () => void;
   onRestart: () => void;
-  onAddToCart: (p: any, size?: string) => void;
+  onAddToCart: (p: Omit<CartItem, "quantity">, size?: string) => void;
 }
 
 function ModalContent({

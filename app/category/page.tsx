@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useProducts } from "../context/ProductContext";
+import { useProducts, type Product } from "../context/ProductContext";
 import { useCart } from "../context/CartContext";
 import { useLanguage } from "../context/LanguageContext";
 import Navbar from "@/components/Navbar";
@@ -79,7 +79,7 @@ function CategoryContent() {
   const hasAnimatedHero = useRef(false);
   const hasAnimatedSections = useRef(false);
 
-  function handleAdd(e: React.MouseEvent, product: any) {
+  function handleAdd(e: React.MouseEvent, product: Product) {
     e.preventDefault();
     e.stopPropagation();
     addToCart({ id: product.id, name: product.name, price: product.price, image_url: product.image_url, category: product.category });
@@ -112,7 +112,7 @@ function CategoryContent() {
       );
     }, pageRef);
     // ✅ NO return cleanup here — we don't want hero elements reverting on re-render
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // ─── Section scroll reveals (fire once when products are ready) ───
   useEffect(() => {
@@ -142,7 +142,7 @@ function CategoryContent() {
       });
     }, pageRef);
     // ✅ NO return cleanup — elements must STAY visible after animation completes
-  }, [loading, products.length, isRTL]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, products.length, isRTL]);  
 
   // ─── Cleanup GSAP only on actual unmount (page navigation away) ───
   useEffect(() => {
@@ -399,7 +399,7 @@ export default function CategoryPage() {
 function CatGenderCard({
   product, index, accent, inCart, onAdd,
 }: {
-  product: any; index: number; accent: string; inCart: boolean;
+  product: Product; index: number; accent: string; inCart: boolean;
   onAdd: (e: React.MouseEvent) => void;
 }) {
   const [hovered, setHovered] = useState(false);

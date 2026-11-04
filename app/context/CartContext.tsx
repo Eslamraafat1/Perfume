@@ -14,6 +14,8 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
+  /** true once the cart has been restored from localStorage */
+  hydrated: boolean;
   totalItems: number;
   totalPrice: number;
   addToCart: (item: Omit<CartItem, "quantity">, size?: string) => void;
@@ -89,7 +91,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, totalItems, totalPrice, addToCart, removeFromCart, updateQty, clearCart, isInCart }}
+      value={{ items, hydrated, totalItems, totalPrice, addToCart, removeFromCart, updateQty, clearCart, isInCart }}
     >
       {children}
     </CartContext.Provider>

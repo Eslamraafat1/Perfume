@@ -874,7 +874,7 @@ export default function SplashCursor({
     }
 
     function correctRadius(radius: number) {
-      let aspectRatio = canvasEl.width / canvasEl.height;
+      const aspectRatio = canvasEl.width / canvasEl.height;
       if (aspectRatio > 1) radius *= aspectRatio;
       return radius;
     }
@@ -908,13 +908,13 @@ export default function SplashCursor({
     }
 
     function correctDeltaX(delta: number) {
-      let aspectRatio = canvasEl.width / canvasEl.height;
+      const aspectRatio = canvasEl.width / canvasEl.height;
       if (aspectRatio < 1) delta *= aspectRatio;
       return delta;
     }
 
     function correctDeltaY(delta: number) {
-      let aspectRatio = canvasEl.width / canvasEl.height;
+      const aspectRatio = canvasEl.width / canvasEl.height;
       if (aspectRatio > 1) delta /= aspectRatio;
       return delta;
     }

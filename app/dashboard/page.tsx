@@ -176,7 +176,7 @@ export default function DashboardPage() {
       }
 
       // Step 2: Upload additional images (if any)
-      let uploadedAdditionalImages: string[] = editingProduct ? (existingGalleryImages) : [];
+      const uploadedAdditionalImages: string[] = editingProduct ? (existingGalleryImages) : [];
       if (additionalImages.length > 0) {
         setUploadProgress("Uploading additional images...");
         // If editing, we append. The user can just upload more images and they get appended.

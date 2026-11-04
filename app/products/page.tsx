@@ -474,7 +474,8 @@ export default function ProductsPage() {
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input
-              type="text"
+              type="search"
+              aria-label="Search fragrances"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search fragrances, notes..."
@@ -499,6 +500,7 @@ export default function ProductsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "0.72rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>Sort:</span>
             <select
+              aria-label="Sort products"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               style={{
@@ -525,6 +527,8 @@ export default function ProductsPage() {
               <button
                 key={v}
                 onClick={() => setView(v)}
+                aria-label={v === "grid" ? "Grid view" : "List view"}
+                aria-pressed={view === v}
                 style={{
                   padding: "10px 14px",
                   background: view === v ? "rgba(220,202,187,0.12)" : "transparent",

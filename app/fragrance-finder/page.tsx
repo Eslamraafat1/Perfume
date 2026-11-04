@@ -194,7 +194,7 @@ export default function FragranceFinderPage() {
               )}
               {query.trim() && (
                 <span style={{ background: "rgba(220,202,187,0.1)", border: "1px solid rgba(220,202,187,0.3)", color: "var(--gold)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.73rem", fontFamily: "var(--font-sans)" }}>
-                  "{query}"
+                  &ldquo;{query}&rdquo;
                 </span>
               )}
               <button
