@@ -1,50 +1,36 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import { supabaseConfig } from "./supabase-config";
 
-const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const rawKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export { supabaseConfig, isSupabaseConfigured, STORAGE_BUCKET } from "./supabase-config";
 
-// Check if URL is a valid URL starting with http:// or https://
-const isValidUrl = (url: string | undefined): boolean => {
-  if (!url) return false;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
+/**
+ * Shared Supabase client, or `null` when Supabase is not configured (demo mode).
+ *
+ * - In the browser it is the @supabase/ssr browser client, which keeps the admin
+ *   session in cookies so proxy.ts can check it on the server.
+ * - On the server (sitemap, product metadata) it is a stateless client that only
+ *   performs public, read-only queries.
+ */
+function createSupabase(): SupabaseClient | null {
+  if (!supabaseConfig) return null;
+  const { url, anonKey } = supabaseConfig;
+  if (typeof window === "undefined") {
+    return createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
   }
-};
-
-const isPlaceholderUrl = (url: string | undefined): boolean => {
-  if (!url) return true;
-  return url.includes("placeholder-url-please-set-in-env") || url.includes("your-supabase-url");
-};
-
-const isPlaceholderKey = (key: string | undefined): boolean => {
-  if (!key) return true;
-  return key === "placeholder-anon-key" || key === "your-anon-key-here";
-};
-
-// NOTE: the fallbacks below are the project's *publishable* (anon) credentials,
-// which are shipped to every browser anyway. They exist because the production
-// deployment currently has no Supabase env vars configured. Prefer setting
-// NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY (see .env.example)
-// and then deleting these fallbacks.
-export const supabaseUrl = isValidUrl(rawUrl) && !isPlaceholderUrl(rawUrl)
-  ? rawUrl!
-  : "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
-
-export const supabaseAnonKey = rawKey && !isPlaceholderKey(rawKey)
-  ? rawKey
-  : "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
-
-if (!isValidUrl(rawUrl) || isPlaceholderUrl(rawUrl) || isPlaceholderKey(rawKey)) {
-  console.log(
-    "ℹ️ INFO: Supabase environment variables are missing or placeholders in process.env. Using fallback credentials."
-  );
+  return createBrowserClient(url, anonKey);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createSupabase();
 
-// Storage bucket name — must match what you created in Supabase Dashboard
-export const STORAGE_BUCKET = "product-images";
-
+/** Returns the client for write operations, or throws a clear error in demo mode. */
+export function requireSupabase(): SupabaseClient {
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured: the demo catalogue is read-only. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+  }
+  return supabase;
+}

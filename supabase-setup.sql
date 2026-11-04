@@ -1,10 +1,60 @@
--- =============================================
--- Nubia — Supabase Setup SQL
--- Run this in: Supabase Dashboard → SQL Editor
--- =============================================
+-- =====================================================================
+-- Nubia — Supabase setup (schema + least-privilege Row Level Security)
+--
+-- Run the whole file in: Supabase Dashboard → SQL Editor → New query → Run.
+-- It is idempotent: safe to re-run on a new or an existing project.
+--
+-- Security model
+--   * Visitors (anon key) can only READ the catalogue and site content.
+--   * Only admins can INSERT / UPDATE / DELETE, and only admins can write to
+--     the `product-images` Storage bucket.
+--   * An admin is an authenticated Supabase Auth user listed in public.admin_users.
+--     Add the first admin after creating the user (Authentication → Users):
+--
+--       insert into public.admin_users (user_id, email)
+--       select id, email from auth.users where email = 'you@example.com'
+--       on conflict (user_id) do nothing;
+--
+--   * The service_role key is never needed by the app.
+-- =====================================================================
 
--- 1. Create products table
-create table if not exists products (
+
+-- ---------------------------------------------------------------------
+-- 1. Admins
+-- ---------------------------------------------------------------------
+create table if not exists public.admin_users (
+  user_id    uuid primary key references auth.users (id) on delete cascade,
+  email      text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_users enable row level security;
+
+-- Nobody can list or modify admins through the API; manage them in the SQL editor.
+revoke all on table public.admin_users from anon, authenticated;
+
+-- is_admin(): true when the current JWT belongs to a user in admin_users.
+-- SECURITY DEFINER so it can read admin_users without exposing the table.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.admin_users a where a.user_id = (select auth.uid())
+  );
+$$;
+
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to anon, authenticated;
+
+
+-- ---------------------------------------------------------------------
+-- 2. products
+-- ---------------------------------------------------------------------
+create table if not exists public.products (
   id          uuid        default gen_random_uuid() primary key,
   name        text        not null,
   description text        not null,
@@ -14,83 +64,102 @@ create table if not exists products (
   created_at  timestamptz default now()
 );
 
--- 2. Enable Row Level Security (required for public access)
-alter table products enable row level security;
+alter table public.products add column if not exists category         text default 'Oud & Woody';
+alter table public.products add column if not exists top_notes        text default 'Bergamot, Mandarin';
+alter table public.products add column if not exists heart_notes      text default 'Lavender, Jasmine';
+alter table public.products add column if not exists base_notes       text default 'Oud, Amber, Patchouli';
+alter table public.products add column if not exists longevity        text default 'Very Long Lasting (8h-12h)';
+alter table public.products add column if not exists sillage          text default 'Strong';
+alter table public.products add column if not exists sizes            jsonb;
+alter table public.products add column if not exists images           text[];
+alter table public.products add column if not exists video_url        text;
+alter table public.products add column if not exists badge            text;
+alter table public.products add column if not exists gender           text default 'unisex';
+alter table public.products add column if not exists fragrance_family text;
 
--- 3. RLS Policies — allow public read, insert, delete
---    (for a real production app you'd add auth, but for this use-case this is correct)
-create policy "Allow public select"
-  on products for select
-  using (true);
-
-create policy "Allow public insert"
-  on products for insert
-  with check (true);
-
-create policy "Allow public delete"
-  on products for delete
-  using (true);
-
--- =============================================
--- After running the SQL above, also do this in the Supabase UI:
--- Storage → New Bucket → Name: "product-images" → toggle Public ON
--- =============================================
-
--- =============================================
--- Migration: Add new columns if they don't exist yet
--- =============================================
-alter table public.products add column if not exists category text default 'Oud & Woody';
-alter table public.products add column if not exists top_notes text default 'Bergamot, Mandarin';
-alter table public.products add column if not exists heart_notes text default 'Lavender, Jasmine';
-alter table public.products add column if not exists base_notes text default 'Oud, Amber, Patchouli';
-alter table public.products add column if not exists longevity text default 'Very Long Lasting (8h-12h)';
-alter table public.products add column if not exists sillage text default 'Strong';
-alter table public.products add column if not exists sizes jsonb;
-alter table public.products add column if not exists images text[];
-alter table public.products add column if not exists video_url text;
-alter table public.products add column if not exists badge text;
--- =============================================
--- Gender column (men / women / unisex / oriental)
--- =============================================
--- Drop old constraint first, then re-add with oriental included
 alter table public.products drop constraint if exists products_gender_check;
-alter table public.products add column if not exists gender text default 'unisex';
 alter table public.products add constraint products_gender_check
   check (gender in ('men', 'women', 'unisex', 'oriental'));
 
--- =============================================
--- Fragrance Family column
--- =============================================
-alter table public.products add column if not exists fragrance_family text;
+alter table public.products enable row level security;
 
--- =============================================
--- 4. Create site_content table for dynamic text/images
--- =============================================
-create table if not exists site_content (
+-- Remove the old permissive policies (anyone could insert / delete).
+drop policy if exists "Allow public select" on public.products;
+drop policy if exists "Allow public insert" on public.products;
+drop policy if exists "Allow public delete" on public.products;
+drop policy if exists "Allow public update" on public.products;
+
+drop policy if exists "products: public read"   on public.products;
+drop policy if exists "products: admin insert"  on public.products;
+drop policy if exists "products: admin update"  on public.products;
+drop policy if exists "products: admin delete"  on public.products;
+
+create policy "products: public read"
+  on public.products for select
+  to anon, authenticated
+  using (true);
+
+create policy "products: admin insert"
+  on public.products for insert
+  to authenticated
+  with check ((select public.is_admin()));
+
+create policy "products: admin update"
+  on public.products for update
+  to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
+
+create policy "products: admin delete"
+  on public.products for delete
+  to authenticated
+  using ((select public.is_admin()));
+
+
+-- ---------------------------------------------------------------------
+-- 3. site_content (editable copy and images, key/value)
+-- ---------------------------------------------------------------------
+create table if not exists public.site_content (
   key   text primary key,
   value text not null
 );
 
--- Enable RLS for site_content
-alter table site_content enable row level security;
+alter table public.site_content enable row level security;
 
--- Allow public read
-create policy "Allow public select on site_content"
-  on site_content for select
+drop policy if exists "Allow public select on site_content" on public.site_content;
+drop policy if exists "Allow public insert on site_content" on public.site_content;
+drop policy if exists "Allow public update on site_content" on public.site_content;
+
+drop policy if exists "site_content: public read"  on public.site_content;
+drop policy if exists "site_content: admin insert" on public.site_content;
+drop policy if exists "site_content: admin update" on public.site_content;
+drop policy if exists "site_content: admin delete" on public.site_content;
+
+create policy "site_content: public read"
+  on public.site_content for select
+  to anon, authenticated
   using (true);
 
--- Allow public insert/update (for demo/admin without auth)
-create policy "Allow public insert on site_content"
-  on site_content for insert
-  with check (true);
+create policy "site_content: admin insert"
+  on public.site_content for insert
+  to authenticated
+  with check ((select public.is_admin()));
 
-create policy "Allow public update on site_content"
-  on site_content for update
-  using (true);
+create policy "site_content: admin update"
+  on public.site_content for update
+  to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
 
--- =============================================
--- 5. Create hero_slides table for Hero Carousel
--- =============================================
+create policy "site_content: admin delete"
+  on public.site_content for delete
+  to authenticated
+  using ((select public.is_admin()));
+
+
+-- ---------------------------------------------------------------------
+-- 4. hero_slides (homepage carousel)
+-- ---------------------------------------------------------------------
 create table if not exists public.hero_slides (
   id          uuid        default gen_random_uuid() primary key,
   sort_order  integer     not null default 0,
@@ -117,28 +186,104 @@ create table if not exists public.hero_slides (
   created_at  timestamptz default now()
 );
 
--- Enable RLS for hero_slides
 alter table public.hero_slides enable row level security;
 
--- Allow public select/insert/update/delete (for admin/demo without auth)
-create policy "Allow public select on hero_slides"
+drop policy if exists "Allow public select on hero_slides" on public.hero_slides;
+drop policy if exists "Allow public insert on hero_slides" on public.hero_slides;
+drop policy if exists "Allow public update on hero_slides" on public.hero_slides;
+drop policy if exists "Allow public delete on hero_slides" on public.hero_slides;
+
+drop policy if exists "hero_slides: public read"  on public.hero_slides;
+drop policy if exists "hero_slides: admin insert" on public.hero_slides;
+drop policy if exists "hero_slides: admin update" on public.hero_slides;
+drop policy if exists "hero_slides: admin delete" on public.hero_slides;
+
+create policy "hero_slides: public read"
   on public.hero_slides for select
+  to anon, authenticated
   using (true);
 
-create policy "Allow public insert on hero_slides"
+create policy "hero_slides: admin insert"
   on public.hero_slides for insert
-  with check (true);
+  to authenticated
+  with check ((select public.is_admin()));
 
-create policy "Allow public update on hero_slides"
+create policy "hero_slides: admin update"
   on public.hero_slides for update
-  using (true);
+  to authenticated
+  using ((select public.is_admin()))
+  with check ((select public.is_admin()));
 
-create policy "Allow public delete on hero_slides"
+create policy "hero_slides: admin delete"
   on public.hero_slides for delete
-  using (true);
-
--- 4. Grant table privileges to anon, authenticated, and service_role
-grant select, insert, update, delete on table public.hero_slides to anon, authenticated, service_role;
+  to authenticated
+  using ((select public.is_admin()));
 
 
+-- ---------------------------------------------------------------------
+-- 5. Table privileges (RLS still applies on top of these grants)
+--    The old script granted INSERT/UPDATE/DELETE on hero_slides to anon.
+-- ---------------------------------------------------------------------
+revoke insert, update, delete, truncate on table public.products, public.site_content, public.hero_slides from anon;
+grant select on table public.products, public.site_content, public.hero_slides to anon;
+grant select, insert, update, delete on table public.products, public.site_content, public.hero_slides to authenticated;
 
+
+-- ---------------------------------------------------------------------
+-- 6. Storage: public bucket for product / site images
+--    Public read (images are shown on the storefront); admin-only write.
+-- ---------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'product-images', 'product-images', true, 5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']
+)
+on conflict (id) do update
+  set public             = excluded.public,
+      file_size_limit    = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "product-images: public read"  on storage.objects;
+drop policy if exists "product-images: admin insert" on storage.objects;
+drop policy if exists "product-images: admin update" on storage.objects;
+drop policy if exists "product-images: admin delete" on storage.objects;
+
+create policy "product-images: public read"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'product-images');
+
+create policy "product-images: admin insert"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'product-images' and (select public.is_admin()));
+
+create policy "product-images: admin update"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'product-images' and (select public.is_admin()))
+  with check (bucket_id = 'product-images' and (select public.is_admin()));
+
+create policy "product-images: admin delete"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'product-images' and (select public.is_admin()));
+
+
+-- ---------------------------------------------------------------------
+-- 7. Realtime (optional): live catalogue updates on the storefront
+-- ---------------------------------------------------------------------
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'products'
+  ) then
+    alter publication supabase_realtime add table public.products;
+  end if;
+exception when undefined_object then
+  null; -- publication not present (e.g. local Postgres without Supabase Realtime)
+end $$;
+
+-- Note: there is no orders table. Checkout hands the order to WhatsApp and keeps
+-- a copy in the customer's browser (localStorage), so no customer data is stored here.

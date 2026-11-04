@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/app/context/CartContext";
+import { useProducts } from "@/app/context/ProductContext";
 import gsap from "gsap";
 
 const INSTAPAY_NUMBER = "01069166033";
 
 export default function CheckoutPage() {
   const { items, hydrated, totalItems, totalPrice, clearCart } = useCart();
+  const { isDemo } = useProducts();
   // Set once the order is placed so the empty-cart redirect does not hijack
   // the navigation to /order-confirmation.
   const orderPlacedRef = useRef(false);
@@ -190,11 +192,14 @@ export default function CheckoutPage() {
           shipping: shippingCost,
           discount,
           total: finalTotal,
+          ...(isDemo ? { demo: true } : {}),
         })
       );
 
       orderPlacedRef.current = true;
-      window.open(whatsappUrl, "_blank");
+      // Demo catalogue: the products are illustrative, so don't hand the order to
+      // the shop's WhatsApp — the confirmation page explains it was a demo order.
+      if (!isDemo) window.open(whatsappUrl, "_blank");
       clearCart();
       router.push("/order-confirmation");
     } catch (err) {

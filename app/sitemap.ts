@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
-import { supabase } from "@/lib/supabase";
+import { loadProducts } from "@/lib/catalogue";
 
 // Re-generate hourly so newly added products appear without a redeploy.
 export const revalidate = 3600;
@@ -54,9 +54,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const { data: products } = await supabase.from("products").select("id, created_at")
-      .abortSignal(AbortSignal.timeout(3000));
-    if (products && products.length > 0) {
+    // Supabase rows, or the demo catalogue when Supabase is not configured / reachable.
+    const { products } = await loadProducts();
+    if (products.length > 0) {
       const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
         url: `${baseUrl}/product/${p.id}`,
         lastModified: p.created_at ? new Date(p.created_at) : new Date(),

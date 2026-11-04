@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { loadProduct, loadRelatedProducts } from "@/lib/catalogue";
 import { Product } from "@/app/context/ProductContext";
 import { useCart } from "@/app/context/CartContext";
 import gsap from "gsap";
@@ -44,14 +44,9 @@ export default function ProductDetailsPage() {
   useEffect(() => {
     async function fetchProductAndRelated() {
       if (!id) return;
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { product: data, source } = await loadProduct(String(id));
 
-      if (error) {
-        console.error("Error fetching product:", error);
+      if (!data) {
         setLoading(false);
       } else {
         setProduct(data);
@@ -59,15 +54,7 @@ export default function ProductDetailsPage() {
           setSelectedSize(data.sizes[0].size);
         }
         setSelectedImage(data.image_url);
-        if (data.category) {
-          const { data: relatedData } = await supabase
-            .from("products")
-            .select("*")
-            .eq("category", data.category)
-            .neq("id", data.id)
-            .limit(4);
-          setRelatedProducts(relatedData || []);
-        }
+        setRelatedProducts(await loadRelatedProducts(data, source));
         setLoading(false);
       }
     }

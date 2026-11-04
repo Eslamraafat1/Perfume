@@ -152,6 +152,8 @@ interface StoredOrder {
   shipping: number;
   discount: number;
   total: number;
+  /** True when placed against the demo catalogue: nothing was sent to the shop. */
+  demo?: boolean;
 }
 
 export default function OrderConfirmationPage() {
@@ -445,6 +447,22 @@ export default function OrderConfirmationPage() {
               animationDelay: "2s",
             }}
           >
+            {order.demo && (
+              <p
+                role="note"
+                data-testid="demo-order-note"
+                style={{
+                  fontSize: "0.8rem",
+                  color: "var(--white-muted)",
+                  border: "1px dashed rgba(201,169,110,0.3)",
+                  borderRadius: "12px",
+                  padding: "10px 14px",
+                  marginBottom: "20px",
+                }}
+              >
+                Demo order: the store is running on its demo catalogue, so this order was saved in your browser only. Nothing was sent or charged.
+              </p>
+            )}
             {/* Header row */}
             <div style={{
               display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "16px",

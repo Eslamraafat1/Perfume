@@ -7,7 +7,8 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, requireSupabase } from "@/lib/supabase";
+import { loadProducts, type CatalogueSource } from "@/lib/catalogue";
 
 export type ProductGender = "men" | "women" | "unisex" | "oriental";
 
@@ -60,6 +61,9 @@ export interface Product {
 interface ProductContextType {
   products: Product[];
   loading: boolean;
+  /** Where the catalogue came from: Supabase, or the bundled demo catalogue. */
+  source: CatalogueSource;
+  isDemo: boolean;
   addProduct: (product: Omit<Product, "id" | "created_at">) => Promise<void>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
@@ -71,71 +75,82 @@ const ProductContext = createContext<ProductContextType | null>(null);
 export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<CatalogueSource>(supabase ? "supabase" : "demo");
 
   const fetchProducts = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching products:", error.message);
-      } else if (data) {
-        setProducts((prev) => {
-          if (prev.length === data.length && JSON.stringify(prev) === JSON.stringify(data)) {
-            return prev;
-          }
-          return data;
-        });
-      }
+      const result = await loadProducts();
+      setSource(result.source);
+      setProducts((prev) => {
+        if (prev.length === result.products.length && JSON.stringify(prev) === JSON.stringify(result.products)) {
+          return prev;
+        }
+        return result.products;
+      });
+      return result.source;
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchProducts(true);
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
 
-    // Real-time subscription — updates home page instantly when dashboard adds a product
-    const channel = supabase
-      .channel("products-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "products" },
-        () => {
+    fetchProducts(true).then((loadedFrom) => {
+      // Real-time updates only make sense when the catalogue really comes from Supabase.
+      if (cancelled || loadedFrom !== "supabase" || !supabase) return;
+      const client = supabase;
+      const channel = client
+        .channel("products-realtime")
+        .on("postgres_changes", { event: "*", schema: "public", table: "products" }, () => {
           fetchProducts(false);
-        }
-      )
-      .subscribe();
+        })
+        .subscribe();
+      unsubscribe = () => {
+        client.removeChannel(channel);
+      };
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      unsubscribe?.();
     };
   }, [fetchProducts]);
 
   const addProduct = async (product: Omit<Product, "id" | "created_at">) => {
-    const { error } = await supabase.from("products").insert([product]);
+    const { error } = await requireSupabase().from("products").insert([product]);
     if (error) throw new Error(error.message);
     await fetchProducts();
   };
 
   const updateProduct = async (id: string, product: Partial<Product>) => {
-    const { error } = await supabase.from("products").update(product).eq("id", id);
+    const { error } = await requireSupabase().from("products").update(product).eq("id", id);
     if (error) throw new Error(error.message);
     await fetchProducts();
   };
 
   const deleteProduct = async (id: string) => {
-    const { error } = await supabase.from("products").delete().eq("id", id);
+    const { error } = await requireSupabase().from("products").delete().eq("id", id);
     if (error) throw new Error(error.message);
     await fetchProducts();
   };
 
   return (
     <ProductContext.Provider
-      value={{ products, loading, addProduct, updateProduct, deleteProduct, refetch: fetchProducts }}
+      value={{
+        products,
+        loading,
+        source,
+        isDemo: source === "demo",
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        refetch: async () => {
+          await fetchProducts();
+        },
+      }}
     >
       {children}
     </ProductContext.Provider>

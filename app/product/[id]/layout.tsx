@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { Metadata } from "next";
-import { supabase } from "@/lib/supabase";
+import { loadProduct } from "@/lib/catalogue";
 import { SITE_URL, SITE_NAME, jsonLdScript } from "@/lib/site";
 import { DEFAULT_OG_IMAGE } from "@/lib/seo";
 import type { Product } from "@/app/context/ProductContext";
@@ -9,18 +9,11 @@ import type { Product } from "@/app/context/ProductContext";
  * Server layout for the (client-rendered) product page: it fetches the product
  * once on the server to emit per-product <title>, canonical, Open Graph tags and
  * Product + BreadcrumbList JSON-LD, so search engines get them in the initial HTML.
- * If Supabase is unreachable it degrades to generic metadata without failing.
+ * If Supabase is not configured or unreachable, the demo catalogue is used (lib/catalogue.ts).
  */
 const getProduct = cache(async (id: string): Promise<Product | null> => {
   try {
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .abortSignal(AbortSignal.timeout(3000))
-      .maybeSingle();
-    if (error || !data) return null;
-    return data as Product;
+    return (await loadProduct(id)).product;
   } catch {
     return null;
   }

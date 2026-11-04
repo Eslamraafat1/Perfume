@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { useProducts } from "@/app/context/ProductContext";
 
 export default function Footer() {
   const year = new Date().getFullYear();
   const { t, isRTL } = useLanguage();
+  const { isDemo } = useProducts();
 
   return (
     <footer className="responsive-pad" style={{
@@ -153,6 +155,13 @@ export default function Footer() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 0", flexWrap: "wrap", gap: "16px" }}>
           <span style={{ fontSize: "0.78rem", color: "rgba(220,202,187,0.4)" }}>
             © {year} Nubia. {t("footer_copyright")}
+            {isDemo && (
+              <span data-testid="demo-catalogue-note" style={{ display: "block", marginTop: "6px", fontSize: "0.72rem" }}>
+                {isRTL
+                  ? "كتالوج تجريبي — المنتجات والأسعار للعرض فقط."
+                  : "Demo catalogue — products and prices are for illustration only."}
+              </span>
+            )}
           </span>
           <div style={{ display: "flex", gap: "24px" }}>
             {(["footer_privacy", "footer_terms", "footer_cookies"] as const).map((key) => (

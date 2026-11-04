@@ -5,10 +5,27 @@ import Link from "next/link";
 import { useProducts } from "../context/ProductContext";
 import { useSiteContent } from "../context/SiteContentContext";
 import { useHeroSlides, DEFAULT_SLIDES, HeroSlide } from "../context/HeroSlidesContext";
-import { supabase, STORAGE_BUCKET } from "@/lib/supabase";
+import { requireSupabase, isSupabaseConfigured } from "@/lib/supabase";
+import { uploadImage } from "@/lib/upload-client";
 import { Product, FRAGRANCE_FAMILIES } from "../context/ProductContext";
+import AdminGate from "@/components/admin/AdminGate";
+import DemoDashboardNotice from "@/components/admin/DemoDashboardNotice";
 
-export default function DashboardPage() {
+/**
+ * /dashboard — admin only. proxy.ts redirects visitors without a session to
+ * /dashboard/login; AdminGate checks admin rights; RLS enforces them on writes.
+ * Without Supabase (demo catalogue) a read-only notice is shown instead.
+ */
+export default function DashboardRoute() {
+  if (!isSupabaseConfigured) return <DemoDashboardNotice />;
+  return (
+    <AdminGate>
+      <DashboardPage />
+    </AdminGate>
+  );
+}
+
+function DashboardPage() {
   const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const { get: sc, update: scUpdate, uploadImageAndUpdate } = useSiteContent();
   const { slides: heroSlides, allSlides: heroAllSlides, addSlide: addHeroSlide, updateSlide: updateHeroSlide, deleteSlide: deleteHeroSlide, reorderSlide: reorderHeroSlide, refetch: refetchHero } = useHeroSlides();
@@ -20,7 +37,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function checkConnection() {
       try {
-        const { error } = await supabase.from("products").select("id").limit(1);
+        const { error } = await requireSupabase().from("products").select("id").limit(1);
         if (error) {
           setDbStatus("error");
           setDbErrorMessage(error.message);
@@ -164,15 +181,7 @@ export default function DashboardPage() {
         setUploadProgress("Uploading main image...");
         const ext = imageFile.name.split(".").pop() ?? "jpg";
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const formData = new FormData();
-        formData.append("file", imageFile);
-        formData.append("fileName", fileName);
-
-        const upRes = await fetch("/api/upload", { method: "POST", body: formData });
-        if (!upRes.ok) throw new Error("Failed to upload main image");
-
-        const data = await upRes.json();
-        image_url = data.imageUrl;
+        image_url = await uploadImage(imageFile, fileName);
       }
 
       // Step 2: Upload additional images (if any)
@@ -184,15 +193,7 @@ export default function DashboardPage() {
         for (const file of additionalImages) {
           const ext = file.name.split(".").pop() ?? "jpg";
           const fileName = `gallery-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("fileName", fileName);
-
-          const upRes = await fetch("/api/upload", { method: "POST", body: formData });
-          if (upRes.ok) {
-            const data = await upRes.json();
-            uploadedAdditionalImages.push(data.imageUrl);
-          }
+          uploadedAdditionalImages.push(await uploadImage(file, fileName));
         }
       }
 
@@ -1525,22 +1526,7 @@ function HeroCarouselEditor({
     const ext = file.name.split(".").pop() ?? "jpg";
     const fileName = `carousel/slide-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("fileName", fileName);
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || res.statusText);
-    }
-
-    const data = await res.json();
-    return data.imageUrl;
+    return uploadImage(file, fileName);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

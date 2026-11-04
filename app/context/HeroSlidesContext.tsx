@@ -8,7 +8,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, requireSupabase } from "@/lib/supabase";
 
 export interface HeroSlide {
   id: string;
@@ -159,11 +159,17 @@ export function HeroSlidesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {
+    if (!supabase) {
+      // Demo mode: the built-in slides are the content.
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from("hero_slides")
         .select("*")
-        .order("sort_order", { ascending: true });
+        .order("sort_order", { ascending: true })
+        .abortSignal(AbortSignal.timeout(6000));
 
       if (error) throw error;
 
@@ -187,7 +193,7 @@ export function HeroSlidesProvider({ children }: { children: ReactNode }) {
 
   const addSlide = useCallback(
     async (slide: Omit<HeroSlide, "id" | "created_at">) => {
-      const { data, error } = await supabase
+      const { data, error } = await requireSupabase()
         .from("hero_slides")
         .insert([slide])
         .select()
@@ -204,7 +210,7 @@ export function HeroSlidesProvider({ children }: { children: ReactNode }) {
 
   const updateSlide = useCallback(
     async (id: string, updates: Partial<Omit<HeroSlide, "id" | "created_at">>) => {
-      const { error } = await supabase
+      const { error } = await requireSupabase()
         .from("hero_slides")
         .update(updates)
         .eq("id", id);
@@ -217,7 +223,7 @@ export function HeroSlidesProvider({ children }: { children: ReactNode }) {
   );
 
   const deleteSlide = useCallback(async (id: string) => {
-    const { error } = await supabase
+    const { error } = await requireSupabase()
       .from("hero_slides")
       .delete()
       .eq("id", id);
@@ -237,16 +243,19 @@ export function HeroSlidesProvider({ children }: { children: ReactNode }) {
       const swap = sorted[swapIdx];
 
       // Swap sort_orders
-      await Promise.all([
-        supabase
+      const client = requireSupabase();
+      const results = await Promise.all([
+        client
           .from("hero_slides")
           .update({ sort_order: swap.sort_order })
           .eq("id", current.id),
-        supabase
+        client
           .from("hero_slides")
           .update({ sort_order: current.sort_order })
           .eq("id", swap.id),
       ]);
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw new Error(failed.error.message);
 
       setAllSlides((prev) =>
         prev.map((s) => {

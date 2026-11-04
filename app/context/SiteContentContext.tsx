@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
-import { supabase, STORAGE_BUCKET } from "@/lib/supabase";
+import { supabase, requireSupabase } from "@/lib/supabase";
+import { uploadImage } from "@/lib/upload-client";
 
 import { defaultTranslations } from "./defaultTranslations";
 
@@ -25,8 +26,16 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
 
   /* ── Fetch all site_content rows ── */
   const fetchContent = useCallback(async () => {
+    if (!supabase) {
+      // Demo mode: the built-in copy (defaultTranslations) is the content.
+      setLoading(false);
+      return;
+    }
     try {
-      const { data, error } = await supabase.from("site_content").select("key, value");
+      const { data, error } = await supabase
+        .from("site_content")
+        .select("key, value")
+        .abortSignal(AbortSignal.timeout(6000));
       if (error) throw error;
 
       if (data && data.length > 0) {
@@ -58,10 +67,11 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
 
   /* ── Update a single text value ── */
   const update = useCallback(async (key: string, value: string) => {
+    const client = requireSupabase();
     // Optimistic update
     setContent((prev) => ({ ...prev, [key]: value }));
 
-    const { error } = await supabase
+    const { error } = await client
       .from("site_content")
       .upsert({ key, value }, { onConflict: "key" });
 
@@ -78,22 +88,8 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
       // Always unique name — no need for upsert/UPDATE permission
       const fileName = `site/${key}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("fileName", fileName);
-
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!uploadRes.ok) {
-        const errData = await uploadRes.json();
-        throw new Error(`Upload error: ${errData.error || uploadRes.statusText}`);
-      }
-
-      const uploadData = await uploadRes.json();
-      await update(key, uploadData.imageUrl);
+      const imageUrl = await uploadImage(file, fileName);
+      await update(key, imageUrl);
     },
     [update]
   );
