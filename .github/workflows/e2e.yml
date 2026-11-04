@@ -16,12 +16,14 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint, type-check, build & E2E
+    name: Lint, type-check, build & E2E (demo + Supabase modes)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
-      # No Supabase secrets are needed: the E2E suite mocks every Supabase request
-      # in the browser (see e2e/fixtures/supabase-mock.js).
+      # No Supabase secrets are needed. The app is built twice:
+      #  1. without Supabase env vars  → demo catalogue (what the live site serves today)
+      #  2. with a fake, unresolvable Supabase URL → the browser's Supabase calls are
+      #     answered by e2e/fixtures/supabase-mock.js, server-side calls fall back to demo.
       NEXT_TELEMETRY_DISABLED: 1
       PORT: 3000
     steps:
@@ -40,8 +42,6 @@ jobs:
         run: npm run lint
       - name: Type-check
         run: npm run typecheck
-      - name: Build
-        run: npm run build
 
       - name: Install test dependencies
         working-directory: e2e
@@ -50,21 +50,61 @@ jobs:
         working-directory: e2e
         run: npx playwright install --with-deps chromium
 
-      - name: Start production server
-        if: ${{ !inputs.base_url }}
-        run: |
-          npm start > server.log 2>&1 &
-          npx --yes wait-on@8.0.1 --timeout 60000 http://localhost:3000
-
-      - name: Run E2E tests
+      # ── Live site (manual runs only) ───────────────────────────────────
+      - name: Run E2E tests against ${{ inputs.base_url }}
+        if: ${{ inputs.base_url }}
         working-directory: e2e
         env:
-          BASE_URL: ${{ inputs.base_url || 'http://localhost:3000' }}
+          BASE_URL: ${{ inputs.base_url }}
+          E2E_MODE: demo
         run: npx playwright test
 
-      - name: Server log
+      # ── 1. Demo catalogue build (no Supabase env) ──────────────────────
+      - name: Build (no Supabase env → demo catalogue)
+        if: ${{ !inputs.base_url }}
+        run: npm run build
+      - name: Start production server (demo)
+        if: ${{ !inputs.base_url }}
+        run: |
+          npm start > server-demo.log 2>&1 &
+          echo $! > server.pid
+          npx --yes wait-on@8.0.1 --timeout 60000 http://localhost:3000
+      - name: Run E2E tests (demo mode)
+        if: ${{ !inputs.base_url }}
+        working-directory: e2e
+        env:
+          BASE_URL: http://localhost:3000
+          E2E_MODE: demo
+        run: npx playwright test --output=test-results-demo
+      - name: Stop server (demo)
+        if: ${{ !inputs.base_url }}
+        run: kill $(cat server.pid) || true
+
+      # ── 2. Supabase build (fake URL, mocked in the browser) ────────────
+      - name: Build (fake Supabase URL)
+        if: ${{ !inputs.base_url }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://e2e-mock.invalid
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: e2e-anon-key
+        run: npm run build
+      - name: Start production server (Supabase mode, port 3001)
+        if: ${{ !inputs.base_url }}
+        env:
+          PORT: 3001
+        run: |
+          npm start > server-mock.log 2>&1 &
+          npx --yes wait-on@8.0.1 --timeout 60000 http://localhost:3001
+      - name: Run E2E tests (Supabase mode, mocked)
+        if: ${{ !inputs.base_url }}
+        working-directory: e2e
+        env:
+          BASE_URL: http://localhost:3001
+          E2E_MODE: mock
+        run: npx playwright test --output=test-results-mock
+
+      - name: Server logs
         if: failure()
-        run: cat server.log || true
+        run: cat server-demo.log server-mock.log 2>/dev/null || true
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
@@ -72,3 +112,30 @@ jobs:
           name: playwright-report
           path: e2e/playwright-report
           retention-days: 14
+
+  rls:
+    name: Supabase RLS policies (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Supabase stand-in (roles, auth, storage)
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/supabase-stub.sql
+      - name: Apply supabase-setup.sql twice (must be idempotent)
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f supabase-setup.sql
+          psql -v ON_ERROR_STOP=1 -q -f supabase-setup.sql
+      - name: Check who can read / write what
+        run: psql -v ON_ERROR_STOP=1 -q -f supabase/tests/rls.test.sql

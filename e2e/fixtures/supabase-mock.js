@@ -1,5 +1,12 @@
 // Deterministic Supabase mock for E2E tests.
 //
+// The suite runs against two builds of the app (see README → Testing):
+//   E2E_MODE=demo (default) — built WITHOUT Supabase env vars: the store serves the
+//                             bundled demo catalogue (data/demo-catalogue.ts).
+//   E2E_MODE=mock           — built with a fake, unresolvable Supabase URL; the browser's
+//                             Supabase calls are answered by the mock below.
+export const MODE = process.env.E2E_MODE === 'mock' ? 'mock' : 'demo';
+//
 // The storefront talks to Supabase (PostgREST) directly from the browser, so the
 // tests intercept those requests with Playwright and answer with fixture data.
 // This means the suite needs NO Supabase credentials and never touches the real

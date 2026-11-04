@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { mockSupabase, dismissPromo, seedCart, PRODUCTS } from '../fixtures/supabase-mock.js';
+import { mockSupabase, dismissPromo, seedCart, PRODUCTS, MODE } from '../fixtures/supabase-mock.js';
 
 const [OUD, JASMINE, CITRUS] = PRODUCTS;
+
+// These flows use the mocked Supabase catalogue; the demo build is covered by demo-catalogue.spec.js.
+test.skip(MODE !== 'mock', 'Supabase-mode flows: run with E2E_MODE=mock against a build with a Supabase URL');
 
 test.beforeEach(async ({ page }) => {
   await dismissPromo(page);
