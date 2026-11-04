@@ -241,6 +241,8 @@ Deployed on **Vercel**. Without Supabase variables the deployment serves the dem
 | **[Tour Egypt Club](https://github.com/Eslamraafat1/Travel)** | client travel & tours website | [Live](https://touregyptclub.com) |
 | **[Portfolio](https://github.com/Eslamraafat1/new-portfolio)** | bilingual Next.js portfolio | [Live](https://new-portfolio-ashy-xi.vercel.app) |
 
+**More client & personal work:** [The Untold Story](https://github.com/Eslamraafat1/Advertising) · [Harvest British College](https://github.com/Eslamraafat1/HarvestNew) · [Namaa](https://github.com/Eslamraafat1/Namaa) · [Physical therapy clinic](https://github.com/Eslamraafat1/Physical-therapy) · [Cord Academy](https://github.com/Eslamraafat1/Cord-academy) · [EVAY cars](https://github.com/Eslamraafat1/Car) · [VISTRA VR mall](https://github.com/Eslamraafat1/VR-Website) · [Prayer times](https://github.com/Eslamraafat1/Prayer-time)
+
 See everything on my [GitHub profile](https://github.com/Eslamraafat1) and [portfolio](https://new-portfolio-ashy-xi.vercel.app/).
 <!-- more-projects:end -->
 
