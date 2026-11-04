@@ -976,8 +976,6 @@ function ProductGridCard({
       {/* Body */}
       <div style={{ padding: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px" }}>
-          <div style={{ color: "var(--gold)", fontSize: "0.72rem", letterSpacing: "1px" }}>★★★★★</div>
-          <span style={{ fontSize: "0.68rem", color: "var(--white-muted)" }}>4.9</span>
           {product.gender && (
             <span style={{
               marginLeft: "auto",
@@ -1146,7 +1144,6 @@ function ProductListCard({
           <span style={{ fontSize: "0.65rem", color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
             {product.category || "Luxury"}
           </span>
-          <span style={{ color: "var(--gold)", fontSize: "0.65rem" }}>★★★★★</span>
         </div>
         <h3 style={{ fontFamily: "var(--font-title)", fontSize: "1.25rem", color: "var(--white)", lineHeight: 1.3 }}>{product.name}</h3>
         <p style={{ color: "var(--white-muted)", fontSize: "0.85rem", lineHeight: 1.6 }}>

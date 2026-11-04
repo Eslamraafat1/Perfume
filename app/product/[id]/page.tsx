@@ -627,10 +627,8 @@ export default function ProductDetailsPage() {
               {product.name}
             </h1>
 
-            {/* Stars */}
+            {/* In-cart badge */}
             <div className="pd-stagger" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-              <div style={{ color: "var(--gold)", fontSize: "1rem", letterSpacing: "2px" }}>★★★★★</div>
-              <span style={{ fontSize: "0.8rem", color: "var(--white-muted)" }}>4.9 · 128 Reviews</span>
               {isInCart(product.id) && (
                 <span style={{
                   fontSize: "0.7rem", background: "rgba(76,175,80,0.15)",
@@ -1124,7 +1122,6 @@ export default function ProductDetailsPage() {
                       <span style={{ fontFamily: "var(--font-serif)", color: "var(--gold)", fontSize: "1.2rem", fontWeight: 700 }}>
                         {rel.price.toLocaleString()} EGP
                       </span>
-                      <div style={{ color: "var(--gold)", fontSize: "0.7rem" }}>★★★★★</div>
                     </div>
                   </div>
                 </Link>
