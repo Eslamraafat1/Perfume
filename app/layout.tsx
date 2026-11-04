@@ -11,6 +11,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import GlobalRouteLoader from "@/components/GlobalRouteLoader";
 import SplashCursor from "@/components/SplashCursor";
 import ScratchGiftCard from "@/components/ScratchGiftCard";
+import { SITE_URL, SITE_NAME, jsonLdScript } from "@/lib/site";
 
 const bodoni = Bodoni_Moda({
   subsets: ["latin"],
@@ -44,7 +45,7 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mazad-ecru.vercel.app";
+const siteUrl = SITE_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -86,8 +87,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/perfume_hero.png",
-        width: 1200,
-        height: 630,
+        width: 1024,
+        height: 1024,
         alt: "Nubia Luxury Fine Fragrance",
       },
     ],
@@ -120,7 +121,8 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "OnlineStore",
-  name: "Nubia Fine Fragrances",
+  "@id": `${siteUrl}/#store`,
+  name: SITE_NAME,
   url: siteUrl,
   logo: `${siteUrl}/perfume_hero.png`,
   description:
@@ -134,6 +136,16 @@ const jsonLd = {
   },
 };
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${siteUrl}/#website`,
+  name: SITE_NAME,
+  url: siteUrl,
+  inLanguage: ["en", "ar"],
+  publisher: { "@id": `${siteUrl}/#store` },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -144,7 +156,11 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd) }}
         />
         <SiteContentProvider>
           <LanguageProvider>

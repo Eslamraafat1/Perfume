@@ -24,11 +24,16 @@ const isPlaceholderKey = (key: string | undefined): boolean => {
   return key === "placeholder-anon-key" || key === "your-anon-key-here";
 };
 
-const supabaseUrl = isValidUrl(rawUrl) && !isPlaceholderUrl(rawUrl)
+// NOTE: the fallbacks below are the project's *publishable* (anon) credentials,
+// which are shipped to every browser anyway. They exist because the production
+// deployment currently has no Supabase env vars configured. Prefer setting
+// NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY (see .env.example)
+// and then deleting these fallbacks.
+export const supabaseUrl = isValidUrl(rawUrl) && !isPlaceholderUrl(rawUrl)
   ? rawUrl!
   : "https://oeatwkrkzqdiwkpzfzzf.supabase.co";
 
-const supabaseAnonKey = rawKey && !isPlaceholderKey(rawKey)
+export const supabaseAnonKey = rawKey && !isPlaceholderKey(rawKey)
   ? rawKey
   : "sb_publishable_lmOGDsQtCBU5jGrY5KXjhg_B7NZ-fY2";
 

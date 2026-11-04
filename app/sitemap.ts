@@ -1,8 +1,12 @@
 import type { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 import { supabase } from "@/lib/supabase";
 
+// Re-generate hourly so newly added products appear without a redeploy.
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mazad-ecru.vercel.app";
+  const baseUrl = SITE_URL;
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -36,6 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${baseUrl}/fragrance-finder`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
       url: `${baseUrl}/category`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -44,7 +54,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const { data: products } = await supabase.from("products").select("id, created_at");
+    const { data: products } = await supabase.from("products").select("id, created_at")
+      .abortSignal(AbortSignal.timeout(3000));
     if (products && products.length > 0) {
       const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
         url: `${baseUrl}/product/${p.id}`,
