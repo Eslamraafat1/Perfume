@@ -8,6 +8,15 @@ test.beforeEach(async ({ page }) => {
   await mockSupabase(page);
 });
 
+/**
+ * Click an element after centring it in the viewport, so the fixed header /
+ * floating buttons can't sit on top of it on small (or slow) screens.
+ */
+async function clickCentered(locator) {
+  await locator.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await locator.click();
+}
+
 /** Product names in the order they appear in the catalogue grid. */
 async function visibleProductNames(page) {
   const names = PRODUCTS.map((p) => p.name);
@@ -84,12 +93,12 @@ test.describe('Product → cart', () => {
     await expect(summary).toContainText('Free'); // >= 1,500 EGP ships free
 
     // Quantity +1 doubles the subtotal
-    await page.getByRole('button', { name: `Increase quantity of ${OUD.name}` }).click();
+    await clickCentered(page.getByRole('button', { name: `Increase quantity of ${OUD.name}` }));
     await expect(summary).toContainText('Subtotal (2 items)');
     await expect(summary).toContainText('3,800 EGP');
 
     // Removing the line empties the cart
-    await page.getByRole('button', { name: `Remove ${OUD.name}` }).click();
+    await clickCentered(page.getByRole('button', { name: `Remove ${OUD.name}` }));
     await expect(page.getByText('No Fragrances Selected')).toBeVisible();
   });
 
@@ -128,13 +137,13 @@ test.describe('Checkout', () => {
     const name = page.getByLabel('Full Name *');
     const email = page.getByLabel('Email Address *');
 
-    await submit.click();
+    await clickCentered(submit);
     await expect(page).toHaveURL(/\/checkout$/);
     expect(await name.evaluate((el) => el.validity.valueMissing)).toBe(true);
 
     await name.fill('Test Customer');
     await email.fill('not-an-email');
-    await submit.click();
+    await clickCentered(submit);
     await expect(page).toHaveURL(/\/checkout$/);
     expect(await email.evaluate((el) => el.validity.typeMismatch)).toBe(true);
   });
@@ -155,7 +164,7 @@ test.describe('Checkout', () => {
     await page.getByLabel('Phone Number *').fill('01000000000');
     await page.getByLabel('Governorate *').selectOption('Giza');
     await page.getByLabel('Detailed Address *').fill('1 Test Street');
-    await page.getByRole('button', { name: /Place Order · 1,380 EGP/ }).click();
+    await clickCentered(page.getByRole('button', { name: /Place Order · 1,380 EGP/ }));
 
     await expect(page).toHaveURL(/\/order-confirmation$/);
     await expect(page.getByText(/ML-\d{6}/).first()).toBeVisible();
