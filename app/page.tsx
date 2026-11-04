@@ -424,7 +424,6 @@ function HomeProductCard({
                 {product.gender === "men" ? "♂" : product.gender === "women" ? "♀" : "⚧"}
               </span>
             )}
-            <div style={{ color: "var(--gold)", fontSize: "0.65rem", letterSpacing: "1px" }}>★★★★★</div>
           </div>
         </div>
 

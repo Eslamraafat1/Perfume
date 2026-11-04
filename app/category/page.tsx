@@ -479,7 +479,6 @@ function CatGenderCard({
           <span style={{ fontFamily: "var(--font-serif)", color: accent, fontSize: "1.05rem", fontWeight: 700 }}>
             {product.price.toLocaleString()} <span style={{ fontSize: "0.7rem", fontWeight: 400 }}>EGP</span>
           </span>
-          <span style={{ fontSize: "0.62rem", color: "var(--gold)", letterSpacing: "1px" }}>★★★★★</span>
         </div>
       </div>
     </Link>
