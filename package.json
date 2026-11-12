@@ -1,6 +1,25 @@
 {
   "name": "nubia-perfume-store",
   "version": "0.1.0",
+  "author": "Eslam Raafat <https://new-portfolio-ashy-xi.vercel.app>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eslamraafat1/Perfume.git"
+  },
+  "homepage": "https://perfume-sooty-alpha.vercel.app",
+  "bugs": {
+    "url": "https://github.com/Eslamraafat1/Perfume/issues"
+  },
+  "keywords": [
+    "nextjs",
+    "react",
+    "gsap",
+    "supabase",
+    "typescript",
+    "arabic",
+    "rtl",
+    "portfolio"
+  ],
   "private": true,
   "description": "Nubia — bilingual (EN/AR) luxury perfume e-commerce store built with Next.js and Supabase.",
   "license": "MIT",
@@ -12,7 +31,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
